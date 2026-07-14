@@ -1,19 +1,17 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const routes = require("./routes");
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 
 const app = express();
-
-// Security Middleware
+app.use("/api/v1", routes);
 app.use(helmet());
 
-// Compress responses
 app.use(compression());
 
-// CORS
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
@@ -21,22 +19,19 @@ app.use(
   })
 );
 
-// Body Parser
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 
-// Cookies
 app.use(cookieParser());
 
-// Logger
 app.use(morgan("dev"));
 
-// Health Check
 app.get("/", (req, res) => {
-  res.status(200).json({
+  res.json({
     success: true,
-    message: "Flora Backend API is running",
+    message: "Welcome to Flora API",
+    version: "1.0.0",
   });
 });
 
