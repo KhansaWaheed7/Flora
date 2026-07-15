@@ -15,7 +15,6 @@ const registerUser = async (data) => {
   return user;
 };
 
-
 const loginUser = async (email, password) => {
   const user = await User.findOne({ email }).select("+password");
 
@@ -23,9 +22,9 @@ const loginUser = async (email, password) => {
     throw new ApiError(401, "Invalid email or password");
   }
 
-  const isMatch = await user.comparePassword(password);
+  const isPasswordCorrect = await user.comparePassword(password);
 
-  if (!isMatch) {
+  if (!isPasswordCorrect) {
     throw new ApiError(401, "Invalid email or password");
   }
 

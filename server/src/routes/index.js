@@ -2,19 +2,19 @@ const express = require("express");
 
 const router = express.Router();
 
+const authRoutes = require("./auth.routes");
 const userRoutes = require("./user.routes");
 
-
-const authRoutes = require("./auth.routes");
-
 router.use("/auth", authRoutes);
-
 router.use("/users", userRoutes);
 
 router.get("/health", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
     server: "Flora API",
+    version: "1.0.0",
+    environment: process.env.NODE_ENV,
+    timestamp: new Date(),
   });
 });
 
