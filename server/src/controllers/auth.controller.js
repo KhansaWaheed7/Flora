@@ -2,9 +2,8 @@ const asyncHandler = require("../utils/asyncHandler");
 const ApiResponse = require("../utils/ApiResponse");
 
 const { registerSchema } = require("../validators/auth.validator");
-const { generateAccessToken } = require("../utils/jwt");
-
 const { loginSchema } = require("../validators/auth.validator");
+const { generateAccessToken } = require("../utils/jwt");
 
 const {
   registerUser,
@@ -40,18 +39,14 @@ exports.login = asyncHandler(async (req, res) => {
   const token = generateAccessToken(user);
 
   res.status(200).json(
-    new ApiResponse(
-      200,
-      "Login successful",
-      {
-        token,
-        user: {
-          id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          role: user.role,
-        },
-      }
-    )
+    new ApiResponse(200, "Login successful", {
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+    })
   );
 });
