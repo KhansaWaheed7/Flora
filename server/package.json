@@ -3,13 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
- 
   "scripts": {
-  "start": "node src/server.js",
-  "dev": "nodemon src/server.js",
-  "lint": "eslint .",
-  "format": "prettier --write ."
-},
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -29,7 +28,8 @@
     "morgan": "^1.11.0",
     "multer": "^2.2.0",
     "uuid": "^14.0.1",
-    "validator": "^13.15.35"
+    "validator": "^13.15.35",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "eslint": "^10.7.0",
