@@ -2,7 +2,10 @@ const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
+
+const generateVerificationToken = require("../utils/generateVerificationToken");
 const generateResetToken = require("../utils/generateResetToken");
+
 const registerUser = async (data) => {
   const existingUser = await User.findOne({
     email: data.email,
@@ -13,6 +16,9 @@ const registerUser = async (data) => {
   }
 
   const user = await User.create(data);
+
+  // Send verification email
+  await sendVerificationEmail(user);
 
   return user;
 };
@@ -29,6 +35,13 @@ const loginUser = async (email, password) => {
   if (!isPasswordCorrect) {
     throw new ApiError(401, "Invalid email or password");
   }
+
+  if (!user.isEmailVerified) {
+  throw new ApiError(
+    403,
+    "Please verify your email before logging in."
+  );
+}
 
   return user;
 };
@@ -110,10 +123,94 @@ const resetPassword = async (token, password) => {
 
 };
 
+const sendVerificationEmail = async (user) => {
+  const token = generateVerificationToken();
+
+  user.emailVerificationToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  user.emailVerificationExpire =
+    Date.now() + 24 * 60 * 60 * 1000;
+
+  await user.save();
+
+  const verifyURL =
+    `${process.env.CLIENT_URL}/verify-email/${token}`;
+
+  const message = `
+      <h2>Welcome to Flora 🌸</h2>
+
+      <p>Please verify your email by clicking below.</p>
+
+      <a href="${verifyURL}">
+          Verify Email
+      </a>
+
+      <p>This link expires in 24 hours.</p>
+  `;
+
+  await sendEmail({
+    email: user.email,
+    subject: "Verify your Flora account",
+    message,
+  });
+};
+const verifyEmail = async (token) => {
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+
+  const user = await User.findOne({
+    emailVerificationToken: hashedToken,
+    emailVerificationExpire: {
+      $gt: Date.now(),
+    },
+  });
+  console.log("Found User:", user);
+
+  if (!user) {
+    throw new ApiError(
+      400,
+      "Verification token is invalid or has expired"
+    );
+  }
+
+  user.isEmailVerified = true;
+  user.emailVerificationToken = "";
+  user.emailVerificationExpire = undefined;
+
+  await user.save();
+
+  const updatedUser = await User.findById(user._id);
+
+};
+const resendVerificationEmail = async (email) => {
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    if (user.isEmailVerified) {
+        throw new ApiError(400, "Email is already verified");
+    }
+
+    await sendVerificationEmail(user);
+
+};
+
 module.exports = {
   registerUser,
   loginUser,
   saveRefreshToken,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  sendVerificationEmail,
+  verifyEmail,
+  resendVerificationEmail
 };

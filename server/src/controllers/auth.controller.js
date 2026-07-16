@@ -1,5 +1,6 @@
 const asyncHandler = require("../utils/asyncHandler");
 const ApiResponse = require("../utils/ApiResponse");
+const ApiError = require("../utils/ApiError");
 
 const { registerSchema } = require("../validators/auth.validator");
 const { loginSchema } = require("../validators/auth.validator");
@@ -8,11 +9,14 @@ const {
     generateRefreshToken
 } = require("../utils/jwt");
 const {
-    registerUser,
-    loginUser,
-    saveRefreshToken,
-    forgotPassword,
-    resetPassword
+  registerUser,
+  loginUser,
+  saveRefreshToken,
+  forgotPassword,
+  resetPassword,
+  sendVerificationEmail,
+  resendVerificationEmail,
+  verifyEmail: verifyEmailService
 } = require("../services/auth.service");
 
 exports.register = asyncHandler(async (req, res) => {
@@ -163,6 +167,36 @@ exports.resetPassword = asyncHandler(async (req, res) => {
             200,
 
             "Password has been reset successfully"
+
+        )
+
+    );
+
+});
+
+exports.verifyEmail = asyncHandler(async (req, res) => {
+
+  await verifyEmailService(req.params.token);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Email verified successfully"
+    )
+  );
+
+});
+exports.resendVerification = asyncHandler(async (req, res) => {
+
+    await resendVerificationEmail(req.body.email);
+
+    res.status(200).json(
+
+        new ApiResponse(
+
+            200,
+
+            "Verification email sent successfully"
 
         )
 
