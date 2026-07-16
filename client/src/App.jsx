@@ -10,6 +10,7 @@ import ProfilePage from "./components/ProfilePage";
 import ProfileDetailsPage from "./components/ProfileDetailsPage";
 import EditProfilePage from "./components/EditProfilePage";
 import SettingsPage from "./components/SettingsPage";
+import DietDashboardPage from "./components/DietDashboardPage";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/profile" element={<ProfileDetailsPage />} />
         <Route path="/profile/edit" element={<EditProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/diet-dashboard" element={<DietDashboardPage />} />
       </Routes>
     </BrowserRouter>
   );
