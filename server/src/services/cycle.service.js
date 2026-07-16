@@ -1,5 +1,10 @@
 const Cycle = require("../models/Cycle");
 const ApiError = require("../utils/ApiError");
+const {
+  calculateAverageCycleLength,
+  addDays,
+} = require("../utils/cyclePrediction");
+const detectIrregularCycle = require("../utils/irregularCycle");
 
 const createCycle = async (userId, data) => {
   const cycle = await Cycle.create({
@@ -60,10 +65,60 @@ const deleteCycle = async (userId, cycleId) => {
   }
 };
 
+const predictCycle = async (userId) => {
+  const cycles = await Cycle.find({
+    user: userId,
+  }).sort({
+    periodStart: 1,
+  });
+
+  if (cycles.length === 0) {
+    throw new ApiError(404, "No cycle history found");
+  }
+
+  const averageCycle =
+    calculateAverageCycleLength(cycles);
+
+  const latestCycle =
+    cycles[cycles.length - 1];
+
+  const nextPeriod = addDays(
+    latestCycle.periodStart,
+    averageCycle
+  );
+
+  const ovulation = addDays(
+    nextPeriod,
+    -14
+  );
+
+  const fertileStart = addDays(
+    ovulation,
+    -5
+  );
+
+  const fertileEnd = addDays(
+    ovulation,
+    1
+  );
+
+  return {
+    averageCycleLength: averageCycle,
+    nextPeriod,
+    ovulation,
+    fertileWindow: {
+      start: fertileStart,
+      end: fertileEnd,
+    },
+    irregularCycle: detectIrregularCycle(cycles),
+  };
+};
+
 module.exports = {
   createCycle,
   getUserCycles,
   getCycleById,
   updateCycle,
   deleteCycle,
+  predictCycle,
 };

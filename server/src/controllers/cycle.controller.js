@@ -4,6 +4,15 @@ const ApiResponse = require("../utils/ApiResponse");
 const { cycleSchema } = require("../validators/cycle.validator");
 
 const {
+  createCycle,
+  getUserCycles,
+  getCycleById,
+  updateCycle,
+  deleteCycle,
+  predictCycle,
+} = require("../services/cycle.service");
+
+const {
   createCycle: createCycleService,
   getUserCycles,
   getCycleById,
@@ -61,5 +70,16 @@ exports.deleteCycle = asyncHandler(async (req, res) => {
 
   res.status(200).json(
     new ApiResponse(200, "Cycle deleted successfully")
+  );
+});
+exports.predictCycle = asyncHandler(async (req, res) => {
+  const prediction = await predictCycle(req.user._id);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Cycle prediction generated",
+      prediction
+    )
   );
 });
