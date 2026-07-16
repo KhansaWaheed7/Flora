@@ -1,6 +1,17 @@
 const asyncHandler = require("../utils/asyncHandler");
 const ApiResponse = require("../utils/ApiResponse");
 
+const {
+  updateProfile,
+  changePassword,
+  deleteAccount,
+} = require("../services/user.service");
+
+const {
+  updateProfileSchema,
+  changePasswordSchema,
+} = require("../validators/user.validator");
+
 exports.getMe = asyncHandler(async (req, res) => {
   res.status(200).json(
     new ApiResponse(200, "User profile fetched successfully", {
@@ -10,8 +21,38 @@ exports.getMe = asyncHandler(async (req, res) => {
       phone: req.user.phone,
       age: req.user.age,
       role: req.user.role,
-      isVerified: req.user.isVerified,
-      createdAt: req.user.createdAt,
     })
+  );
+});
+
+exports.updateProfile = asyncHandler(async (req, res) => {
+  const data = updateProfileSchema.parse(req.body);
+
+  const user = await updateProfile(req.user._id, data);
+
+  res.status(200).json(
+    new ApiResponse(200, "Profile updated successfully", user)
+  );
+});
+
+exports.changePassword = asyncHandler(async (req, res) => {
+  const data = changePasswordSchema.parse(req.body);
+
+  await changePassword(
+    req.user._id,
+    data.currentPassword,
+    data.newPassword
+  );
+
+  res.status(200).json(
+    new ApiResponse(200, "Password updated successfully")
+  );
+});
+
+exports.deleteAccount = asyncHandler(async (req, res) => {
+  await deleteAccount(req.user._id);
+
+  res.status(200).json(
+    new ApiResponse(200, "Account deleted successfully")
   );
 });
