@@ -51,8 +51,27 @@ const deleteAccount = async (userId) => {
   await User.findByIdAndDelete(userId);
 };
 
+const updateAvatar = async(userId,imageUrl)=>{
+
+    const user=await User.findById(userId);
+
+    if(!user){
+
+        throw new ApiError(404,"User not found");
+
+    }
+
+    user.profilePicture=imageUrl;
+
+    await user.save();
+
+    return user;
+
+};
+
 module.exports = {
   updateProfile,
   changePassword,
   deleteAccount,
+  updateAvatar,
 };
