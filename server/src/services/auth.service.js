@@ -30,7 +30,21 @@ const loginUser = async (email, password) => {
 
   return user;
 };
+const saveRefreshToken = async (userId, refreshToken) => {
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    user.refreshToken = refreshToken;
+
+    await user.save();
+
+};
 module.exports = {
   registerUser,
   loginUser,
+  saveRefreshToken,
 };
