@@ -21,14 +21,12 @@ const cycleSchema = new mongoose.Schema(
 
     cycleLength: {
       type: Number,
-      required: true,
       min: 15,
       max: 60,
     },
 
     periodLength: {
       type: Number,
-      required: true,
       min: 1,
       max: 10,
     },

@@ -1,25 +1,17 @@
 const asyncHandler = require("../utils/asyncHandler");
 const ApiResponse = require("../utils/ApiResponse");
+const Cycle = require("../models/Cycle");
 
 const { cycleSchema } = require("../validators/cycle.validator");
 
 const {
-  createCycle,
-  getUserCycles,
-  getCycleById,
-  updateCycle,
-  deleteCycle,
-  predictCycle,
-} = require("../services/cycle.service");
-
-const {
   createCycle: createCycleService,
-  getUserCycles,
-  getCycleById,
+  getUserCycles: getUserCyclesService,
+  getCycleById: getCycleByIdService,
   updateCycle: updateCycleService,
   deleteCycle: deleteCycleService,
+  predictCycle: predictCycleService,
 } = require("../services/cycle.service");
-
 // Create Cycle
 exports.createCycle = asyncHandler(async (req, res) => {
   const validatedData = cycleSchema.parse(req.body);
@@ -33,7 +25,7 @@ exports.createCycle = asyncHandler(async (req, res) => {
 
 // Get All Cycles
 exports.getCycles = asyncHandler(async (req, res) => {
-  const cycles = await getUserCycles(req.user._id);
+  const cycles = await getUserCyclesService(req.user._id);
 
   res.status(200).json(
     new ApiResponse(200, "Cycles fetched successfully", cycles)
@@ -42,7 +34,7 @@ exports.getCycles = asyncHandler(async (req, res) => {
 
 // Get Single Cycle
 exports.getCycle = asyncHandler(async (req, res) => {
-  const cycle = await getCycleById(req.user._id, req.params.id);
+  const cycle = await getCycleByIdService(req.user._id, req.params.id);
 
   res.status(200).json(
     new ApiResponse(200, "Cycle fetched successfully", cycle)
@@ -73,13 +65,33 @@ exports.deleteCycle = asyncHandler(async (req, res) => {
   );
 });
 exports.predictCycle = asyncHandler(async (req, res) => {
-  const prediction = await predictCycle(req.user._id);
+  const prediction = await predictCycleService(req.user._id);
 
   res.status(200).json(
     new ApiResponse(
       200,
       "Cycle prediction generated",
       prediction
+    )
+  );
+});
+exports.dashboard = asyncHandler(async (req, res) => {
+  const latestCycle = await Cycle.findOne({
+    user: req.user._id,
+  }).sort({
+    periodStart: -1,
+  });
+
+  const prediction = await predictCycleService(req.user._id);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Dashboard Summary",
+      {
+        latestCycle,
+        prediction,
+      }
     )
   );
 });

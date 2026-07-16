@@ -10,6 +10,8 @@ const {
   getCycle,
   updateCycle,
   deleteCycle,
+  predictCycle,
+  dashboard,
 } = require("../controllers/cycle.controller");
 
 router.use(protect);
@@ -19,6 +21,7 @@ router.post("/", createCycle);
 router.get("/", getCycles);
 
 router.get("/prediction", predictCycle);
+router.get("/dashboard", dashboard);
 
 router.get("/:id", getCycle);
 
