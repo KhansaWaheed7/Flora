@@ -18,10 +18,13 @@ router.post("/", createCycle);
 
 router.get("/", getCycles);
 
+router.get("/prediction", predictCycle);
+
 router.get("/:id", getCycle);
 
 router.put("/:id", updateCycle);
 
 router.delete("/:id", deleteCycle);
+
 
 module.exports = router;
