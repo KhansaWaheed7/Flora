@@ -5,6 +5,7 @@ const {
   updateProfile,
   changePassword,
   deleteAccount,
+  updateAvatar,
 } = require("../services/user.service");
 
 const {
@@ -55,4 +56,35 @@ exports.deleteAccount = asyncHandler(async (req, res) => {
   res.status(200).json(
     new ApiResponse(200, "Account deleted successfully")
   );
+});
+exports.uploadAvatar=asyncHandler(async(req,res)=>{
+
+    if(!req.file){
+
+        throw new ApiError(400,"Please upload an image");
+
+    }
+
+    const user=await updateAvatar(
+
+        req.user._id,
+
+        req.file.path
+
+    );
+
+    res.status(200).json(
+
+        new ApiResponse(
+
+            200,
+
+            "Profile picture updated",
+
+            user
+
+        )
+
+    );
+
 });
