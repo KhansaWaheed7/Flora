@@ -10,7 +10,9 @@ const {
 const {
     registerUser,
     loginUser,
-    saveRefreshToken
+    saveRefreshToken,
+    forgotPassword,
+    resetPassword
 } = require("../services/auth.service");
 
 exports.register = asyncHandler(async (req, res) => {
@@ -135,4 +137,35 @@ exports.logout = asyncHandler(async (req, res) => {
       null
     )
   );
+});
+exports.forgotPassword = asyncHandler(async (req, res) => {
+  await forgotPassword(req.body.email);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Password reset email sent successfully"
+    )
+  );
+});
+
+exports.resetPassword = asyncHandler(async (req, res) => {
+
+    await resetPassword(
+        req.params.token,
+        req.body.password
+    );
+
+    res.status(200).json(
+
+        new ApiResponse(
+
+            200,
+
+            "Password has been reset successfully"
+
+        )
+
+    );
+
 });
