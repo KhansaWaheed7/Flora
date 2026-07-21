@@ -1,33 +1,65 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LandingPage from "./components/LandingPage";
-import LoginPage from "./components/LoginPage";
-import RegisterPage from "./components/RegisterPage";
-import ForgotPasswordPage from "./components/ForgotPasswordPage";
-import ResetPasswordPage from "./components/ResetPasswordPage";
-import VerifyEmailPage from "./components/VerifyEmailPage";
-import DashboardPage from "./components/DashboardPage";
-import ProfilePage from "./components/ProfilePage";
-import ProfileDetailsPage from "./components/ProfileDetailsPage";
-import EditProfilePage from "./components/EditProfilePage";
-import SettingsPage from "./components/SettingsPage";
+import { Routes, Route } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+import LandingPage from "./pages/public/Landing/LandingPage";
+import LoginPage from "./pages/auth/Login/LoginPage";
+import RegisterPage from "./pages/auth/Register/RegisterPage";
+import ForgotPasswordPage from "./pages/auth/ForgetPassword/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPassword/ResetPasswordPage";
+import VerifyEmailPage from "./pages/auth/VerifyEmail/VerifyEmailPage";
+import DashboardPage from "./pages/dashboard/DashboardPage";
+import ProfilePage from "./pages/profile/ProfilePage";
+import ProfileDetailsPage from "./pages/profile/ProfileDetailsPage";
+import EditProfilePage from "./pages/profile/EditProfilePage";
+import SettingsPage from "./pages/settings/SettingsPage";
+import ProtectedRoute from "./routes/ProtectedRoute";
+
 
 function App() {
   return (
-    <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/myprofile" element={<ProfilePage />} />
-        <Route path="/profile" element={<ProfileDetailsPage />} />
-        <Route path="/profile/edit" element={<EditProfilePage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+        <Route
+  path="/dashboard"
+  element={
+    <ProtectedRoute>
+      <DashboardPage />
+    </ProtectedRoute>
+  }
+/>
+        <Route path="/profile/details" element={<ProtectedRoute>
+      <ProfileDetailsPage />
+    </ProtectedRoute>} />
+        <Route
+  path="/profile"
+  element={
+    <ProtectedRoute>
+      <ProfilePage />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/profile/edit"
+  element={
+    <ProtectedRoute>
+      <EditProfilePage />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/settings"
+  element={
+    <ProtectedRoute>
+      <SettingsPage />
+    </ProtectedRoute>
+  }
+/>
       </Routes>
-    </BrowserRouter>
+
   );
 }
 

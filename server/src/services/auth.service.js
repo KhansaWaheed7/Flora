@@ -140,16 +140,183 @@ const sendVerificationEmail = async (user) => {
     `${process.env.CLIENT_URL}/verify-email/${token}`;
 
   const message = `
-      <h2>Welcome to Flora 🌸</h2>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+</head>
 
-      <p>Please verify your email by clicking below.</p>
+<body style="
+margin:0;
+padding:0;
+background:#F8F8F8;
+font-family:Arial,Helvetica,sans-serif;
+">
 
-      <a href="${verifyURL}">
-          Verify Email
-      </a>
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td align="center">
 
-      <p>This link expires in 24 hours.</p>
-  `;
+<table
+width="600"
+cellpadding="0"
+cellspacing="0"
+style="
+background:#ffffff;
+margin:40px auto;
+border-radius:18px;
+overflow:hidden;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+">
+
+<tr>
+<td
+style="
+background:#F33B7D;
+padding:35px;
+text-align:center;
+color:white;
+"
+>
+
+<h1 style="margin:0;font-size:32px;">
+Flora
+</h1>
+
+<p style="margin-top:10px;font-size:16px;">
+Women's Health Companion
+</p>
+
+</td>
+</tr>
+
+<tr>
+<td style="padding:45px;">
+
+<h2
+style="
+margin-top:0;
+color:#222;
+font-size:28px;
+"
+>
+Welcome to Flora!
+</h2>
+
+<p
+style="
+font-size:16px;
+line-height:1.7;
+color:#555;
+"
+>
+Hi,
+</p>
+
+<p
+style="
+font-size:16px;
+line-height:1.7;
+color:#555;
+"
+>
+Thank you for creating your Flora account.
+
+Before you can start using Flora, please verify your email address.
+
+This helps us keep your account secure.
+</p>
+
+<div style="text-align:center;margin:40px 0;">
+
+<a
+href="${verifyURL}"
+style="
+display:inline-block;
+padding:16px 40px;
+background:#F33B7D;
+color:white;
+text-decoration:none;
+border-radius:12px;
+font-size:16px;
+font-weight:bold;
+"
+>
+Verify Email
+</a>
+
+</div>
+
+<p
+style="
+font-size:15px;
+line-height:1.7;
+color:#666;
+"
+>
+This verification link will expire in
+<strong>24 hours.</strong>
+</p>
+
+<p
+style="
+font-size:15px;
+line-height:1.7;
+color:#666;
+"
+>
+If you didn't create a Flora account, you can safely ignore this email.
+</p>
+
+<hr
+style="
+margin:35px 0;
+border:none;
+border-top:1px solid #eee;
+"
+/>
+
+<p
+style="
+font-size:13px;
+color:#999;
+line-height:1.7;
+"
+>
+
+Need help?
+Reply to this email or contact the Flora support team.
+
+</p>
+
+</td>
+</tr>
+
+<tr>
+<td
+style="
+background:#FFF5F8;
+padding:18px;
+text-align:center;
+font-size:13px;
+color:#888;
+"
+>
+
+© ${new Date().getFullYear()} Flora • Empowering Women's Health
+
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+`;
 
   await sendEmail({
     email: user.email,
@@ -170,7 +337,6 @@ const verifyEmail = async (token) => {
       $gt: Date.now(),
     },
   });
-  console.log("Found User:", user);
 
   if (!user) {
     throw new ApiError(
@@ -180,12 +346,12 @@ const verifyEmail = async (token) => {
   }
 
   user.isEmailVerified = true;
-  user.emailVerificationToken = "";
+  user.emailVerificationToken = undefined;
   user.emailVerificationExpire = undefined;
 
   await user.save();
 
-  const updatedUser = await User.findById(user._id);
+  return user;
 
 };
 const resendVerificationEmail = async (email) => {
