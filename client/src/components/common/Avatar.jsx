@@ -1,6 +1,6 @@
 export default function Avatar({
   name = "User",
-  image,
+  image = "",
   size = "h-9 w-9",
 }) {
   if (image) {
@@ -15,13 +15,13 @@ export default function Avatar({
 
   const initials = name
     .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("");
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2);
 
   return (
     <div
-      className={`flex ${size} flex-shrink-0 items-center justify-center rounded-full bg-[#F33B7D] text-xs font-semibold text-white`}
+      className={`${size} flex items-center justify-center rounded-full bg-[#F33B7D] text-white font-semibold`}
     >
       {initials}
     </div>

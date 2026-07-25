@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 import * as authService from "../services/auth.service";
+import * as profileService from "../services/profile.service";
 
 const AuthContext = createContext();
 
@@ -25,13 +26,8 @@ export function AuthProvider({ children }) {
     const { accessToken, refreshToken, user } = response.data;
 
     localStorage.setItem("accessToken", accessToken);
-
     localStorage.setItem("refreshToken", refreshToken);
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(user)
-    );
+    localStorage.setItem("user", JSON.stringify(user));
 
     setUser(user);
 
@@ -42,10 +38,31 @@ export function AuthProvider({ children }) {
     return await authService.register(data);
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await profileService.getProfile();
+
+      const latestUser = {
+    ...response.data.data.user,
+    ...response.data.data.profile,
+};
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(latestUser)
+      );
+
+      setUser(latestUser);
+
+      return latestUser;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const logout = async () => {
     try {
-      const token =
-        localStorage.getItem("accessToken");
+      const token = localStorage.getItem("accessToken");
 
       if (token) {
         await authService.logout(token);
@@ -55,9 +72,7 @@ export function AuthProvider({ children }) {
     }
 
     localStorage.removeItem("accessToken");
-
     localStorage.removeItem("refreshToken");
-
     localStorage.removeItem("user");
 
     setUser(null);
@@ -71,6 +86,7 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
+        refreshUser,
         setUser,
       }}
     >

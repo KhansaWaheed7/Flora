@@ -1,4 +1,7 @@
-import React from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 import { Link } from "react-router-dom";
 import Avatar from "../../components/common/Avatar";
 import DashboardLayout from "../../layouts/DashboardLayout";
@@ -8,44 +11,116 @@ import {
   Edit,
   Eye,
 } from "lucide-react";
+import * as profileService from "../../services/profile.service";
 
-const storedUser = JSON.parse(localStorage.getItem("user")) || {};
 
-const user = {
-  name: storedUser.fullName || "",
-  email: storedUser.email || "",
-  phone: storedUser.phone || "",
-  gender: storedUser.gender || "",
-  bloodGroup: storedUser.bloodGroup || "",
-  location: storedUser.location || "",
-  dateOfBirth: storedUser.dateOfBirth || "",
-};
-
-const personalInfo = [
-  { label: "Full Name", value: user.name || "Not added" },
-  { label: "Email Address", value: user.email || "Not added" },
-  { label: "Phone Number", value: user.phone || "Not added" },
-  { label: "Date of Birth", value: user.dateOfBirth || "Not added" },
-  { label: "Gender", value: user.gender || "Not added" },
-  { label: "Blood Group", value: user.bloodGroup || "Not added" },
-  { label: "Location", value: user.location || "Not added" },
+const getPersonalInfo = (profile) => [
+  {
+    label: "Full Name",
+    value: profile?.user?.fullName || "Not added",
+  },
+  {
+    label: "Email Address",
+    value: profile?.user?.email || "Not added",
+  },
+  {
+    label: "Phone Number",
+    value: profile?.user?.phone || "Not added",
+  },
+  {
+    label: "Date of Birth",
+    value: profile?.profile?.dateOfBirth
+      ? new Date(profile.profile.dateOfBirth).toLocaleDateString()
+      : "Not added",
+  },
+  {
+    label: "Gender",
+    value: profile?.profile?.gender || "Not added",
+  },
+  {
+    label: "Blood Group",
+    value: profile?.profile?.bloodGroup || "Not added",
+  },
+  {
+    label: "Location",
+    value: profile?.profile?.location || "Not added",
+  },
 ];
 
-const healthOverview = [
-  { label: "Cycle Length (Avg)", value: "28 Days" },
-  { label: "Period Length (Avg)", value: "5 Days" },
-  { label: "Last Period", value: "10 May 2025" },
-  { label: "Next Period", value: "15 May 2025" },
+const getHealthOverview = (profile) => [
+  {
+    label: "BMI",
+    value: profile?.bmi || "--",
+  },
+  {
+    label: "BMI Category",
+    value: profile?.bmiCategory || "--",
+  },
+  {
+    label: "Height",
+    value: profile?.profile?.height
+      ? `${profile.profile.height} cm`
+      : "--",
+  },
+  {
+    label: "Weight",
+    value: profile?.profile?.weight
+      ? `${profile.profile.weight} kg`
+      : "--",
+  },
 ];
 
-const connectedAccounts = [
-  { name: "Google", detail: user.email, status: "connected" },
-  { name: "Apple", detail: "Not Connected", status: "not-connected" },
-  { name: "Facebook", detail: "Not Connected", status: "not-connected" },
+const getConnectedAccounts = (profile) => [
+  {
+    name: "Google",
+    detail: profile?.user?.email || "",
+    status: "connected",
+  },
+  {
+    name: "Apple",
+    detail: "Not Connected",
+    status: "not-connected",
+  },
+  {
+    name: "Facebook",
+    detail: "Not Connected",
+    status: "not-connected",
+  },
 ];
 
 export default function ProfileDetailsPage() {
-  
+  const [profile, setProfile] = useState(null);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  loadProfile();
+}, []);
+
+const loadProfile = async () => {
+  try {
+    const response = await profileService.getProfile();
+    setProfile(response.data);
+  } catch (err) {
+    console.log(err);
+  } finally {
+    setLoading(false);
+  }
+};
+if (loading) {
+  return (
+    <DashboardLayout
+      title="My Profile"
+      subtitle="View and manage your profile details"
+    >
+      <div className="flex h-64 items-center justify-center">
+        Loading profile...
+      </div>
+    </DashboardLayout>
+  );
+}
+const personalInfo = getPersonalInfo(profile);
+const healthOverview = getHealthOverview(profile);
+const connectedAccounts = getConnectedAccounts(profile);
 
   return (
     <DashboardLayout
@@ -116,7 +191,11 @@ export default function ProfileDetailsPage() {
               Profile Picture
             </h2>
             <div className="relative">
-              <Avatar name={user.name} size="h-24 w-24 text-xl" />
+              <Avatar
+  name={profile?.user?.fullName}
+  image={profile?.profile?.avatar}
+  size="h-24 w-24 text-xl"
+/>
               <button className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#F33B7D] text-white shadow-[0_4px_10px_rgba(243,59,125,0.4)]">
                 <Camera className="h-3.5 w-3.5" />
               </button>

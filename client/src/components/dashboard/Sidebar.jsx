@@ -138,11 +138,11 @@ export default function Sidebar({
           {/* User Profile */}
           <div className="flex items-center gap-3 mb-4">
             <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#F33B7D] text-sm font-bold text-white">
-              {user?.name?.charAt(0) || "S"}
+              {(user?.fullName || user?.name || "U").charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-[#0D0D0D]">
-                {user?.name || "Sarah Khan"}
+                {user?.fullName || user?.name || "User"}
               </p>
             </div>
             <ChevronDown className="h-4 w-4 text-[#8F8C8C]" />

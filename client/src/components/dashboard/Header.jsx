@@ -152,9 +152,10 @@ export default function Header({
   sidebarOpen,
   setSidebarOpen,
   onSearch,
+  user,
 }) {
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  
   const [notifications, setNotifications] = useState([]);
 
   const [unreadCount, setUnreadCount] = useState(0);
@@ -415,12 +416,12 @@ export default function Header({
             }}
             className="flex items-center gap-2"
           >
-            <Avatar
-  name={user?.fullName || "User"}
-  avatarUrl={user?.avatar}
+           <Avatar
+  name={user?.fullName || user?.name || "User"}
+  image={user?.avatar}
 />
             <span className="hidden text-sm font-medium text-[#0D0D0D] sm:inline">
-  {user?.fullName || "User"}
+  {user?.fullName || user?.name || "User"}
 </span>
           </button>
 

@@ -2,16 +2,8 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/dashboard/Sidebar";
 import Header from "../components/dashboard/Header";
+import { useAuth } from "../context/AuthContext";
 
-// Service to get user data
-const userService = {
-  getUser: async () => {
-    // Replace with actual API call
-    // const response = await fetch('/api/user/profile');
-    // return response.json();
-    return null;
-  }
-};
 
 export default function DashboardLayout({
   children,
@@ -22,12 +14,12 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
- const storedUser = JSON.parse(localStorage.getItem("user")) || {};
 
-const [user, setUser] = useState({
-  name: storedUser.fullName || "",
-  email: storedUser.email || "",
-});
+const { user } = useAuth();
+const userName =
+  user?.fullName?.split(" ")[0] ||
+  user?.name?.split(" ")[0] ||
+  "there";
 
 const currentHour = new Date().getHours();
 
@@ -41,26 +33,8 @@ if (currentHour >= 12 && currentHour < 17) {
   greeting = "Good Night";
 }
 
-const userName = user.name?.split(" ")[0] || "there";
 const greetingTitle = `${greeting}, ${userName} `;
 
-  // Fetch user data on mount
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userData = await userService.getUser();
-        if (userData) {
-          setUser(userData);
-        }
-        // If API returns null, keep default user
-      } catch (error) {
-        console.error('Error fetching user:', error);
-        // Keep default user
-      } 
-    };
-
-    fetchUser();
-  }, []);
 
   // Handle search from header
   const handleSearch = (result) => {
