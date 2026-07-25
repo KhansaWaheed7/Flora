@@ -6,7 +6,6 @@ const asyncHandler = require("../utils/asyncHandler");
 exports.protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  // Authorization: Bearer <token>
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer ")
@@ -18,7 +17,13 @@ exports.protect = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, "Access denied. No token provided.");
   }
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (error) {
+    throw new ApiError(401, "Session expired. Please login again.");
+  }
 
   const user = await User.findById(decoded.id);
 

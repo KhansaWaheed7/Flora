@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import Avatar from "../../components/common/Avatar";
-
+import * as profileService from "../../services/profile.service";
+import { useAuth } from "../../context/AuthContext";
 import {
   Camera,
   Cake,
@@ -19,70 +20,149 @@ import {
 
 
 
-const storedUser = JSON.parse(localStorage.getItem("user")) || {};
 
-const user = {
-  name: storedUser.fullName || "",
-  email: storedUser.email || "",
-  phone: storedUser.phone || "",
-};
+export default function ProfilePage() {
+  const { user, setUser } = useAuth();
+  const [profile, setProfile] = useState(null);
 
-
+const [loading, setLoading] = useState(true);
 const fields = [
-  user.name,
-  user.email,
-  user.phone,
-  storedUser.gender,
-  storedUser.dateOfBirth,
-  storedUser.bloodGroup,
-  storedUser.location,
+  profile?.user?.fullName,
+  profile?.user?.email,
+  profile?.user?.phone,
+  profile?.user?.gender,
+  profile?.user?.dateOfBirth,
+  profile?.user?.bloodGroup,
+  profile?.user?.location,
 ];
 
-const completed = fields.filter(Boolean).length;
-const completion = Math.round((completed / fields.length) * 100);
+
+const completion = profile?.completion || 0;
 
 const badges = [
   {
     icon: Cake,
-    value: storedUser.dateOfBirth || "Not added",
+    value: profile?.profile?.dateOfBirth
+      ? new Date(profile.profile.dateOfBirth).toLocaleDateString()
+      : "Not added",
     label: "Date of Birth",
   },
   {
     icon: Venus,
-    value: storedUser.gender || "Not added",
+    value: profile?.profile?.gender || "Not added",
     label: "Gender",
   },
   {
     icon: Droplet,
-    value: storedUser.bloodGroup || "Not added",
+    value: profile?.profile?.bloodGroup || "Not added",
     label: "Blood Group",
   },
   {
     icon: MapPin,
-    value: storedUser.location || "Not added",
+    value: profile?.profile?.location || "Not added",
     label: "Location",
   },
 ];
-
 const healthSummary = [
-  { label: "Cycle Length", value: "28 Days", sub: "Average" },
-  { label: "Period Length", value: "5 Days", sub: "Average" },
-  { label: "Last Period", value: "10 May 2025", sub: "" },
-  { label: "Next Period", value: "15 May 2025", sub: "In 5 Days" },
+  {
+    label: "BMI",
+    value: profile?.bmi || "--",
+    sub: profile?.bmiCategory || "",
+  },
+  {
+    label: "Height",
+    value: profile?.profile?.height
+      ? `${profile.profile.height} cm`
+      : "--",
+    sub: "",
+  },
+  {
+    label: "Weight",
+    value: profile?.profile?.weight
+      ? `${profile.profile.weight} kg`
+      : "--",
+    sub: "",
+  },
+  {
+    label: "Age",
+    value: profile?.age || "--",
+    sub: "",
+  },
 ];
-
 const quickActions = [
-  { icon: UserCog, label: "Edit Profile", to: "/profile/edit" },
-  { icon: User, label: "View Full Profile", to: "/profile/details" },
-  { icon: ShieldCheck, label: "Account Settings", to: "/settings" },
-  { icon: Heart, label: "Health Preferences", to: "/settings" },
-  { icon: KeyRound, label: "Privacy & Security", to: "/settings" },
+  {
+    icon: UserCog,
+    label: "Edit Profile",
+    to: "/profile/edit",
+  },
+  {
+    icon: User,
+    label: "View Full Profile",
+    to: "/profile/details",
+  },
+  {
+    icon: ShieldCheck,
+    label: "Account Settings",
+    to: "/settings",
+  },
+  {
+    icon: Heart,
+    label: "Health Preferences",
+    to: "/settings",
+  },
+  {
+    icon: KeyRound,
+    label: "Privacy & Security",
+    to: "/settings",
+  },
 ];
 
-export default function ProfilePage() {
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+useEffect(() => {
+  fetchProfile();
+}, []);
+
+const fetchProfile = async () => {
+  try {
+    const response = await profileService.getProfile();
+
+setProfile(response.data);
+
+const latestUser = {
+  ...response.data.user,
+  ...response.data.profile,
+
+  age: response.data.age,
+  bmi: response.data.bmi,
+  bmiCategory: response.data.bmiCategory,
+  completion: response.data.completion,
+};
+
+    setUser(latestUser);
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(latestUser)
+    );
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+if (loading) {
+  return (
+    <DashboardLayout
+      title="My Profile"
+      subtitle="Loading profile..."
+    >
+      <div className="flex items-center justify-center h-96">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    </DashboardLayout>
+  );
+}
 
   return (
     <DashboardLayout
@@ -106,14 +186,18 @@ export default function ProfilePage() {
           <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 lg:col-span-2">
             <div className="flex flex-wrap items-start gap-5">
               <div className="relative">
-                <Avatar name={user.name} size="h-20 w-20 text-lg" />
+                <Avatar
+    name={profile?.user?.fullName}
+    image={profile?.profile?.avatar}
+    size="h-20 w-20 text-lg"
+/>
                 <button className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#F33B7D] text-white shadow-[0_4px_10px_rgba(243,59,125,0.4)]">
                   <Camera className="h-3.5 w-3.5" />
                 </button>
               </div>
               <div>
                 <h2 className="font-display text-lg font-semibold text-[#0D0D0D]">
-                  {user.name}
+                  {user.fullName}
                 </h2>
                 <p className="mt-1 text-sm text-[#8F8C8C]">{user.email}</p>
                 <p className="text-sm text-[#8F8C8C]">{user.phone || "Not added"}</p>
