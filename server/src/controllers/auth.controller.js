@@ -11,13 +11,12 @@ const {
 const {
   registerUser,
   loginUser,
-  loginWithGoogle,
   saveRefreshToken,
   forgotPassword,
   resetPassword,
   sendVerificationEmail,
   resendVerificationEmail,
-  verifyEmail: verifyEmailService,
+  verifyEmail: verifyEmailService
 } = require("../services/auth.service");
 
 exports.register = asyncHandler(async (req, res) => {
@@ -86,45 +85,6 @@ await saveRefreshToken(
     )
 
 );
-});
-
-exports.googleLogin = asyncHandler(async (req, res) => {
-
-  const { token } = req.body;
-
-  if (!token) {
-    throw new ApiError(
-      400,
-      "Google token is required."
-    );
-  }
-
-  const result = await loginWithGoogle(token);
-
-  res.status(200).json(
-
-    new ApiResponse(
-
-      200,
-
-      "Google login successful",
-
-      {
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-
-        user: {
-          id: result.user._id,
-          fullName: result.user.fullName,
-          email: result.user.email,
-          role: result.user.role,
-        },
-      }
-
-    )
-
-  );
-
 });
 
 exports.refreshToken = asyncHandler(async (req, res) => {
