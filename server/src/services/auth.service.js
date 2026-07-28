@@ -2,12 +2,15 @@ const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
+<<<<<<< HEAD
 const googleClient = require("../config/google");
 
 const {
   generateAccessToken,
   generateRefreshToken,
 } = require("../utils/jwt");
+=======
+>>>>>>> 34dd02696b0e174e8eaa84a08828d961448fe46e
 
 const generateVerificationToken = require("../utils/generateVerificationToken");
 const generateResetToken = require("../utils/generateResetToken");
@@ -375,6 +378,7 @@ const resendVerificationEmail = async (email) => {
     await sendVerificationEmail(user);
 
 };
+<<<<<<< HEAD
 const loginWithGoogle = async (idToken) => {
 
   const ticket = await googleClient.verifyIdToken({
@@ -444,15 +448,24 @@ const loginWithGoogle = async (idToken) => {
     user,
   };
 };
+=======
+>>>>>>> 34dd02696b0e174e8eaa84a08828d961448fe46e
 
 module.exports = {
   registerUser,
   loginUser,
+<<<<<<< HEAD
   loginWithGoogle,
+=======
+>>>>>>> 34dd02696b0e174e8eaa84a08828d961448fe46e
   saveRefreshToken,
   forgotPassword,
   resetPassword,
   sendVerificationEmail,
   verifyEmail,
+<<<<<<< HEAD
   resendVerificationEmail,
+=======
+  resendVerificationEmail
+>>>>>>> 34dd02696b0e174e8eaa84a08828d961448fe46e
 };

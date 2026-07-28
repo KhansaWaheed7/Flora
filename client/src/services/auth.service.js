@@ -97,6 +97,7 @@ export const resendVerification = async (email) => {
   });
 
   return response.data;
+<<<<<<< HEAD
 };
 
 /*
@@ -111,4 +112,6 @@ export const googleLogin = async (token) => {
 
   return response.data;
 
+=======
+>>>>>>> 34dd02696b0e174e8eaa84a08828d961448fe46e
 };
