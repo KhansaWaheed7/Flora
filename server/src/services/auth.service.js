@@ -2,6 +2,12 @@ const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
+const googleClient = require("../config/google");
+
+const {
+  generateAccessToken,
+  generateRefreshToken,
+} = require("../utils/jwt");
 
 const generateVerificationToken = require("../utils/generateVerificationToken");
 const generateResetToken = require("../utils/generateResetToken");
@@ -370,13 +376,84 @@ const resendVerificationEmail = async (email) => {
 
 };
 
+const loginWithGoogle = async (idToken) => {
+
+  const ticket = await googleClient.verifyIdToken({
+    idToken,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+
+  const {
+    sub,
+    email,
+    name,
+    picture,
+    email_verified,
+  } = payload;
+
+  if (!email_verified) {
+    throw new ApiError(
+      401,
+      "Google account email is not verified."
+    );
+  }
+
+  let user = await User.findOne({ email });
+
+  if (!user) {
+
+    user = await User.create({
+      fullName: name,
+      email,
+      googleId: sub,
+      provider: "google",
+      profilePicture: picture,
+      isEmailVerified: true,
+    });
+
+  } else {
+
+    if (!user.googleId) {
+      user.googleId = sub;
+    }
+
+    user.provider = "google";
+
+    if (!user.profilePicture) {
+      user.profilePicture = picture;
+    }
+
+    user.isEmailVerified = true;
+
+    await user.save();
+  }
+
+  const accessToken = generateAccessToken(user);
+
+  const refreshToken = generateRefreshToken(user);
+
+  await saveRefreshToken(
+    user._id,
+    refreshToken
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    user,
+  };
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  loginWithGoogle,
   saveRefreshToken,
   forgotPassword,
   resetPassword,
   sendVerificationEmail,
   verifyEmail,
-  resendVerificationEmail
+  resendVerificationEmail,
 };

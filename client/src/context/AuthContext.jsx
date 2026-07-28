@@ -34,6 +34,34 @@ export function AuthProvider({ children }) {
     return response;
   };
 
+
+  const googleLogin = async (data) => {
+
+  const {
+    accessToken,
+    refreshToken,
+    user,
+  } = data;
+
+  localStorage.setItem(
+    "accessToken",
+    accessToken
+  );
+
+  localStorage.setItem(
+    "refreshToken",
+    refreshToken
+  );
+
+  localStorage.setItem(
+    "user",
+    JSON.stringify(user)
+  );
+
+  setUser(user);
+
+  return user;
+};
   const register = async (data) => {
     return await authService.register(data);
   };
@@ -84,6 +112,7 @@ export function AuthProvider({ children }) {
         user,
         loading,
         login,
+        googleLogin,
         register,
         logout,
         refreshUser,

@@ -7,6 +7,7 @@ const { protect } = require("../middlewares/auth.middleware");
 const {
   register,
   login,
+  googleLogin,
   logout,
   refreshToken,
   forgotPassword,
@@ -22,6 +23,10 @@ router.post(
 );
 
 router.post("/login", login);
+router.post(
+  "/google",
+  googleLogin
+);
 router.post(
   "/forgot-password",
   forgotPassword

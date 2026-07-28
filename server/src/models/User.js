@@ -18,12 +18,21 @@ const userSchema = new mongoose.Schema(
     },
 
     password: {
-      type: String,
-      required: true,
-      minlength: 8,
-      select: false,
-    },
+  type: String,
+  minlength: 8,
+  select: false,
+},
 
+    googleId: {
+  type: String,
+  default: "",
+},
+
+provider: {
+  type: String,
+  enum: ["local", "google"],
+  default: "local",
+},
     phone: {
       type: String,
       default: "",
@@ -73,9 +82,13 @@ const userSchema = new mongoose.Schema(
   }
 );
 userSchema.pre("save", async function () {
+
+  if (!this.password) return;
+
   if (!this.isModified("password")) return;
 
   this.password = await bcrypt.hash(this.password, 10);
+
 });
 userSchema.methods.comparePassword = function (password) {
   return bcrypt.compare(password, this.password);

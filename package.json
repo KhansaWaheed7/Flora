@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "react-hot-toast": "^2.6.0"
+    "express-validator": "^7.3.2",
+    "react-hot-toast": "^2.6.0",
+    "streamifier": "^0.1.1"
   }
 }
