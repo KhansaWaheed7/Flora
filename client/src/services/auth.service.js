@@ -98,3 +98,17 @@ export const resendVerification = async (email) => {
 
   return response.data;
 };
+
+/*
+Google Login
+*/
+
+export const googleLogin = async (token) => {
+
+  const response = await api.post("/auth/google", {
+    token,
+  });
+
+  return response.data;
+
+};
