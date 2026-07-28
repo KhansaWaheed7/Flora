@@ -11,20 +11,13 @@ const {
 const {
   registerUser,
   loginUser,
-<<<<<<< HEAD
   loginWithGoogle,
-=======
->>>>>>> 34dd02696b0e174e8eaa84a08828d961448fe46e
   saveRefreshToken,
   forgotPassword,
   resetPassword,
   sendVerificationEmail,
   resendVerificationEmail,
-<<<<<<< HEAD
   verifyEmail: verifyEmailService,
-=======
-  verifyEmail: verifyEmailService
->>>>>>> 34dd02696b0e174e8eaa84a08828d961448fe46e
 } = require("../services/auth.service");
 
 exports.register = asyncHandler(async (req, res) => {
@@ -95,7 +88,6 @@ await saveRefreshToken(
 );
 });
 
-<<<<<<< HEAD
 exports.googleLogin = asyncHandler(async (req, res) => {
 
   const { token } = req.body;
@@ -135,8 +127,6 @@ exports.googleLogin = asyncHandler(async (req, res) => {
 
 });
 
-=======
->>>>>>> 34dd02696b0e174e8eaa84a08828d961448fe46e
 exports.refreshToken = asyncHandler(async (req, res) => {
 
     const { refreshToken } = req.body;

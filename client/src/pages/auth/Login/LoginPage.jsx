@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { login } from "../../../services/auth.service";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, HeartPulse, ShieldCheck, Users } from "lucide-react";
-
 import { GoogleLogin } from "@react-oauth/google";
 import { googleLogin } from "../../../services/auth.service";
 
@@ -16,9 +15,6 @@ import PasswordField from "../../../components/ui/PasswordField";
 import Button from "../../../components/ui/Button";
 import FloraLogo from "../../../components/common/Logo"
 import WomanPng from "../../../assets/woman.png"
-
-// Social media logos
-import { FaGoogle, FaApple, FaFacebook } from 'react-icons/fa';
 
 const trustBadges = [
   { icon: HeartPulse, label: "Your Health\nOur Priority" },

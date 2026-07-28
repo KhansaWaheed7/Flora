@@ -18,7 +18,6 @@ const userSchema = new mongoose.Schema(
     },
 
     password: {
-<<<<<<< HEAD
   type: String,
   minlength: 8,
   select: false,
@@ -34,13 +33,6 @@ provider: {
   enum: ["local", "google"],
   default: "local",
 },
-=======
-      type: String,
-      required: true,
-      minlength: 8,
-      select: false,
-    },
->>>>>>> 34dd02696b0e174e8eaa84a08828d961448fe46e
 
     phone: {
       type: String,
@@ -91,7 +83,6 @@ provider: {
   }
 );
 userSchema.pre("save", async function () {
-<<<<<<< HEAD
 
   if (!this.password) return;
 
@@ -99,11 +90,6 @@ userSchema.pre("save", async function () {
 
   this.password = await bcrypt.hash(this.password, 10);
 
-=======
-  if (!this.isModified("password")) return;
-
-  this.password = await bcrypt.hash(this.password, 10);
->>>>>>> 34dd02696b0e174e8eaa84a08828d961448fe46e
 });
 userSchema.methods.comparePassword = function (password) {
   return bcrypt.compare(password, this.password);
