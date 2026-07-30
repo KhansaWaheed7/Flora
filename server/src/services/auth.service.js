@@ -419,7 +419,6 @@ const loginWithGoogle = async (idToken) => {
       user.googleId = sub;
     }
 
-    user.provider = "google";
 
     if (!user.profilePicture) {
       user.profilePicture = picture;

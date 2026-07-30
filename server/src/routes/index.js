@@ -8,6 +8,7 @@ const cycleRoutes = require("./cycle.routes");
 const adminRoutes = require("./admin.routes");
 const profileRoutes = require("./profile.routes");
 const pregnancyRoutes = require("./pregnancy.routes");
+const pcosRoutes = require("./pcos.routes");
 
 const pregnancyReminderRoutes = require("./pregnancyReminder.routes");
 
@@ -22,6 +23,8 @@ router.use(
   "/pregnancy/reminders",
   pregnancyReminderRoutes
 );
+router.use("/pcos", pcosRoutes);
+
 
 router.get("/health", (req, res) => {
   res.status(200).json({
