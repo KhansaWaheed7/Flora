@@ -5,5 +5,8 @@ build
 .vscode
 .idea
 __pycache__
+# Model files
+ai/models/*.pkl
+*.pyc
 venv
 *.log
