@@ -11,6 +11,13 @@ import ProfilePage from "./pages/profile/ProfilePage";
 import ProfileDetailsPage from "./pages/profile/ProfileDetailsPage";
 import EditProfilePage from "./pages/profile/EditProfilePage";
 import SettingsPage from "./pages/settings/SettingsPage";
+import CycleTrackerDashboard from "./pages/cycle-tracker/CycleTrackerDashboard";
+import LogPeriod from "./pages/cycle-tracker/LogPeriod";
+import EditCycle from "./pages/cycle-tracker/EditCycle";
+import CycleHistory from "./pages/cycle-tracker/CycleHistory";
+import CycleDetails from "./pages/cycle-tracker/CycleDetails";
+import Predictions from "./pages/cycle-tracker/Predictions";
+import CycleStatistics from "./pages/cycle-tracker/CycleStatistics";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 
@@ -55,6 +62,62 @@ function App() {
   element={
     <ProtectedRoute>
       <SettingsPage />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/cycle-tracker"
+  element={
+    <ProtectedRoute>
+      <CycleTrackerDashboard />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/cycle-tracker/log"
+  element={
+    <ProtectedRoute>
+      <LogPeriod />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/cycle-tracker/history"
+  element={
+    <ProtectedRoute>
+      <CycleHistory />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/cycle-tracker/predictions"
+  element={
+    <ProtectedRoute>
+      <Predictions />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/cycle-tracker/statistics"
+  element={
+    <ProtectedRoute>
+      <CycleStatistics />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/cycle-tracker/:id/edit"
+  element={
+    <ProtectedRoute>
+      <EditCycle />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/cycle-tracker/:id"
+  element={
+    <ProtectedRoute>
+      <CycleDetails />
     </ProtectedRoute>
   }
 />

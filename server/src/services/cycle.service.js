@@ -10,9 +10,6 @@ const {
 const detectIrregularCycle = require("../utils/irregularCycle");
 const analyzeCycle = require("../utils/cycleHealth");
 
-/**
- * Create a new menstrual cycle
- */
 const createCycle = async (userId, data) => {
   // Calculate period length
   const periodLength =
