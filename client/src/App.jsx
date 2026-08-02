@@ -18,6 +18,21 @@ import CycleHistory from "./pages/cycle-tracker/CycleHistory";
 import CycleDetails from "./pages/cycle-tracker/CycleDetails";
 import Predictions from "./pages/cycle-tracker/Predictions";
 import CycleStatistics from "./pages/cycle-tracker/CycleStatistics";
+import PCOSIntro from "./pages/pcos-detection/PCOSIntro";
+import PCOSQuestionnaire from "./pages/pcos-detection/PCOSQuestionnaire";
+import PCOSAnalyzing from "./pages/pcos-detection/PCOSAnalyzing";
+import PCOSResult from "./pages/pcos-detection/PCOSResult";
+import PCOSRecommendations from "./pages/pcos-detection/PCOSRecommendations";
+import PCOSHistory from "./pages/pcos-detection/PCOSHistory";
+import PCOSDetails from "./pages/pcos-detection/PCOSDetails";
+import PregnancyDashboard from "./pages/pregnancy/PregnancyDashboard";
+import RegisterPregnancy from "./pages/pregnancy/RegisterPregnancy";
+import PregnancyOverview from "./pages/pregnancy/PregnancyOverview";
+import PregnancyTimeline from "./pages/pregnancy/PregnancyTimeline";
+import WeeklyGuide from "./pages/pregnancy/WeeklyGuide";
+import WeekDetails from "./pages/pregnancy/WeekDetails";
+import PregnancyReminders from "./pages/pregnancy/PregnancyReminders";
+import ReminderDetails from "./pages/pregnancy/ReminderDetails";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 
@@ -118,6 +133,126 @@ function App() {
   element={
     <ProtectedRoute>
       <CycleDetails />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pcos-detection"
+  element={
+    <ProtectedRoute>
+      <PCOSIntro />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pcos-detection/assessment"
+  element={
+    <ProtectedRoute>
+      <PCOSQuestionnaire />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pcos-detection/analyzing"
+  element={
+    <ProtectedRoute>
+      <PCOSAnalyzing />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pcos-detection/result"
+  element={
+    <ProtectedRoute>
+      <PCOSResult />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pcos-detection/recommendations"
+  element={
+    <ProtectedRoute>
+      <PCOSRecommendations />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pcos-detection/history"
+  element={
+    <ProtectedRoute>
+      <PCOSHistory />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pcos-detection/:id"
+  element={
+    <ProtectedRoute>
+      <PCOSDetails />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pregnancy"
+  element={
+    <ProtectedRoute>
+      <PregnancyDashboard />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pregnancy/update"
+  element={
+    <ProtectedRoute>
+      <RegisterPregnancy />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pregnancy/overview"
+  element={
+    <ProtectedRoute>
+      <PregnancyOverview />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pregnancy/timeline"
+  element={
+    <ProtectedRoute>
+      <PregnancyTimeline />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pregnancy/weekly-guide"
+  element={
+    <ProtectedRoute>
+      <WeeklyGuide />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pregnancy/weekly-guide/:week"
+  element={
+    <ProtectedRoute>
+      <WeekDetails />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pregnancy/reminders"
+  element={
+    <ProtectedRoute>
+      <PregnancyReminders />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/pregnancy/reminders/:id"
+  element={
+    <ProtectedRoute>
+      <ReminderDetails />
     </ProtectedRoute>
   }
 />
