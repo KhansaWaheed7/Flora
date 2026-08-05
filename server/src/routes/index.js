@@ -9,12 +9,13 @@ const adminRoutes = require("./admin.routes");
 const profileRoutes = require("./profile.routes");
 const pregnancyRoutes = require("./pregnancy.routes");
 const pcosRoutes = require("./pcos.routes");
-
 const pregnancyReminderRoutes = require("./pregnancyReminder.routes");
+const chatRoutes = require("./chat.routes");
+const doctorRoutes = require("./doctor.routes");
+const messageRoutes = require("./message.routes");
 
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
-
 router.use("/cycles", cycleRoutes);
 router.use("/admin", adminRoutes);
 router.use("/profile", profileRoutes);
@@ -24,6 +25,9 @@ router.use(
   pregnancyReminderRoutes
 );
 router.use("/pcos", pcosRoutes);
+router.use("/chat", chatRoutes);
+router.use("/doctor", doctorRoutes);
+router.use("/messages", messageRoutes);
 
 
 router.get("/health", (req, res) => {

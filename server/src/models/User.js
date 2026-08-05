@@ -48,6 +48,31 @@ provider: {
       default: "user",
     },
 
+    doctorApprovalStatus: {
+  type: String,
+  enum: ["pending", "approved", "rejected"],
+  default: "approved",
+},
+
+specialization: {
+  type: String,
+  default: "",
+},
+
+licenseNumber: {
+  type: String,
+  default: "",
+},
+
+hospital: {
+  type: String,
+  default: "",
+},
+
+yearsOfExperience: {
+  type: Number,
+},
+
     isEmailVerified: {
       type: Boolean,
       default: false,

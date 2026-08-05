@@ -13,6 +13,7 @@ const generateVerificationToken = require("../utils/generateVerificationToken");
 const generateResetToken = require("../utils/generateResetToken");
 
 const registerUser = async (data) => {
+
   const existingUser = await User.findOne({
     email: data.email,
   });
@@ -21,12 +22,23 @@ const registerUser = async (data) => {
     throw new ApiError(409, "Email already exists");
   }
 
+  // -----------------------------
+  // Patients are approved immediately
+  // Doctors require admin approval
+  // -----------------------------
+
+  if (data.role === "doctor") {
+    data.doctorApprovalStatus = "pending";
+  } else {
+    data.doctorApprovalStatus = "approved";
+  }
+
   const user = await User.create(data);
 
-  // Send verification email
   await sendVerificationEmail(user);
 
   return user;
+
 };
 
 const loginUser = async (email, password) => {
@@ -46,6 +58,26 @@ const loginUser = async (email, password) => {
   throw new ApiError(
     403,
     "Please verify your email before logging in."
+  );
+}
+
+if (
+  user.role === "doctor" &&
+  user.doctorApprovalStatus === "pending"
+) {
+  throw new ApiError(
+    403,
+    "Your doctor account is awaiting admin approval."
+  );
+}
+
+if (
+  user.role === "doctor" &&
+  user.doctorApprovalStatus === "rejected"
+) {
+  throw new ApiError(
+    403,
+    "Your doctor account has been rejected. Please contact support."
   );
 }
 
