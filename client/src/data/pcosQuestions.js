@@ -3,79 +3,104 @@ export const questions = [
     key: "age",
     type: "number",
     label: "How old are you?",
-    sidebarLabel: "What is your age?",
+    sidebarLabel: "Your age",
     unit: "years",
     placeholder: "e.g. 22",
   },
+
   {
     key: "heightWeight",
     type: "height_weight",
-    label: "What is your height and weight?",
-    sidebarLabel: "What is your BMI?",
-    hint: "We'll use this to calculate your BMI automatically.",
+    label: "What are your height and weight?",
+    sidebarLabel: "Height & weight",
+    hint: "We'll use these to calculate your BMI automatically.",
   },
+
   {
     key: "cycleLength",
     type: "number",
-    label: "What is your average menstrual cycle length?",
-    sidebarLabel: "What is your average menstrual cycle length?",
+    label: "How long is your menstrual cycle usually?",
+    sidebarLabel: "Cycle length",
     unit: "days",
-    placeholder: "e.g. 35",
-    hint: "Count the number of days from the first day of one period to the first day of the next period.",
-    helperNote: "A normal cycle length is typically 21-35 days.",
+    placeholder: "e.g. 28",
+    hint:
+      "Count from the first day of one period to the first day of your next period.",
+    helperNote:
+      "Most menstrual cycles are around 21–35 days, but everyone's cycle can be different.",
   },
+
   {
     key: "irregularCycles",
-    type: "yesno",
-    label: "Are your menstrual cycles irregular?",
-    sidebarLabel: "Do you have irregular periods?",
+    type: "frequency",
+    label: "How often is your menstrual cycle irregular?",
+    sidebarLabel: "Irregular periods",
+    hint:
+      "Think about how often your periods come earlier, later, or vary significantly from your usual pattern.",
   },
+
   {
     key: "weightGain",
-    type: "yesno",
-    label: "Have you experienced weight gain recently?",
-    sidebarLabel: "Do you experience weight gain?",
+    type: "frequency",
+    label: "How often have you noticed unexplained weight gain?",
+    sidebarLabel: "Weight changes",
+    hint:
+      "Consider changes that happened without a major change in your diet or activity.",
   },
+
   {
     key: "acne",
-    type: "yesno",
-    label: "Do you frequently experience acne or persistent pimples?",
-    sidebarLabel: "Do you have acne?",
+    type: "frequency",
+    label: "How often do you experience acne or persistent breakouts?",
+    sidebarLabel: "Acne & breakouts",
+    hint:
+      "Include frequent or persistent breakouts, especially on the face, chest, or back.",
   },
+
   {
     key: "hairLoss",
-    type: "yesno",
-    label: "Have you noticed excessive hair loss or thinning?",
-    sidebarLabel: "Do you have hair loss?",
+    type: "frequency",
+    label: "How often do you notice unusual hair loss or thinning?",
+    sidebarLabel: "Hair loss",
+    hint:
+      "Think about noticeable thinning or more hair loss than you normally experience.",
   },
+
   {
     key: "hirsutism",
-    type: "yesno",
-    label:
-      "Do you have excessive hair growth on your face, chest, abdomen, or other areas?",
-    sidebarLabel: "Do you have excessive hair growth?",
+    type: "frequency",
+    label: "How often do you notice extra hair growth on your face or body?",
+    sidebarLabel: "Excess hair growth",
+    hint:
+      "For example, noticeable hair growth on the face, chest, abdomen, or other areas.",
   },
+
   {
     key: "skinPatches",
     type: "yesno",
-    label:
-      "Have you noticed dark, velvety patches of skin around your neck, underarms, or other body folds?",
-    sidebarLabel: "Do you have skin darkening?",
+    label: "Have you noticed darker, velvety patches of skin?",
+    sidebarLabel: "Skin changes",
+    hint:
+      "These patches may appear around the neck, underarms, or other skin folds.",
   },
+
   {
     key: "exerciseFrequency",
     type: "number",
-    label: "How many days per week do you exercise?",
-    sidebarLabel: "How often do you exercise?",
+    label: "How many days a week do you usually exercise?",
+    sidebarLabel: "Physical activity",
     unit: "days/week",
     placeholder: "e.g. 3",
-    hint: "Enter a number from 0 (never) to 7 (every day).",
+    hint:
+      "Enter a number from 0 to 7. Include activities such as walking, workouts, sports, or other regular exercise.",
   },
+
   {
     key: "fastFood",
-    type: "yesno",
-    label: "Do you eat fast food frequently?",
-    sidebarLabel: "Do you eat fast food often?",
+    type: "frequency",
+    label: "How often do you eat fast food or highly processed foods?",
+    sidebarLabel: "Diet habits",
+    hint:
+      "Think about foods such as fast food, fried foods, packaged snacks, or highly processed meals.",
   },
 ];
 

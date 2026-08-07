@@ -3,33 +3,73 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Info, Check } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import { questions, TOTAL_QUESTIONS } from "../../data/pcosQuestions";
+function frequencyToBoolean(value) {
+  return ["Rarely", "Sometimes", "Often", "Frequently"].includes(value);
+}
 
-// Shapes the raw answers into the payload sent to POST /pcos.
-// NOTE: server/src/validators/pcos.validator.js hasn't been shared yet,
-// so these exact field names/types are a best guess (yes/no -> boolean,
-// height/weight flattened, bmi computed client-side). If submission
-// fails validation, share that validator file and this will be corrected.
 function buildPayload(answers) {
-  const height = Number(answers.heightWeight?.height);
-  const weight = Number(answers.heightWeight?.weight);
-  const bmi =
-    height && weight ? +(weight / (height / 100) ** 2).toFixed(1) : undefined;
+  // Get height value and unit
+  const heightValue = Number(answers.heightWeight?.height);
+  const heightUnit = answers.heightWeight?.heightUnit || "cm";
 
-  // Field names match server/src/validators/pcos.validator.js exactly.
+  // Convert height to cm
+  let heightInCm = heightValue;
+
+  if (heightUnit === "ft") {
+    heightInCm = heightValue * 30.48;
+  } else if (heightUnit === "in") {
+    heightInCm = heightValue * 2.54;
+  }
+
+  const weight = Number(answers.heightWeight?.weight);
+
+  const bmi =
+    heightInCm && weight
+      ? +(weight / (heightInCm / 100) ** 2).toFixed(1)
+      : undefined;
+
   return {
     age: Number(answers.age),
-    height,
+
+    height: heightInCm,
+
     weight,
+
     bmi,
+
     cycleLength: Number(answers.cycleLength),
-    irregularPeriods: answers.irregularCycles === "Yes",
-    weightGain: answers.weightGain === "Yes",
-    acne: answers.acne === "Yes",
-    hairLoss: answers.hairLoss === "Yes",
-    excessiveHairGrowth: answers.hirsutism === "Yes",
-    darkSkinPatches: answers.skinPatches === "Yes",
-    exerciseFrequency: Number(answers.exerciseFrequency),
-    fastFood: answers.fastFood === "Yes",
+
+    irregularPeriods: frequencyToBoolean(
+      answers.irregularCycles
+    ),
+
+    weightGain: frequencyToBoolean(
+      answers.weightGain
+    ),
+
+    acne: frequencyToBoolean(
+      answers.acne
+    ),
+
+    hairLoss: frequencyToBoolean(
+      answers.hairLoss
+    ),
+
+    excessiveHairGrowth: frequencyToBoolean(
+      answers.hirsutism
+    ),
+
+    darkSkinPatches: frequencyToBoolean(
+      answers.skinPatches
+    ),
+
+    exerciseFrequency: Number(
+      answers.exerciseFrequency
+    ),
+
+    fastFood: frequencyToBoolean(
+      answers.fastFood
+    ),
   };
 }
 
@@ -44,7 +84,12 @@ export default function PCOSQuestionnaire() {
   const isAnswered = () => {
     const val = answers[current.key];
     if (current.type === "height_weight") {
-      return val?.height && val?.weight;
+      const height = Number(val?.height);
+      const weight = Number(val?.weight);
+      if (!val?.heightUnit) return false;
+      if (isNaN(height) || height <= 0) return false;
+      if (isNaN(weight) || weight <= 0) return false;
+      return true;
     }
     return val !== undefined && val !== "";
   };
@@ -67,6 +112,71 @@ export default function PCOSQuestionnaire() {
 
   const setAnswer = (value) => {
     setAnswers((prev) => ({ ...prev, [current.key]: value }));
+  };
+
+  // Handle number input - only prevent negative values
+  const handleNumberChange = (e) => {
+    const value = e.target.value;
+    if (value === '' || value === '-' || value === '.') {
+      setAnswer(value);
+      return;
+    }
+    const num = Number(value);
+    if (!isNaN(num) && num >= 0) {
+      setAnswer(value);
+    }
+  };
+
+  // Handle height input - only prevent negative values
+  const handleHeightChange = (e) => {
+    const value = e.target.value;
+    if (value === '' || value === '-' || value === '.') {
+      setAnswer({
+        ...answers.heightWeight,
+        height: value,
+      });
+      return;
+    }
+    const num = Number(value);
+    if (!isNaN(num) && num >= 0) {
+      setAnswer({
+        ...answers.heightWeight,
+        height: value,
+      });
+    }
+  };
+
+  // Handle weight input - only prevent negative values
+  const handleWeightChange = (e) => {
+    const value = e.target.value;
+    if (value === '' || value === '-' || value === '.') {
+      setAnswer({
+        ...answers.heightWeight,
+        weight: value,
+      });
+      return;
+    }
+    const num = Number(value);
+    if (!isNaN(num) && num >= 0) {
+      setAnswer({
+        ...answers.heightWeight,
+        weight: value,
+      });
+    }
+  };
+
+  // Get placeholder based on selected unit
+  const getHeightPlaceholder = () => {
+    const unit = answers.heightWeight?.heightUnit || 'cm';
+    switch(unit) {
+      case 'ft':
+        return '5.8';
+      case 'in':
+        return '65';
+      case 'cm':
+      default:
+        return '165';
+    }
   };
 
   return (
@@ -111,7 +221,7 @@ export default function PCOSQuestionnaire() {
                 <input
                   type="number"
                   value={answers[current.key] || ""}
-                  onChange={(e) => setAnswer(e.target.value)}
+                  onChange={handleNumberChange}
                   placeholder={current.placeholder}
                   className="w-full rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-4 py-3.5 text-lg font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15"
                 />
@@ -125,25 +235,34 @@ export default function PCOSQuestionnaire() {
 
             {current.type === "height_weight" && (
               <div className="grid grid-cols-2 gap-4">
-                <div className="relative">
+                <div>
                   <label className="mb-1.5 block text-xs font-semibold text-[#3D3939]">
                     Height
                   </label>
-                  <input
-                    type="number"
-                    value={answers.heightWeight?.height || ""}
-                    onChange={(e) =>
-                      setAnswer({
-                        ...answers.heightWeight,
-                        height: e.target.value,
-                      })
-                    }
-                    placeholder="165"
-                    className="w-full rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-4 py-3 pr-12 text-sm font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15"
-                  />
-                  <span className="absolute right-4 top-[38px] text-xs text-[#8F8C8C]">
-                    cm
-                  </span>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      value={answers.heightWeight?.height || ""}
+                      onChange={handleHeightChange}
+                      placeholder={getHeightPlaceholder()}
+                      className="w-[190px] rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-3 py-3 text-sm font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15"
+                    />
+                    <select
+                      value={answers.heightWeight?.heightUnit || 'cm'}
+                      onChange={(e) =>
+                        setAnswer({
+                          ...answers.heightWeight,
+                          heightUnit: e.target.value,
+                          height: '', // Clear height when switching units
+                        })
+                      }
+                      className="w-[70px] rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-2 py-3 text-sm font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15"
+                    >
+                      <option value="cm">cm</option>
+                      <option value="ft">ft</option>
+                      <option value="in">in</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="relative">
                   <label className="mb-1.5 block text-xs font-semibold text-[#3D3939]">
@@ -152,12 +271,7 @@ export default function PCOSQuestionnaire() {
                   <input
                     type="number"
                     value={answers.heightWeight?.weight || ""}
-                    onChange={(e) =>
-                      setAnswer({
-                        ...answers.heightWeight,
-                        weight: e.target.value,
-                      })
-                    }
+                    onChange={handleWeightChange}
                     placeholder="60"
                     className="w-full rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-4 py-3 pr-12 text-sm font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15"
                   />
@@ -169,23 +283,48 @@ export default function PCOSQuestionnaire() {
             )}
 
             {current.type === "yesno" && (
-              <div className="grid grid-cols-2 gap-4">
-                {["Yes", "No"].map((opt) => (
-                  <button
-                    key={opt}
-                    type="button"
-                    onClick={() => setAnswer(opt)}
-                    className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
-                      answers[current.key] === opt
-                        ? "border-[#F33B7D] bg-[#FEE4EB] text-[#F33B7D]"
-                        : "border-[#F0DCE4] bg-white text-[#3D3939]"
-                    }`}
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            )}
+  <div className="grid grid-cols-2 gap-4">
+    {["Yes", "No"].map((opt) => (
+      <button
+        key={opt}
+        type="button"
+        onClick={() => setAnswer(opt)}
+        className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+          answers[current.key] === opt
+            ? "border-[#F33B7D] bg-[#FEE4EB] text-[#F33B7D]"
+            : "border-[#F0DCE4] bg-white text-[#3D3939] hover:bg-[#FEF4F4]"
+        }`}
+      >
+        {opt}
+      </button>
+    ))}
+  </div>
+)}
+
+{current.type === "frequency" && (
+  <div className="space-y-3">
+    {["Never", "Rarely", "Sometimes", "Often", "Frequently"].map(
+      (opt) => (
+        <button
+          key={opt}
+          type="button"
+          onClick={() => setAnswer(opt)}
+          className={`flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left text-sm font-semibold transition ${
+            answers[current.key] === opt
+              ? "border-[#F33B7D] bg-[#FEE4EB] text-[#F33B7D]"
+              : "border-[#F0DCE4] bg-white text-[#3D3939] hover:bg-[#FEF4F4]"
+          }`}
+        >
+          <span>{opt}</span>
+
+          {answers[current.key] === opt && (
+            <Check className="h-4 w-4 text-[#F33B7D]" />
+          )}
+        </button>
+      )
+    )}
+  </div>
+)}
 
             {current.helperNote && (
               <div className="mt-3 flex items-start gap-2 rounded-xl bg-[#FEE4EB] p-3">
