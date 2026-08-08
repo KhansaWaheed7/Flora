@@ -1,6 +1,5 @@
 const axios = require("axios");
 
-
 const predictPCOS = async (answers) => {
   const response = await axios.post(
     "http://127.0.0.1:8000/predict",
@@ -15,8 +14,7 @@ const predictPCOS = async (answers) => {
       excessiveHairGrowth: answers.excessiveHairGrowth,
       darkSkinPatches: answers.darkSkinPatches,
 
-      // exerciseFrequency is stored as a number.
-      // Convert it to boolean for the AI.
+      // Convert exercise frequency into boolean
       exercise: answers.exerciseFrequency > 0,
 
       fastFood: answers.fastFood,

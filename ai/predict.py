@@ -1,5 +1,11 @@
 import joblib
 import pandas as pd
+import shap
+
+
+# =====================================
+# Load trained model
+# =====================================
 
 model_data = joblib.load("models/pcos_model.pkl")
 
@@ -7,6 +13,10 @@ model = model_data["model"]
 
 feature_names = model_data["features"]
 
+
+# =====================================
+# Feature labels for Flora
+# =====================================
 
 FEATURE_LABELS = {
     "Age (yrs)": "Age",
@@ -23,48 +33,135 @@ FEATURE_LABELS = {
 }
 
 
+# =====================================
+# SHAP Explainer
+# =====================================
+
+explainer = shap.TreeExplainer(model)
+
+
+# =====================================
+# Prediction
+# =====================================
+
 def predict(features):
 
-    df = pd.DataFrame([features])
+    # Keep feature order exactly the same
+    df = pd.DataFrame(
+        [features],
+        columns=feature_names
+    )
+
+    # ---------------------------------
+    # Model prediction
+    # ---------------------------------
 
     prediction = bool(model.predict(df)[0])
 
-    probability = float(model.predict_proba(df)[0][1])
+    probability = float(
+        model.predict_proba(df)[0][1]
+    )
 
-    confidence = round(probability * 100)
+    probability_percent = round(
+        probability * 100,
+        2
+    )
+
+    # ---------------------------------
+    # Confidence
+    # ---------------------------------
+
+    confidence = round(
+        probability * 100,
+        2
+    )
+
+    # ---------------------------------
+    # Risk classification
+    # ---------------------------------
+
+    SCREENING_THRESHOLD = 0.4779
 
     if probability >= 0.70:
+
         risk = "High"
-    elif probability >= 0.40:
+
+    elif probability >= SCREENING_THRESHOLD:
+
         risk = "Medium"
+
     else:
+
         risk = "Low"
 
-    importances = model.feature_importances_
+    # ---------------------------------
+    # SHAP explanation
+    # ---------------------------------
 
-    ranked = sorted(
-        zip(feature_names, importances),
-        key=lambda x: x[1],
+    shap_values = explainer.shap_values(df)
+
+# SHAP 0.52+ returns:
+# (samples, features, classes)
+#
+# We need the PCOS class = class 1.
+
+    if isinstance(shap_values, list):
+        values = shap_values[1][0]
+    elif len(shap_values.shape) == 3:
+        values = shap_values[0, :, 1]
+    else:
+        values = shap_values[0]
+    # ---------------------------------
+    # Rank individual contributions
+    # ---------------------------------
+
+    contributions = list(
+        zip(
+            feature_names,
+            values
+        )
+    )
+
+    contributions.sort(
+        key=lambda x: abs(x[1]),
         reverse=True
     )
 
+    # ---------------------------------
+    # Top factors contributing
+    # towards PCOS prediction
+    # ---------------------------------
+
     topFactors = []
 
-    for feature, importance in ranked:
+    for feature, contribution in contributions:
 
-        if features[feature]:
+        # Positive SHAP contribution
+        # means this feature pushed the
+        # prediction towards PCOS.
 
-            topFactors.append(
-                FEATURE_LABELS[feature]
-            )
+        if contribution > 0:
+
+            topFactors.append({
+            "factor": FEATURE_LABELS[feature],
+            "impact": "positive",
+            "shapValue": round(float(contribution), 4)
+        })
 
         if len(topFactors) == 4:
+
             break
 
     return {
+
         "prediction": prediction,
-        "probability": round(probability * 100, 2),
+
+        "probability": probability_percent,
+
         "confidence": confidence,
+
         "risk": risk,
+
         "topFactors": topFactors,
+
     }

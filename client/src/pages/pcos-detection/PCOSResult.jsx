@@ -141,13 +141,21 @@ export default function PCOSResult() {
             </p>
             <div className="space-y-2">
               {factors.map((factor, i) => (
-                <div key={factor} className="flex items-center gap-3">
-                  <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[#FEE4EB] text-xs font-semibold text-[#F33B7D]">
-                    {i + 1}
-                  </span>
-                  <span className="text-sm text-[#3D3939]">{factor}</span>
-                </div>
-              ))}
+  <div
+    key={factor.factor || factor}
+    className="flex items-center gap-3"
+  >
+    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[#FEE4EB] text-xs font-semibold text-[#F33B7D]">
+      {i + 1}
+    </span>
+
+    <span className="text-sm text-[#3D3939]">
+      {typeof factor === "string"
+        ? factor
+        : factor.factor}
+    </span>
+  </div>
+))}
             </div>
 
             {result.disclaimer && (

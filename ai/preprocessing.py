@@ -36,41 +36,34 @@ def preprocess(df):
 
     df = df[FEATURE_COLUMNS + [TARGET_COLUMN]]
 
+    # Convert all selected columns to numeric
+    for col in FEATURE_COLUMNS + [TARGET_COLUMN]:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    # Remove rows with missing values
     df = df.dropna()
 
-    # Regular Exercise
-    df["Reg.Exercise(Y/N)"] = (
-        df["Reg.Exercise(Y/N)"]
-        .astype(int)
-    )
+    # Keep Cycle(R/I) as the dataset's original numeric encoding
+    # Dataset values are: 2, 4, 5
+    df["Cycle(R/I)"] = df["Cycle(R/I)"].astype(int)
 
-    # Binary columns
+    # Binary columns already use:
+    # Yes = 1
+    # No  = 0
     binary_columns = [
         "Weight gain(Y/N)",
         "Pimples(Y/N)",
         "Hair loss(Y/N)",
         "hair growth(Y/N)",
         "Skin darkening (Y/N)",
-        "Fast food (Y/N)"
+        "Fast food (Y/N)",
+        "Reg.Exercise(Y/N)",
     ]
 
     for col in binary_columns:
         df[col] = df[col].astype(int)
 
-    # Cycle(R/I)
-    # R = Regular
-    # I = Irregular
-
-    df["Cycle(R/I)"] = (
-        df["Cycle(R/I)"]
-        .map({
-            "R": 0,
-            "I": 1
-        })
-    )
-
     X = df[FEATURE_COLUMNS]
-
-    y = df[TARGET_COLUMN]
+    y = df[TARGET_COLUMN].astype(int)
 
     return X, y

@@ -100,10 +100,22 @@ const pcosAssessmentSchema = new mongoose.Schema(
 },
 
     topFactors: [
-      {
-        type: String,
-      },
-    ],
+  {
+    factor: {
+      type: String,
+      required: true,
+    },
+    impact: {
+      type: String,
+      enum: ["positive", "negative"],
+      required: true,
+    },
+    shapValue: {
+      type: Number,
+      required: true,
+    },
+  },
+],
   },
   {
     timestamps: true,
