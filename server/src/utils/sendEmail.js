@@ -9,6 +9,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendEmail = async (options) => {
+  
   await transporter.sendMail({
     from: `"Flora" <${process.env.EMAIL_USER}>`,
     to: options.email,
@@ -16,5 +17,6 @@ const sendEmail = async (options) => {
     html: options.message,
   });
 };
+
 
 module.exports = sendEmail;

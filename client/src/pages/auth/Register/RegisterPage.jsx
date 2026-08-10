@@ -57,7 +57,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "patient",
+    role: "user",
     terms: false,
   });
 
@@ -198,7 +198,7 @@ export default function RegisterPage() {
         email: "",
         password: "",
         confirmPassword: "",
-        role: "patient",
+        role: "user",
         terms: false,
       });
 
@@ -466,11 +466,11 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => {
-                setForm((prev) => ({ ...prev, role: "patient" }));
+                setForm((prev) => ({ ...prev, role: "user" }));
                 setFieldErrors((prev) => ({ ...prev, role: null }));
               }}
               className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
-                form.role === "patient"
+                form.role === "user"
                   ? "border-[#EB6991] bg-[#FEE4EB] text-[#EB6991]"
                   : "border-[#F0DCE4] bg-white text-[#3D3939]"
               }`}
