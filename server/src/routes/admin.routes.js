@@ -8,10 +8,16 @@ const { protect } = require("../middlewares/auth.middleware");
 const authorize = require("../middlewares/authorize.middleware");
 
 const {
+  getDashboardStats,
   getPendingDoctors,
   getDoctors,
   approveDoctor,
   rejectDoctor,
+  updateDoctorStatus,
+  getPatients,
+  updatePatientStatus,
+  getAuditLogs
+  
 } = require("../controllers/admin.controller");
 
 // =========================================
@@ -22,12 +28,22 @@ router.get(
   "/dashboard",
   protect,
   authorize(ROLES.ADMIN),
-  (req, res) => {
-    res.json({
-      success: true,
-      message: "Welcome Admin",
-    });
-  }
+  getDashboardStats
+);
+
+
+router.get(
+  "/patients",
+  protect,
+  authorize(ROLES.ADMIN),
+  getPatients
+);
+
+router.patch(
+  "/patients/:patientId/status",
+  protect,
+  authorize(ROLES.ADMIN),
+  updatePatientStatus
 );
 
 // =========================================
@@ -60,6 +76,19 @@ router.put(
   protect,
   authorize(ROLES.ADMIN),
   rejectDoctor
+);
+
+router.patch(
+  "/doctors/:id/status",
+  protect,
+  authorize(ROLES.ADMIN),
+  updateDoctorStatus
+);
+router.get(
+  "/audit-logs",
+  protect,
+  authorize(ROLES.ADMIN),
+  getAuditLogs
 );
 
 module.exports = router;
