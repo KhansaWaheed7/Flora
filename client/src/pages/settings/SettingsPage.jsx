@@ -309,7 +309,7 @@ const handleDeleteAccount = async () => {
           type="button"
           onClick={handleDeleteAccount}
           disabled={isDeleting}
-          className="flex-1 rounded-xl bg-[#EF4444] py-2.5 text-sm font-semibold text-white transition hover:bg-[#DC2626] disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex-1 rounded-xl bg-[#ea0303] py-2.5 text-sm font-semibold text-white transition hover:bg-[#b00101] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isDeleting ? "Deleting..." : "Yes, Delete Account"}
         </button>
