@@ -10,6 +10,7 @@ const {
   getProfile,
   updateProfile,
   uploadAvatar,
+  removeAvatar,
 } = require("../controllers/profile.controller");
 
 const {
@@ -33,7 +34,14 @@ router.post(
   "/avatar",
   protect,
   upload.single("avatar"),
+  
   uploadAvatar
+);
+
+router.delete(
+  "/avatar",
+  protect,
+  removeAvatar
 );
 
 module.exports = router;

@@ -6,7 +6,7 @@ export default function FloraLogo() {
     <Link to="/" className="flex items-center -space-x-4">
       <img src={LogoPng} alt="Flora" className="h-14 w-auto object-cover" />
       <span
-        className="text-3xl font-semibold tracking-tight text-[#F33B7D]"
+        className="text-3xl font-semibold tracking-tight text-[#EB6991]"
         style={{ fontFamily: "'Playfair Display', serif" }}
       >
         flora

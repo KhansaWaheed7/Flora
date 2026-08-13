@@ -6,7 +6,7 @@ const upload = multer({
   storage,
 
   limits: {
-    fileSize: 2 * 1024 * 1024,
+    fileSize: 5 * 1024 * 1024,
   },
 
   fileFilter(req, file, cb) {
@@ -19,7 +19,7 @@ const upload = multer({
       return cb(null, true);
     }
 
-    cb(new Error("Only image files are allowed."));
+    cb(new Error("Only JPG, PNG, or WEBP image files are allowed."));
   },
 });
 

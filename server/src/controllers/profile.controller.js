@@ -33,16 +33,27 @@ exports.updateProfile = asyncHandler(async (req, res) => {
 });
 
 exports.uploadAvatar = asyncHandler(async (req, res) => {
-
   const avatar = await profileService.uploadAvatar(
     req.user._id,
     req.file
   );
 
-  res.json(
+  return res.status(200).json(
     new ApiResponse(
       200,
       "Avatar uploaded successfully",
+      avatar
+    )
+  );
+});
+
+exports.removeAvatar = asyncHandler(async (req, res) => {
+  const avatar = await profileService.removeAvatar(req.user._id);
+
+  res.json(
+    new ApiResponse(
+      200,
+      "Profile picture removed successfully",
       avatar
     )
   );
