@@ -637,7 +637,6 @@ export default function FloraLanding() {
       </section>
 
     {/* FOOTER */}
-{/* FOOTER */}
 <footer id="contact" className="border-t border-[#F7DCE4] bg-gradient-to-b from-[#FFF5F7] to-[#FEF6F6]">
   <div className="mx-auto max-w-7xl px-6 py-14">
     <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -646,6 +645,17 @@ export default function FloraLanding() {
         <p className="mt-4 max-w-xs text-sm text-[#8F7C87]">
           Your all-in-one platform for women's health and well-being.
         </p>
+        <div className="mt-4">
+          <p className="text-sm text-[#8F7C87]">
+            <span className="font-medium text-[#5B4650]">Support:</span>{" "}
+            <a 
+              href="mailto:flora.app.project@gmail.com" 
+              className="text-[#EB6991] hover:underline transition-colors"
+            >
+              flora.app.project@gmail.com
+            </a>
+          </p>
+        </div>
         <div className="mt-5 flex gap-3">
           {["instagram", "facebook", "twitter", "youtube"].map((name) => (
             <a
@@ -731,7 +741,7 @@ export default function FloraLanding() {
     </div>
     <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-[#F7DCE4] pt-6 text-xs text-[#8A7B8F] sm:flex-row">
       <p>© 2026 Flora. All rights reserved.</p>
-      <p>Made with ❤ for women everywhere.</p>
+      <p>Made with <span className="text-[#EB6991]">❤</span> for women everywhere.</p>
     </div>
   </div>
 </footer>
