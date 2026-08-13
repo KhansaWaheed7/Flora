@@ -112,3 +112,13 @@ export const googleLogin = async (token) => {
   return response.data;
 
 };
+
+/*
+ Delete Account
+*/
+
+export const deleteAccount = async () => {
+  const response = await api.delete("/auth/delete-account");
+
+  return response.data;
+};

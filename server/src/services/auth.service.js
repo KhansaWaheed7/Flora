@@ -498,6 +498,16 @@ const loginWithGoogle = async (idToken) => {
   };
 };
 
+const deleteAccount = async (userId) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  await User.findByIdAndDelete(userId);
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -508,4 +518,5 @@ module.exports = {
   sendVerificationEmail,
   verifyEmail,
   resendVerificationEmail,
+  deleteAccount,
 };

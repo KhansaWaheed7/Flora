@@ -14,6 +14,7 @@ const {
   resetPassword,
   verifyEmail,
   resendVerification,
+  deleteAccount,
 } = require("../controllers/auth.controller");
 
 router.post("/register", register);
@@ -44,6 +45,12 @@ router.post("/logout", protect, logout);
 router.get(
   "/verify-email/:token",
   verifyEmail
+);
+
+router.delete(
+  "/delete-account",
+  protect,
+  deleteAccount
 );
 
 module.exports = router;
