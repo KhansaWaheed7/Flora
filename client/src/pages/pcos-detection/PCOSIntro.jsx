@@ -1,6 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Sparkles, Clock, Lock, History } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
+import uterusImg from "../../assets/uterus.png";
 
 const features = [
   {
@@ -32,7 +33,11 @@ export default function PCOSIntro() {
         <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
           <div className="relative mx-auto flex h-40 w-40 items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-[#FEE4EB]" />
-            <div className="relative text-5xl">🌸</div>
+            <img
+              src={uterusImg}
+              alt="Uterus illustration"
+              className="relative h-24 w-24 object-contain"
+            />
           </div>
 
           <div className="mt-5 space-y-4 border-t border-[#F7DCE4] pt-5">
