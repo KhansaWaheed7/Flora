@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Info, Check } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import { questions, TOTAL_QUESTIONS } from "../../data/pcosQuestions";
 function frequencyToBoolean(value) {
-  return ["Rarely", "Sometimes", "Often", "Frequently"].includes(value);
+  return ["Often", "Frequently"].includes(value);
 }
 
 function buildPayload(answers) {
@@ -182,7 +182,7 @@ export default function PCOSQuestionnaire() {
   return (
     <PageLayout
       title="PCOS Assessment"
-      subtitle="Answer the following questions to help us analyze your risk."
+      subtitle="Answer the following questions to estimate your PCOS risk. This is a screening assessment, not a medical diagnosis."
     >
       <div className="mx-auto max-w-2xl">
         {/* Progress dots */}
@@ -334,6 +334,16 @@ export default function PCOSQuestionnaire() {
             )}
           </div>
 
+          <div className="mt-5 rounded-xl bg-[#FEF4F4] p-3">
+  <p className="text-xs leading-relaxed text-[#6B5F63]">
+    <span className="font-semibold text-[#F33B7D]">
+      Important:
+    </span>{" "}
+    This assessment provides a PCOS risk screening and prediction based on
+    the information you provide. It does not detect or diagnose PCOS and
+    cannot replace evaluation by a qualified healthcare professional.
+  </p>
+</div>
           <div className="mt-6 flex gap-3">
             <button
               onClick={handlePrevious}
@@ -347,7 +357,7 @@ export default function PCOSQuestionnaire() {
               disabled={!isAnswered()}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#F33B7D] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_-6px_rgba(243,59,125,0.5)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {isLast ? "Analyze" : "Next"} <ArrowRight className="h-4 w-4" />
+              {isLast ? "Check My Risk" : "Next"} <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>

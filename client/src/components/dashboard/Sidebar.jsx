@@ -23,7 +23,7 @@ import Logo from "../../components/common/Logo"
 const navItems = [
   { icon: Home, label: "Dashboard", path: "/dashboard" },
   { icon: Repeat, label: "Cycle Tracker", path: "/cycle-tracker" },
-  { icon: Stethoscope, label: "PCOS Detection", path: "/pcos-detection" },
+  { icon: Stethoscope, label: "PCOS Screening", path: "/pcos-detection" },
   { icon: Baby, label: "Pregnancy", path: "/pregnancy" },
   { icon: MessageCircle, label: "Chat", badge: 3, path: "/chat" },
   { icon: HeartHandshake, label: "Health Assistant", path: "/health-assistant" },

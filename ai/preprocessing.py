@@ -11,6 +11,7 @@ FEATURE_COLUMNS = [
     "Hair loss(Y/N)",
     "hair growth(Y/N)",
     "Skin darkening (Y/N)",
+    "Waist:Hip Ratio",
     "Reg.Exercise(Y/N)",
     "Fast food (Y/N)"
 ]
@@ -45,7 +46,11 @@ def preprocess(df):
 
     # Keep Cycle(R/I) as the dataset's original numeric encoding
     # Dataset values are: 2, 4, 5
-    df["Cycle(R/I)"] = df["Cycle(R/I)"].astype(int)
+    df["Cycle(R/I)"] = df["Cycle(R/I)"].map({
+    2: 0,
+    4: 1,
+    5: 1
+})
 
     # Binary columns already use:
     # Yes = 1

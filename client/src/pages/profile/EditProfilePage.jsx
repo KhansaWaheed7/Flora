@@ -51,6 +51,9 @@ function SelectField({ label, options, ...props }) {
 export default function EditProfilePage() {
   
   const [saved, setSaved] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
 const [formData, setFormData] = useState({
   fullName: "",
@@ -120,6 +123,10 @@ const handleAvatarUpload = async (e) => {
 
     if (!file) return;
 
+    setAvatarLoading(true);
+    setIsUploading(true);
+    setAvatarMessage("");
+
     const data = new FormData();
     data.append("avatar", file);
 
@@ -130,7 +137,8 @@ const handleAvatarUpload = async (e) => {
     console.log("Avatar upload response:", res);
 
     setAvatar(res.data.avatar);
-
+    setAvatarMessage("Profile picture uploaded successfully!");
+    
     await fetchProfile();
 
   } catch (err) {
@@ -138,15 +146,27 @@ const handleAvatarUpload = async (e) => {
       "Avatar upload error:",
       err.response?.data || err.message || err
     );
+    setAvatarMessage("Failed to upload profile picture. Please try again.");
+  } finally {
+    setAvatarLoading(false);
+    setIsUploading(false);
+    setTimeout(() => {
+      setAvatarMessage("");
+    }, 3000);
   }
 };
 
 
 const handleRemoveAvatar = async () => {
   try {
+    setAvatarLoading(true);
+    setIsUploading(false);
+    setAvatarMessage("");
+
     await removeAvatar();
 
     setAvatar("");
+    setAvatarMessage("Profile picture removed successfully!");
 
     await fetchProfile();
   } catch (err) {
@@ -156,7 +176,12 @@ const handleRemoveAvatar = async () => {
       err.response?.data?.message ||
       "Failed to remove profile picture.";
 
-    alert(message);
+    setAvatarMessage(message);
+  } finally {
+    setAvatarLoading(false);
+    setTimeout(() => {
+      setAvatarMessage("");
+    }, 3000);
   }
 };
 
@@ -317,6 +342,17 @@ onChange={handleChange} />
                   <Camera className="h-3.5 w-3.5" />
                 </button>
               </div>
+              
+              {avatarMessage && (
+                <div className={`mt-4 text-sm font-medium ${
+                  avatarMessage.includes("success") || avatarMessage.includes("removed successfully")
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}>
+                  {avatarMessage}
+                </div>
+              )}
+              
               <p className="mt-4 text-[10px] text-[#B8AEB2]">
                 JPG, PNG or GIF. Max size 2MB.
               </p>
@@ -329,17 +365,22 @@ onChange={handleChange} />
 />
               <label
 htmlFor="avatar"
-className="mt-4 w-full cursor-pointer rounded-full bg-[#F33B7D] px-4 py-2.5 text-center text-xs font-semibold text-white shadow-[0_8px_16px_-4px_rgba(243,59,125,0.4)] transition hover:-translate-y-0.5"
+className={`mt-4 w-full cursor-pointer rounded-full px-4 py-2.5 text-center text-xs font-semibold text-white shadow-[0_8px_16px_-4px_rgba(243,59,125,0.4)] transition hover:-translate-y-0.5 ${
+  avatarLoading && isUploading ? "bg-gray-400 cursor-not-allowed" : "bg-[#F33B7D]"
+}`}
 >
-Change Photo
+{avatarLoading && isUploading ? "Uploading..." : "Change Photo"}
 </label>
 {avatar && (
   <button
     type="button"
     onClick={handleRemoveAvatar}
-    className="mt-2 w-full rounded-full border border-[#F0DCE4] bg-white px-4 py-2.5 text-xs font-semibold text-[#F33B7D] transition hover:bg-[#FFF5F8]"
+    disabled={avatarLoading}
+    className={`mt-2 w-full rounded-full border border-[#F0DCE4] bg-white px-4 py-2.5 text-xs font-semibold text-[#F33B7D] transition ${
+      avatarLoading && !isUploading ? "opacity-50 cursor-not-allowed" : "hover:bg-[#FFF5F8]"
+    }`}
   >
-    Remove Photo
+    {avatarLoading && !isUploading ? "Removing..." : "Remove Photo"}
   </button>
 )}
             </div>
