@@ -1,15 +1,12 @@
 const evaluateSafety = (category, answers) => {
   const redFlags = [];
 
-  // ======================================================
   // MISSED / IRREGULAR PERIOD
-  // ======================================================
+ 
 
   if (category === "missed_period") {
-    // --------------------------------------------------
-    // Severe pelvic / abdominal pain
-    // --------------------------------------------------
 
+    // Severe pelvic / abdominal pain
     if (
       ["severe", "very_severe"].includes(
         answers.severe_pain
@@ -20,9 +17,8 @@ const evaluateSafety = (category, answers) => {
       );
     }
 
-    // --------------------------------------------------
     // Heavy bleeding
-    // --------------------------------------------------
+
 
     if (
       ["heavy", "very_heavy"].includes(
@@ -34,9 +30,9 @@ const evaluateSafety = (category, answers) => {
       );
     }
 
-    // --------------------------------------------------
+
     // Possible pregnancy + severe pain
-    // --------------------------------------------------
+  
 
     if (
       ["yes", "not_sure"].includes(
@@ -51,9 +47,8 @@ const evaluateSafety = (category, answers) => {
       );
     }
 
-    // --------------------------------------------------
     // Dizziness / fainting
-    // --------------------------------------------------
+ 
 
     if (
       ["yes", "sometimes"].includes(
@@ -66,9 +61,8 @@ const evaluateSafety = (category, answers) => {
     }
   }
 
-  // ======================================================
   // PELVIC PAIN
-  // ======================================================
+
 
   if (category === "pelvic_pain") {
     if (
@@ -117,9 +111,9 @@ const evaluateSafety = (category, answers) => {
     }
   }
 
-  // ======================================================
+
   // VAGINAL DISCHARGE
-  // ======================================================
+
 
   if (category === "vaginal_discharge") {
     if (
@@ -153,9 +147,9 @@ const evaluateSafety = (category, answers) => {
     }
   }
 
-  // ======================================================
+
   // PAINFUL PERIOD
-  // ======================================================
+
 
   if (category === "painful_period") {
     if (
@@ -245,9 +239,9 @@ const evaluateSafety = (category, answers) => {
     }
   }
 
-  // ======================================================
+
   // URINARY SYMPTOMS
-  // ======================================================
+
 
   if (category === "urinary_symptoms") {
     if (answers.blood_in_urine === "yes") {
@@ -277,9 +271,8 @@ const evaluateSafety = (category, answers) => {
     riskLevel = "high";
   }
 
-  // ------------------------------------------------------
   // Medium-risk situations
-  // ------------------------------------------------------
+
 
   if (riskLevel === "low") {
     if (

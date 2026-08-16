@@ -21,9 +21,9 @@ const {
   getAssessmentResult,
 } = require("../data/gynae/assessmentResults");
 
-// ======================================================
+
 // CHECK IF MESSAGE IS A VALID ANSWER TO CURRENT QUESTION
-// ======================================================
+// 
 
 const isValidQuestionAnswer = (question, message) => {
   if (!question || !message) {
@@ -66,9 +66,8 @@ const isValidQuestionAnswer = (question, message) => {
   return false;
 };
 
-// ======================================================
+
 // CREATE NEW CONVERSATION
-// ======================================================
 
 const createConversation = async (req, res, next) => {
   try {
@@ -86,9 +85,8 @@ const createConversation = async (req, res, next) => {
 };
 
 
-// ======================================================
+
 // SEND MESSAGE
-// ======================================================
 
 const sendMessage = async (req, res, next) => {
   try {
@@ -103,9 +101,8 @@ const sendMessage = async (req, res, next) => {
 
     let conversation;
 
-    // -----------------------------------------------
     // Existing conversation
-    // -----------------------------------------------
+
 
     if (conversationId) {
       conversation = await GynaeConversation.findOne({
@@ -129,9 +126,8 @@ const sendMessage = async (req, res, next) => {
   });
 }
 
-    // -----------------------------------------------
+
     // Create conversation if none exists
-    // -----------------------------------------------
 
     if (!conversation) {
       conversation = await GynaeConversation.create({
@@ -139,18 +135,18 @@ const sendMessage = async (req, res, next) => {
       });
     }
 
-    // -----------------------------------------------
+
     // Save user message
-    // -----------------------------------------------
+
 
     conversation.messages.push({
       role: "user",
       content: message.trim(),
     });
 
-    // -----------------------------------------------
-// Handle answer to current assessment question
-// -----------------------------------------------
+
+// Handle answer to current assessment qs
+
 if (
   conversation.currentQuestion &&
   conversation.category
