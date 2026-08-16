@@ -364,10 +364,9 @@ const QUESTION_FLOWS = {
     },
   ],
 
-  // ======================================================
+ 
   // PAINFUL PERIOD
-  // ======================================================
-
+  
   [GYNAE_CATEGORIES.PAINFUL_PERIOD]: [
     {
       id: "pain_severity",
@@ -451,9 +450,9 @@ const QUESTION_FLOWS = {
     },
   ],
 
-  // ======================================================
+ 
   // ABNORMAL BLEEDING
-  // ======================================================
+  
 
   [GYNAE_CATEGORIES.ABNORMAL_BLEEDING]: [
     {

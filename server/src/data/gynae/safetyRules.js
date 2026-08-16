@@ -193,9 +193,7 @@ const evaluateSafety = (category, answers) => {
     }
   }
 
-  // ======================================================
   // ABNORMAL BLEEDING
-  // ======================================================
 
   if (category === "abnormal_bleeding") {
     if (

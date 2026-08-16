@@ -176,9 +176,9 @@ if (
     conversation.messages.pop();
   } else {
 
-    // -----------------------------------------------
+  
 // Validate structured question answers
-// -----------------------------------------------
+
 
 if (
   ["single_choice", "multi_choice"].includes(
@@ -259,10 +259,9 @@ conversation.markModified(
   "assessment.answers"
 );
 
-      // -----------------------------------------------
+      
       // Check safety rules
-      // -----------------------------------------------
-
+   
       const safetyResult = evaluateSafety(
         conversation.category,
         conversation.assessment.answers
@@ -274,9 +273,8 @@ conversation.markModified(
       conversation.assessment.redFlags =
         safetyResult.redFlags;
 
-      // -----------------------------------------------
       // Find next unanswered question
-      // -----------------------------------------------
+
 
       const answeredQuestions = Object.keys(
         conversation.assessment.answers

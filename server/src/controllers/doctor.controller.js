@@ -9,9 +9,9 @@ const {
   getAssignedPatients,
 } = require("../services/doctor.service");
 
-// =========================================
+
 // Dashboard
-// =========================================
+
 
 exports.getDashboard = asyncHandler(async (req, res) => {
 
@@ -29,9 +29,9 @@ exports.getDashboard = asyncHandler(async (req, res) => {
 
 });
 
-// =========================================
+
 // Pending Consultation Requests
-// =========================================
+
 
 exports.getPendingRequests = asyncHandler(async (req, res) => {
 
@@ -48,9 +48,8 @@ exports.getPendingRequests = asyncHandler(async (req, res) => {
   );
 
 });
-// =========================================
+
 // Assigned Patients
-// =========================================
 
 exports.getAssignedPatients = asyncHandler(async (req, res) => {
 
@@ -67,9 +66,9 @@ exports.getAssignedPatients = asyncHandler(async (req, res) => {
   );
 
 });
-// =========================================
+
 // Accept Consultation Request
-// =========================================
+
 
 exports.acceptConsultation = asyncHandler(async (req, res) => {
 
@@ -88,9 +87,8 @@ exports.acceptConsultation = asyncHandler(async (req, res) => {
 
 });
 
-// =========================================
 // Reject Consultation Request
-// =========================================
+
 
 exports.rejectConsultation = asyncHandler(async (req, res) => {
 

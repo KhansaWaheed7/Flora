@@ -10,9 +10,9 @@ const {
   getConversations,
 } = require("../services/chat.service");
 
-// =========================================
+
 // Create Consultation Request
-// =========================================
+
 
 exports.createChat = asyncHandler(async (req, res) => {
 
@@ -32,9 +32,8 @@ exports.createChat = asyncHandler(async (req, res) => {
   );
 
 });
-// =========================================
+
 // Get Available Doctors
-// =========================================
 
 exports.getAvailableDoctors = asyncHandler(async (req, res) => {
 
@@ -50,9 +49,8 @@ exports.getAvailableDoctors = asyncHandler(async (req, res) => {
 
 });
 
-// =========================================
+
 // Get Conversations
-// =========================================
 
 exports.getConversations = asyncHandler(async (req, res) => {
 
@@ -70,9 +68,9 @@ exports.getConversations = asyncHandler(async (req, res) => {
 
 });
 
-// =========================================
+
 // Get My Consultation Requests
-// =========================================
+
 
 exports.getMyRequests = asyncHandler(async (req, res) => {
 
