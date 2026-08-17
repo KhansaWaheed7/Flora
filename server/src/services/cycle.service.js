@@ -1,6 +1,6 @@
 const Cycle = require("../models/Cycle");
 const ApiError = require("../utils/ApiError");
-
+const getCyclePhase = require("../utils/cyclePhase");
 
 const {
   calculateAverageCycleLength,
@@ -162,6 +162,12 @@ const predictCycle = async (userId) => {
 
   const latestCycle = cycles[cycles.length - 1];
 
+  const currentPhase = getCyclePhase({
+  cycleStart: latestCycle.periodStart,
+  cycleLength: averageCycle,
+  periodLength: latestCycle.periodLength,
+});
+
   const nextPeriod = addDays(
     latestCycle.periodStart,
     averageCycle
@@ -181,6 +187,7 @@ const predictCycle = async (userId) => {
   return {
     averageCycleLength: averageCycle,
     periodLength: latestCycle.periodLength,
+    currentPhase,
     nextPeriod,
     ovulation,
     fertileWindow: {
