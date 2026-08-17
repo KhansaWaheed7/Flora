@@ -94,34 +94,55 @@ export default function CycleTrackerDashboard() {
   //                fertileWindow: { start, end }, irregularCycle, health: { status, insights } }
   const { latestCycle, prediction } = data;
 
-  const cycleLength = prediction?.averageCycleLength ?? latestCycle?.cycleLength ?? 28;
-  const periodLength = prediction?.periodLength ?? latestCycle?.periodLength ?? 5;
+  
 
-  // There's no "currentDay" field from the backend — derive it from periodStart vs today
-  const currentDay = latestCycle?.periodStart
-    ? Math.floor(
-        (Date.now() - new Date(latestCycle.periodStart)) / (1000 * 60 * 60 * 24)
-      ) + 1
-    : null;
+const cycleLength =
+  prediction?.averageCycleLength ??
+  latestCycle?.cycleLength ??
+  28;
 
-  const daysUntilNextPeriod = prediction?.nextPeriod
-    ? Math.ceil((new Date(prediction.nextPeriod) - Date.now()) / (1000 * 60 * 60 * 24))
-    : null;
+const periodLength =
+  prediction?.periodLength ??
+  latestCycle?.periodLength ??
+  5;
 
-  const insight =
-    prediction?.health?.insights?.[0] ||
-    "Log your next period to keep predictions accurate.";
+// Backend now calculates the current phase
+const currentDay =
+  prediction?.currentPhase?.cycleDay ?? null;
 
-  const cyclePieData = [
-    { name: "Period", value: periodLength, color: "#F33B7D" },
-    { name: "Follicular", value: 5, color: "#FBCFE8" },
-    { name: "Fertile", value: 6, color: "#A855F7" },
-    {
-      name: "Luteal",
-      value: Math.max(0, cycleLength - periodLength - 11),
-      color: "#E5E7EB",
-    },
-  ];
+const currentPhase =
+  prediction?.currentPhase?.phase ?? "Unknown";
+
+const phaseDescription =
+  prediction?.currentPhase?.description ||
+  "Your current cycle phase is being estimated.";
+
+const daysUntilNextPeriod = prediction?.nextPeriod
+  ? Math.ceil(
+      (new Date(prediction.nextPeriod) - Date.now()) /
+        (1000 * 60 * 60 * 24)
+    )
+  : null;
+
+const insight =
+  prediction?.health?.insights?.[0] ||
+  "Log your next period to keep predictions accurate.";
+
+const cyclePieData = [
+  {
+    name: "Current Day",
+    value: currentDay || 1,
+    color: "#F33B7D",
+  },
+  {
+    name: "Remaining",
+    value: Math.max(
+      0,
+      cycleLength - (currentDay || 1)
+    ),
+    color: "#FBCFE8",
+  },
+];
 
   return (
     <PageLayout
@@ -135,6 +156,15 @@ export default function CycleTrackerDashboard() {
           <p className="mt-1 font-display text-lg font-semibold text-[#0D0D0D]">
             Day {currentDay ?? "-"} of {cycleLength}
           </p>
+          <div className="mt-2 flex items-center gap-2">
+  <span className="rounded-full bg-[#FEE4EB] px-3 py-1 text-xs font-semibold text-[#F33B7D]">
+    {currentPhase} Phase
+  </span>
+</div>
+
+<p className="mt-2 text-xs text-[#8F8C8C]">
+  {phaseDescription}
+</p>
 
           <div className="relative mx-auto my-4 h-36 w-36">
             <ResponsiveContainer width="100%" height="100%">
@@ -155,11 +185,18 @@ export default function CycleTrackerDashboard() {
               </PieChart>
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <p className="font-display text-2xl font-semibold text-[#0D0D0D]">
-                {currentDay ?? "-"}
-              </p>
-              <p className="text-xs text-[#8F8C8C]">of {cycleLength}</p>
-            </div>
+  <p className="font-display text-2xl font-semibold text-[#0D0D0D]">
+    {currentDay ?? "-"}
+  </p>
+
+  <p className="text-xs text-[#8F8C8C]">
+    of {cycleLength}
+  </p>
+
+  <p className="mt-1 text-[10px] font-semibold text-[#F33B7D]">
+    {currentPhase}
+  </p>
+</div>
           </div>
 
           <div className="rounded-xl bg-[#FEF4F4] p-3">
@@ -216,7 +253,13 @@ export default function CycleTrackerDashboard() {
             <p className="text-xs font-semibold text-[#F33B7D]">
               Today's Insight
             </p>
-            <p className="mt-1 text-xs text-[#3D3939]">{insight}</p>
+            <p className="mt-1 text-xs text-[#3D3939]">
+  {phaseDescription}
+</p>
+
+<p className="mt-2 text-xs text-[#3D3939]">
+  {insight}
+</p>
           </div>
         </div>
       </div>

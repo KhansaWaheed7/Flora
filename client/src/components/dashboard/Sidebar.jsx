@@ -26,7 +26,7 @@ const navItems = [
   { icon: Stethoscope, label: "PCOS Screening", path: "/pcos-detection" },
   { icon: Baby, label: "Pregnancy", path: "/pregnancy" },
   { icon: MessageCircle, label: "Chat", badge: 3, path: "/chat" },
-  { icon: HeartHandshake, label: "Health Assistant", path: "/health-assistant" },
+  { icon: HeartHandshake, label: "Gynae Assistant", path: "/gynae-assistant" },
   { icon: Apple, label: "Diet & Nutrition", path: "/diet-nutrition" },
   { icon: Dumbbell, label: "Exercise", path: "/exercise" },
   { icon: FileText, label: "Reports", path: "/reports" },

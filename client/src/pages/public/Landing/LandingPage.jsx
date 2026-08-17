@@ -236,7 +236,7 @@ export default function FloraLanding() {
       />
 
       {/* NAV */}
-      <header className="sticky top-0 z-40 border-b border-[#ffcfdf] bg-[#FFF5F7]/20 backdrop-blur-sm">
+      <header className="sticky top-0 z-40 border-b border-[#ffcfdf] bg-[#FFF5F7]/50 backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
           <FloraLogo />
           <nav className="hidden items-center gap-9 text-sm font-medium text-[#5B4650] md:flex">
