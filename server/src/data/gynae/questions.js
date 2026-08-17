@@ -37,8 +37,7 @@ const QUESTION_FLOWS = {
 
     {
       id: "pregnancy_possibility",
-      question:
-        "Is there any possibility that you could be pregnant?",
+      question: "Is there any possibility that you could be pregnant?",
       type: "single_choice",
       options: [
         { value: "yes", label: "Yes" },
@@ -65,8 +64,7 @@ const QUESTION_FLOWS = {
 
     {
       id: "pcos_symptoms",
-      question:
-        "Which of these symptoms have you noticed recently?",
+      question: "Which of these symptoms have you noticed recently?",
       type: "multi_choice",
       options: [
         {
@@ -109,65 +107,64 @@ const QUESTION_FLOWS = {
     },
 
     {
-  id: "heavy_bleeding",
-  question:
-    "How would you describe your current vaginal bleeding?",
-  type: "single_choice",
-  options: [
-    { value: "none", label: "No unusual bleeding" },
-    { value: "light", label: "Light" },
-    { value: "moderate", label: "Moderate" },
-    { value: "heavy", label: "Heavy" },
-    { value: "very_heavy", label: "Very heavy" },
-  ],
-  required: true,
-},
+      id: "heavy_bleeding",
+      question: "How would you describe your current vaginal bleeding?",
+      type: "single_choice",
+      options: [
+        { value: "none", label: "No unusual bleeding" },
+        { value: "light", label: "Light" },
+        { value: "moderate", label: "Moderate" },
+        { value: "heavy", label: "Heavy" },
+        { value: "very_heavy", label: "Very heavy" },
+      ],
+      required: true,
+    },
 
-{
-  id: "dizziness_or_fainting",
-  question:
-    "Have you experienced severe dizziness, fainting, or unusual weakness?",
-  type: "single_choice",
-  options: [
-    { value: "no", label: "No" },
-    { value: "sometimes", label: "Sometimes" },
-    { value: "yes", label: "Yes" },
-    { value: "not_sure", label: "I'm not sure" },
-  ],
-  required: true,
-},
+    {
+      id: "dizziness_or_fainting",
+      question:
+        "Have you experienced severe dizziness, fainting, or unusual weakness?",
+      type: "single_choice",
+      options: [
+        { value: "no", label: "No" },
+        { value: "sometimes", label: "Sometimes" },
+        { value: "yes", label: "Yes" },
+        { value: "not_sure", label: "I'm not sure" },
+      ],
+      required: true,
+    },
 
-{
-  id: "breastfeeding",
-  question:
-    "Are you currently breastfeeding?",
-  type: "single_choice",
-  options: [
-    { value: "yes", label: "Yes" },
-    { value: "no", label: "No" },
-    { value: "not_sure", label: "I'm not sure" },
-    { value: "prefer_not_to_say", label: "Prefer not to say" },
-  ],
-  required: true,
-},
+    {
+      id: "breastfeeding",
+      question: "Are you currently breastfeeding?",
+      type: "single_choice",
+      options: [
+        { value: "yes", label: "Yes" },
+        { value: "no", label: "No" },
+        { value: "not_sure", label: "I'm not sure" },
+        { value: "prefer_not_to_say", label: "Prefer not to say" },
+      ],
+      required: true,
+    },
 
-{
-  id: "medication_or_contraception",
-  question:
-    "Have you recently started, stopped, or changed any hormonal medication or contraception?",
-  type: "single_choice",
-  options: [
-    { value: "yes", label: "Yes" },
-    { value: "no", label: "No" },
-    { value: "not_sure", label: "I'm not sure" },
-    { value: "prefer_not_to_say", label: "Prefer not to say" },
-  ],
-  required: true,
-},
+    {
+      id: "medication_or_contraception",
+      question:
+        "Have you recently started, stopped, or changed any hormonal medication or contraception?",
+      type: "single_choice",
+      options: [
+        { value: "yes", label: "Yes" },
+        { value: "no", label: "No" },
+        { value: "not_sure", label: "I'm not sure" },
+        { value: "prefer_not_to_say", label: "Prefer not to say" },
+      ],
+      required: true,
+    },
   ],
 
-
+  // ======================================================
   // PELVIC PAIN
+  // ======================================================
 
   [GYNAE_CATEGORIES.PELVIC_PAIN]: [
     {
@@ -252,8 +249,7 @@ const QUESTION_FLOWS = {
 
     {
       id: "pregnancy_possibility",
-      question:
-        "Is there any possibility that you could be pregnant?",
+      question: "Is there any possibility that you could be pregnant?",
       type: "single_choice",
       options: [
         { value: "yes", label: "Yes" },
@@ -265,8 +261,9 @@ const QUESTION_FLOWS = {
     },
   ],
 
-
+  // ======================================================
   // VAGINAL DISCHARGE
+  // ======================================================
 
   [GYNAE_CATEGORIES.VAGINAL_DISCHARGE]: [
     {
@@ -351,8 +348,7 @@ const QUESTION_FLOWS = {
 
     {
       id: "pregnancy_possibility",
-      question:
-        "Is there any possibility that you could be pregnant?",
+      question: "Is there any possibility that you could be pregnant?",
       type: "single_choice",
       options: [
         { value: "yes", label: "Yes" },
@@ -364,9 +360,10 @@ const QUESTION_FLOWS = {
     },
   ],
 
- 
+  // ======================================================
   // PAINFUL PERIOD
-  
+  // ======================================================
+
   [GYNAE_CATEGORIES.PAINFUL_PERIOD]: [
     {
       id: "pain_severity",
@@ -409,8 +406,7 @@ const QUESTION_FLOWS = {
 
     {
       id: "heavy_bleeding",
-      question:
-        "How would you describe your menstrual bleeding?",
+      question: "How would you describe your menstrual bleeding?",
       type: "single_choice",
       options: [
         { value: "normal", label: "Normal for me" },
@@ -444,20 +440,24 @@ const QUESTION_FLOWS = {
         { value: "slightly", label: "Slightly" },
         { value: "moderately", label: "Moderately" },
         { value: "significantly", label: "Significantly" },
-        { value: "completely", label: "I cannot do my normal activities" },
+        {
+          value: "completely",
+          label: "I cannot do my normal activities",
+        },
       ],
       required: true,
     },
   ],
 
- 
+  // ======================================================
   // ABNORMAL BLEEDING
-  
+  // ======================================================
 
   [GYNAE_CATEGORIES.ABNORMAL_BLEEDING]: [
     {
       id: "bleeding_duration",
-      question: "How long have you been experiencing the unusual bleeding?",
+      question:
+        "How long have you been experiencing the unusual bleeding?",
       type: "single_choice",
       options: [
         { value: "less_than_day", label: "Less than a day" },
@@ -601,8 +601,7 @@ const QUESTION_FLOWS = {
 
     {
       id: "blood_in_urine",
-      question:
-        "Have you noticed blood in your urine?",
+      question: "Have you noticed blood in your urine?",
       type: "single_choice",
       options: [
         { value: "yes", label: "Yes" },
@@ -651,7 +650,89 @@ const QUESTION_FLOWS = {
       required: true,
     },
   ],
+
+    // ======================================================
+  // PREGNANCY CONCERN
+  // ======================================================
+
+  [GYNAE_CATEGORIES.PREGNANCY_CONCERN]: [
+    {
+      id: "pregnancy_possibility",
+      question:
+        "Is there a possibility that you could be pregnant?",
+      type: "single_choice",
+      options: [
+        { value: "yes", label: "Yes" },
+        { value: "no", label: "No" },
+        { value: "not_sure", label: "I'm not sure" },
+        { value: "prefer_not_to_say", label: "Prefer not to say" },
+      ],
+      required: true,
+    },
+
+    {
+      id: "period_status",
+      question:
+        "What best describes your current period situation?",
+      type: "single_choice",
+      options: [
+        { value: "on_time", label: "My period is on time" },
+        { value: "late", label: "My period is late" },
+        { value: "missed", label: "I missed my period" },
+        { value: "unexpected_bleeding", label: "I have unexpected bleeding" },
+        { value: "not_sure", label: "I'm not sure" },
+      ],
+      required: true,
+    },
+
+    {
+      id: "pregnancy_symptoms",
+      question:
+        "Have you noticed any symptoms that could be related to pregnancy?",
+      type: "multi_choice",
+      options: [
+        { value: "nausea", label: "Nausea or vomiting" },
+        { value: "breast_changes", label: "Breast tenderness or changes" },
+        { value: "fatigue", label: "Unusual tiredness" },
+        { value: "increased_urination", label: "More frequent urination" },
+        { value: "none", label: "None of these" },
+      ],
+      required: true,
+    },
+
+    {
+      id: "pelvic_pain",
+      question:
+        "Are you experiencing pelvic or lower abdominal pain?",
+      type: "single_choice",
+      options: [
+        { value: "no", label: "No" },
+        { value: "mild", label: "Mild" },
+        { value: "moderate", label: "Moderate" },
+        { value: "severe", label: "Severe" },
+        { value: "very_severe", label: "Very severe" },
+      ],
+      required: true,
+    },
+
+    {
+      id: "bleeding",
+      question:
+        "Are you experiencing unusual vaginal bleeding?",
+      type: "single_choice",
+      options: [
+        { value: "no", label: "No" },
+        { value: "light", label: "Light" },
+        { value: "moderate", label: "Moderate" },
+        { value: "heavy", label: "Heavy" },
+        { value: "very_heavy", label: "Very heavy" },
+      ],
+      required: true,
+    },
+  ],
 };
+
+
 
 module.exports = {
   QUESTION_FLOWS,

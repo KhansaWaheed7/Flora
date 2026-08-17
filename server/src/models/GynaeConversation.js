@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
 
+// ======================================================
+// MESSAGE
+// ======================================================
+
 const messageSchema = new mongoose.Schema(
   {
     role: {
@@ -23,17 +27,21 @@ const messageSchema = new mongoose.Schema(
     _id: false,
   }
 );
-//-----
+
+// ======================================================
+// ASSESSMENT
+// ======================================================
+
 const assessmentSchema = new mongoose.Schema(
   {
     answers: {
       type: mongoose.Schema.Types.Mixed,
-      default: {},
+      default: () => ({}),
     },
 
     redFlags: {
       type: [String],
-      default: [],
+      default: () => [],
     },
 
     riskLevel: {
@@ -69,6 +77,10 @@ const assessmentSchema = new mongoose.Schema(
   }
 );
 
+// ======================================================
+// CONVERSATION
+// ======================================================
+
 const gynaeConversationSchema = new mongoose.Schema(
   {
     user: {
@@ -79,20 +91,22 @@ const gynaeConversationSchema = new mongoose.Schema(
     },
 
     category: {
-  type: String,
-  enum: [
-    "missed_period",
-    "pelvic_pain",
-    "vaginal_discharge",
-    "painful_period",
-    "abnormal_bleeding",
-    "urinary_symptoms",
-    "general_menstrual_health",
-    "general_gynae",
-    "out_of_scope",
-  ],
-  default: null,
-},
+      type: String,
+
+      enum: [
+        "missed_period",
+        "pelvic_pain",
+        "vaginal_discharge",
+        "painful_period",
+        "abnormal_bleeding",
+        "urinary_symptoms",
+        "general_menstrual_health",
+        "general_gynae",
+        "out_of_scope",
+      ],
+
+      default: null,
+    },
 
     currentQuestion: {
       type: String,
@@ -106,7 +120,7 @@ const gynaeConversationSchema = new mongoose.Schema(
 
     messages: {
       type: [messageSchema],
-      default: [],
+      default: () => [],
     },
 
     status: {
@@ -115,6 +129,7 @@ const gynaeConversationSchema = new mongoose.Schema(
       default: "active",
     },
   },
+
   {
     timestamps: true,
   }

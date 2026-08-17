@@ -57,7 +57,7 @@ const CATEGORY_INFO = {
   [GYNAE_CATEGORIES.PREGNANCY_CONCERN]: {
     name: "Pregnancy Concern",
     description:
-      "General questions or symptoms related to possible pregnancy.",
+      "Questions about possible pregnancy, pregnancy-related symptoms, or pregnancy concerns.",
   },
 
   [GYNAE_CATEGORIES.GENERAL_GYNAE]: {

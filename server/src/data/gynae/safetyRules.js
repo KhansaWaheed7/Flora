@@ -1,12 +1,11 @@
-const evaluateSafety = (category, answers) => {
+const evaluateSafety = (category, answers = {}) => {
   const redFlags = [];
 
-  // MISSED / IRREGULAR PERIOD
- 
+  // ======================================================
+  // MISSED PERIOD
+  // ======================================================
 
   if (category === "missed_period") {
-
-    // Severe pelvic / abdominal pain
     if (
       ["severe", "very_severe"].includes(
         answers.severe_pain
@@ -17,9 +16,6 @@ const evaluateSafety = (category, answers) => {
       );
     }
 
-    // Heavy bleeding
-
-
     if (
       ["heavy", "very_heavy"].includes(
         answers.heavy_bleeding
@@ -29,10 +25,6 @@ const evaluateSafety = (category, answers) => {
         "Heavy or unusually heavy bleeding should be evaluated by a healthcare professional."
       );
     }
-
-
-    // Possible pregnancy + severe pain
-  
 
     if (
       ["yes", "not_sure"].includes(
@@ -47,9 +39,6 @@ const evaluateSafety = (category, answers) => {
       );
     }
 
-    // Dizziness / fainting
- 
-
     if (
       ["yes", "sometimes"].includes(
         answers.dizziness_or_fainting
@@ -61,8 +50,9 @@ const evaluateSafety = (category, answers) => {
     }
   }
 
+  // ======================================================
   // PELVIC PAIN
-
+  // ======================================================
 
   if (category === "pelvic_pain") {
     if (
@@ -111,9 +101,9 @@ const evaluateSafety = (category, answers) => {
     }
   }
 
-
+  // ======================================================
   // VAGINAL DISCHARGE
-
+  // ======================================================
 
   if (category === "vaginal_discharge") {
     if (
@@ -147,9 +137,9 @@ const evaluateSafety = (category, answers) => {
     }
   }
 
-
+  // ======================================================
   // PAINFUL PERIOD
-
+  // ======================================================
 
   if (category === "painful_period") {
     if (
@@ -193,7 +183,9 @@ const evaluateSafety = (category, answers) => {
     }
   }
 
+  // ======================================================
   // ABNORMAL BLEEDING
+  // ======================================================
 
   if (category === "abnormal_bleeding") {
     if (
@@ -237,9 +229,9 @@ const evaluateSafety = (category, answers) => {
     }
   }
 
-
+  // ======================================================
   // URINARY SYMPTOMS
-
+  // ======================================================
 
   if (category === "urinary_symptoms") {
     if (answers.blood_in_urine === "yes") {
@@ -259,35 +251,132 @@ const evaluateSafety = (category, answers) => {
   }
 
   // ======================================================
+  // PREGNANCY CONCERN
+  // ======================================================
+
+  if (category === "pregnancy_concern") {
+    if (
+      ["severe", "very_severe"].includes(
+        answers.pelvic_pain
+      )
+    ) {
+      redFlags.push(
+        "Severe pelvic or abdominal pain when pregnancy is possible requires urgent medical evaluation."
+      );
+    }
+
+    if (
+      ["heavy", "very_heavy"].includes(
+        answers.bleeding
+      )
+    ) {
+      redFlags.push(
+        "Heavy bleeding when pregnancy is possible should be evaluated promptly."
+      );
+    }
+  }
+
+  // ======================================================
   // RISK LEVEL
   // ======================================================
 
   let riskLevel = "low";
 
-  // High-risk situations
   if (redFlags.length > 0) {
     riskLevel = "high";
-  }
+  } else {
+    if (category === "missed_period") {
+      if (
+        ["8_14", "15_30", "more_than_30"].includes(
+          answers.days_late
+        ) ||
+        ["sometimes", "often", "almost_always"].includes(
+          answers.previous_irregular
+        ) ||
+        ["mild", "moderate"].includes(
+          answers.severe_pain
+        ) ||
+        answers.heavy_bleeding === "moderate"
+      ) {
+        riskLevel = "medium";
+      }
+    }
 
-  // Medium-risk situations
+    if (category === "pelvic_pain") {
+      if (
+        ["moderate"].includes(
+          answers.pain_severity
+        ) ||
+        answers.fever === "not_sure" ||
+        answers.heavy_bleeding === "not_sure"
+      ) {
+        riskLevel = "medium";
+      }
+    }
 
+    if (category === "vaginal_discharge") {
+      if (
+        ["yellow", "green", "grey"].includes(
+          answers.discharge_color
+        ) ||
+        ["moderate", "severe"].includes(
+          answers.itching
+        ) ||
+        answers.unusual_odor === "yes"
+      ) {
+        riskLevel = "medium";
+      }
+    }
 
-  if (riskLevel === "low") {
-    if (
-      ["8_14", "15_30", "more_than_30"].includes(
-        answers.days_late
-      ) ||
-      ["sometimes", "often", "almost_always"].includes(
-        answers.previous_irregular
-      ) ||
-      ["mild", "moderate"].includes(
-        answers.severe_pain
-      ) ||
-      ["moderate"].includes(
-        answers.heavy_bleeding
-      )
-    ) {
-      riskLevel = "medium";
+    if (category === "painful_period") {
+      if (
+        answers.pain_severity === "moderate" ||
+        ["moderate", "heavy"].includes(
+          answers.heavy_bleeding
+        ) ||
+        ["significantly"].includes(
+          answers.daily_activities
+        )
+      ) {
+        riskLevel = "medium";
+      }
+    }
+
+    if (category === "abnormal_bleeding") {
+      if (
+        ["moderate", "heavy"].includes(
+          answers.heavy_bleeding
+        ) ||
+        answers.between_periods === "yes" ||
+        answers.after_sex === "yes"
+      ) {
+        riskLevel = "medium";
+      }
+    }
+
+    if (category === "urinary_symptoms") {
+      if (
+        ["sometimes", "often"].includes(
+          answers.burning
+        ) ||
+        ["sometimes", "often"].includes(
+          answers.frequency
+        ) ||
+        ["sometimes", "often"].includes(
+          answers.urgency
+        )
+      ) {
+        riskLevel = "medium";
+      }
+    }
+
+    if (category === "pregnancy_concern") {
+      if (
+        answers.pregnancy_possibility === "yes" ||
+        answers.pregnancy_possibility === "not_sure"
+      ) {
+        riskLevel = "medium";
+      }
     }
   }
 
