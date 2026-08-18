@@ -36,7 +36,9 @@ import WeekDetails from "./pages/pregnancy/WeekDetails";
 import PregnancyReminders from "./pages/pregnancy/PregnancyReminders";
 import ReminderDetails from "./pages/pregnancy/ReminderDetails";
 import ProtectedRoute from "./routes/ProtectedRoute";
-
+import GynaeAssistantPage from "./pages/gynae-assistant/GynaeAssistantPage";
+import GynaeConversationHistoryPage from "./pages/gynae-assistant/GynaeConversationHistoryPage";
+import GynaeConversationDetailPage from "./pages/gynae-assistant/GynaeConversationDetailPage";
 
 function App() {
   return (
@@ -260,6 +262,31 @@ function App() {
     </ProtectedRoute>
   }
 />
+<Route
+  path="/gynae-assistant"
+  element={
+    <ProtectedRoute>
+      <GynaeAssistantPage />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/gynae-assistant/history"
+  element={
+    <ProtectedRoute>
+      <GynaeConversationHistoryPage />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/gynae-assistant/history/:id"
+  element={
+    <ProtectedRoute>
+      <GynaeConversationDetailPage />
+    </ProtectedRoute>
+  }
+/>
+
       </Routes>
 
   );
