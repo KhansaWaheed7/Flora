@@ -33,6 +33,34 @@ const {
 // HELPERS
 // ======================================================
 
+// Add this helper function at the top of your controller file
+
+const generateConversationTitle = (message) => {
+  // Clean and truncate the message
+  const cleanMessage = message.trim();
+  
+  // Remove common greeting patterns
+  const cleaned = cleanMessage
+    .replace(/^(hi|hello|hey|good morning|good afternoon|good evening)[\s,!.]*/i, '')
+    .replace(/^flora[\s,!.]*/i, '')
+    .trim();
+  
+  // If after cleaning it's empty, use a default
+  if (!cleaned) {
+    return "General Conversation";
+  }
+  
+  // Capitalize first letter
+  const title = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  
+  // Truncate to reasonable length (50 characters)
+  if (title.length > 50) {
+    return title.substring(0, 50) + '...';
+  }
+  
+  return title;
+};
+
 const isValidQuestionAnswer = (
   question,
   message
@@ -201,35 +229,7 @@ const getAssessmentQuestionPayload = (
   };
 };
 
-// ======================================================
-// CREATE NEW CONVERSATION
-// ======================================================
 
-const createConversation = async (
-  req,
-  res,
-  next
-) => {
-  try {
-    const conversation =
-      await GynaeConversation.create({
-        user: req.user._id,
-      });
-
-    res.status(201).json({
-      success: true,
-
-      data: {
-        conversationId: conversation._id,
-        category: null,
-        status: conversation.status,
-        messages: [],
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 // ======================================================
 // PROCESS VALID ASSESSMENT ANSWER
@@ -472,9 +472,12 @@ const sendMessage = async (
         });
       }
     } else {
+      // Create new conversation with title
+      const title = generateConversationTitle(message);
       conversation =
         await GynaeConversation.create({
           user: req.user._id,
+          title: title, 
         });
     }
 
@@ -929,12 +932,14 @@ const getConversationHistory = async (
     const conversations =
       await GynaeConversation.find({
         user: req.user._id,
+        "messages.0": { $exists: true },
       })
         .sort({
           updatedAt: -1,
         })
         .select(
-          "category status messages createdAt updatedAt assessment"
+          "title category status messages createdAt updatedAt assessment"
+        
         );
 
     res.status(200).json({
@@ -979,9 +984,38 @@ const getConversation = async (
   }
 };
 
+// ======================================================
+// DELETE CONVERSATION
+// ======================================================
+
+const deleteConversation = async (req, res, next) => {
+  try {
+    const conversation = await GynaeConversation.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        message: "Conversation not found",
+      });
+    }
+
+    await conversation.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Conversation deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
-  createConversation,
   sendMessage,
   getConversationHistory,
   getConversation,
+  deleteConversation,
 };

@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Paperclip,
-  Smile,
   Send,
   Trash2,
   Sparkles,
@@ -13,7 +11,6 @@ import {
 import PageLayout from "../../layouts/PageLayout";
 
 import {
-  createGynaeConversation,
   sendGynaeMessage,
 } from "../../services/gynaeAssistant.service";
 
@@ -108,76 +105,6 @@ export default function GynaeAssistantPage() {
     });
   };
 
-  // ======================================================
-  // START / RESET CONVERSATION
-  // ======================================================
-
-  const startConversation = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      const result = await createGynaeConversation();
-
-      console.log("CREATE GYNAE RESPONSE:", result);
-
-      const data = result?.data;
-
-      if (!data?.conversationId) {
-        throw new Error("Backend did not return a conversationId.");
-      }
-
-      setConversationId(data.conversationId);
-
-      setMessages([
-        {
-          ...initialAssistantMessage,
-          id: `welcome-${Date.now()}`,
-          timestamp: formatTime(),
-        },
-      ]);
-
-      setCurrentQuestion(null);
-      setSelectedOptions([]);
-
-      setCategory(null);
-      setAssessment(null);
-
-      setAnsweredQuestions(0);
-      setTotalQuestions(0);
-      setShowAssessmentComplete(false);
-
-      setInput("");
-    } catch (error) {
-      console.error("Failed to create Gynae conversation:", error);
-      console.error("Backend response:", error?.response?.data);
-
-      setConversationId(null);
-
-      setMessages([
-        {
-          id: `error-${Date.now()}`,
-          role: "assistant",
-          content:
-            "I'm sorry, I couldn't start the conversation right now. Please try again.",
-          timestamp: formatTime(),
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // ======================================================
-  // INITIAL CONVERSATION
-  // ======================================================
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      startConversation();
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, [startConversation]);
 
   // ======================================================
   // MESSAGE HELPERS
@@ -207,6 +134,31 @@ export default function GynaeAssistantPage() {
     ]);
   };
 
+
+  const startNewConversation = useCallback(() => {
+  setConversationId(null);
+
+  setMessages([
+    {
+      ...initialAssistantMessage,
+      id: `welcome-${Date.now()}`,
+      timestamp: formatTime(),
+    },
+  ]);
+
+  setCurrentQuestion(null);
+  setSelectedOptions([]);
+
+  setCategory(null);
+  setAssessment(null);
+
+  setAnsweredQuestions(0);
+  setTotalQuestions(0);
+
+  setShowAssessmentComplete(false);
+
+  setInput("");
+}, []);
   // ======================================================
   // SEND MESSAGE
   // ======================================================
@@ -230,23 +182,10 @@ export default function GynaeAssistantPage() {
     setLoading(true);
 
     try {
-      if (!conversationId) {
-        throw new Error(
-          "No conversation ID exists. Please start a new conversation."
-        );
-      }
-
-      console.log("SENDING GYNAE MESSAGE:", {
-        conversationId,
-        message: cleanMessage,
-      });
-
-      const result = await sendGynaeMessage(
-        conversationId,
-        cleanMessage
-      );
-
-      console.log("GYNAE MESSAGE RESPONSE:", result);
+  const result = await sendGynaeMessage(
+    conversationId,
+    cleanMessage
+  );
 
       const data = result?.data;
 
@@ -484,7 +423,7 @@ export default function GynaeAssistantPage() {
 
         <button
           type="button"
-          onClick={startConversation}
+          onClick={startNewConversation}
           disabled={loading}
           className="inline-flex items-center gap-2 rounded-xl border border-[#F33B7D] bg-white px-4 py-2.5 text-xs font-semibold text-[#F33B7D] transition hover:bg-[#FEE4EB] disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -527,7 +466,7 @@ export default function GynaeAssistantPage() {
 
             <button
               type="button"
-              onClick={startConversation}
+              onClick={startNewConversation}
               disabled={loading}
               title="Start a new conversation"
               className="flex h-9 w-9 items-center justify-center rounded-lg text-[#8F8C8C] transition hover:bg-[#FEF4F4] hover:text-[#F33B7D] disabled:cursor-not-allowed disabled:opacity-50"
@@ -886,24 +825,6 @@ export default function GynaeAssistantPage() {
                 }
                 className="min-w-0 flex-1 bg-transparent px-1 py-3 text-sm text-[#3D3939] outline-none placeholder:text-[#B8AEB2] disabled:cursor-not-allowed"
               />
-
-              {/* UI icons retained from your design.
-                  Attachment/emoji functionality will be
-                  checked separately against backend support. */}
-
-              <button
-                type="button"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#8F8C8C] transition hover:bg-[#FEF4F4] hover:text-[#F33B7D]"
-              >
-                <Paperclip className="h-4 w-4" />
-              </button>
-
-              <button
-                type="button"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#8F8C8C] transition hover:bg-[#FEF4F4] hover:text-[#F33B7D]"
-              >
-                <Smile className="h-4 w-4" />
-              </button>
 
               <button
                 type="button"

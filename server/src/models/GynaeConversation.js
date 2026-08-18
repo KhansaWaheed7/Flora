@@ -90,6 +90,12 @@ const gynaeConversationSchema = new mongoose.Schema(
       index: true,
     },
 
+      title: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
     category: {
       type: String,
 
@@ -102,6 +108,7 @@ const gynaeConversationSchema = new mongoose.Schema(
         "urinary_symptoms",
         "general_menstrual_health",
         "general_gynae",
+        "pregnancy_concern",
         "out_of_scope",
       ],
 

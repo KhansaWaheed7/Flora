@@ -1,10 +1,7 @@
+// client/src/services/gynaeAssistant.service.js
+
 import api from "../api/axios";
 import { GYNAE_ASSISTANT } from "../api/endpoints";
-
-export const createGynaeConversation = async () => {
-  const response = await api.post(GYNAE_ASSISTANT.CREATE);
-  return response.data;
-};
 
 export const sendGynaeMessage = async (conversationId, message) => {
   const response = await api.post(GYNAE_ASSISTANT.MESSAGE, {
@@ -26,4 +23,17 @@ export const getGynaeConversation = async (conversationId) => {
   );
 
   return response.data;
+};
+
+export const deleteGynaeConversation = async (conversationId) => {
+  try {
+    
+    const response = await api.delete(
+      `/gynae-assistant/conversations/${conversationId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting conversation:", error);
+    throw error;
+  }
 };
