@@ -14,6 +14,7 @@ const chatRoutes = require("./chat.routes");
 const doctorRoutes = require("./doctor.routes");
 const messageRoutes = require("./message.routes");
 const gynaeAssistantRoutes = require("./gynaeAssistant.routes");
+const medicalReportRoutes = require("./medicalReport.routes");
 
 
 router.use("/auth", authRoutes);
@@ -31,7 +32,7 @@ router.use("/chat", chatRoutes);
 router.use("/doctor", doctorRoutes);
 router.use("/messages", messageRoutes);
 router.use("/gynae-assistant", gynaeAssistantRoutes);
-
+router.use("/medical-reports", medicalReportRoutes);
 
 router.get("/health", (req, res) => {
   res.status(200).json({

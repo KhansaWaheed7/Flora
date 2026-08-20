@@ -1,3 +1,4 @@
+// server/src/middlewares/medicalReportUpload.middleware.js (UPDATED)
 const multer = require("multer");
 
 const ALLOWED_MIME_TYPES = [
@@ -8,7 +9,7 @@ const ALLOWED_MIME_TYPES = [
   "text/plain",
 ];
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB for medical reports
 
 const storage = multer.memoryStorage();
 
@@ -18,6 +19,25 @@ const fileFilter = (req, file, cb) => {
       new Error(
         "Invalid file type. Only PDF, JPG, PNG, WEBP, and TXT files are allowed."
       ),
+      false
+    );
+  }
+
+  // Validate file extension matches MIME type
+  const validExtensions = {
+    "application/pdf": [".pdf"],
+    "image/jpeg": [".jpg", ".jpeg"],
+    "image/png": [".png"],
+    "image/webp": [".webp"],
+    "text/plain": [".txt"],
+  };
+
+  const fileExt = require("path").extname(file.originalname).toLowerCase();
+  const allowedExts = validExtensions[file.mimetype] || [];
+
+  if (!allowedExts.includes(fileExt)) {
+    return cb(
+      new Error("File extension does not match the file type."),
       false
     );
   }

@@ -1,3 +1,4 @@
+// server/src/models/MedicalReport.js (UPDATED)
 const mongoose = require("mongoose");
 
 const medicalReportSchema = new mongoose.Schema(
@@ -26,16 +27,36 @@ const medicalReportSchema = new mongoose.Schema(
       required: true,
     },
 
-    fileUrl: {
+    // Encrypted file data (stored in DB or disk)
+    encryptedData: {
+      type: Buffer,
+    },
+
+    // Encryption metadata
+    encryptionIV: {
       type: String,
       required: true,
     },
 
-    publicId: {
+    encryptionAuthTag: {
       type: String,
-      default: "",
+      required: true,
     },
 
+    // File integrity
+    fileHash: {
+      type: String,
+      required: true,
+      index: true,
+      unique: true,
+    },
+
+    fileSize: {
+      type: Number,
+      required: true,
+    },
+
+    // Extracted text
     extractedText: {
       type: String,
       default: "",
@@ -44,90 +65,113 @@ const medicalReportSchema = new mongoose.Schema(
     reportType: {
       type: String,
       default: "Unknown",
+      enum: [
+        "Blood Test",
+        "Urine Test",
+        "Ultrasound",
+        "X-Ray",
+        "CT Scan",
+        "MRI",
+        "Pathology",
+        "Cardiology",
+        "Gynecology",
+        "Thyroid Test",
+        "Liver Function",
+        "Kidney Function",
+        "Unknown",
+      ],
     },
 
+    // Structured extracted data
     extractedData: [
       {
         test: {
           type: String,
           trim: true,
         },
-
         value: {
           type: String,
           trim: true,
         },
-
         unit: {
           type: String,
           trim: true,
           default: "",
         },
-
         referenceRange: {
           type: String,
           trim: true,
-          default: "",
+          default: "N/A",
         },
-
         status: {
           type: String,
-          enum: [
-            "normal",
-            "low",
-            "high",
-            "abnormal",
-            "unknown",
-          ],
+          enum: ["normal", "low", "high", "abnormal", "unknown"],
           default: "unknown",
+        },
+        confidence: {
+          type: Number,
+          min: 0,
+          max: 100,
+          default: 0,
         },
       },
     ],
 
+    // Abnormal results
     abnormalResults: [
       {
         test: {
           type: String,
           trim: true,
         },
-
         value: {
           type: String,
           trim: true,
         },
-
         unit: {
           type: String,
           trim: true,
           default: "",
         },
-
         referenceRange: {
           type: String,
           trim: true,
           default: "",
         },
-
         status: {
           type: String,
           enum: ["low", "high", "abnormal"],
         },
+        severity: {
+          type: String,
+          enum: ["mild", "moderate", "severe"],
+          default: "mild",
+        },
+        recommendation: {
+          type: String,
+          default: "",
+        },
       },
     ],
 
+    // Summary and insights
     summary: {
       type: String,
       default: "",
     },
 
+    insights: {
+      overview: String,
+      keyFindings: [String],
+      normalResults: [String],
+      recommendations: [String],
+      whenToSeeDoctor: String,
+    },
+
+    // Processing status
     processingStatus: {
       type: String,
-      enum: [
-        "uploaded",
-        "processing",
-        "completed",
-        "failed",
-      ],
+      enum: ["uploaded", "processing", "ocr_done", "parsing_done", "completed", "failed"],
       default: "uploaded",
     },
 
@@ -136,6 +180,38 @@ const medicalReportSchema = new mongoose.Schema(
       default: "",
     },
 
+    // Privacy
+    isPrivate: {
+      type: Boolean,
+      default: true,
+    },
+
+    // Access tracking
+    accessLog: [
+      {
+        accessedBy: mongoose.Schema.Types.ObjectId,
+        accessedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        action: {
+          type: String,
+          enum: ["viewed", "downloaded", "shared"],
+        },
+      },
+    ],
+
+    // Metadata
+    metadata: {
+      uploadedFrom: {
+        type: String,
+        enum: ["mobile", "web", "api"],
+        default: "web",
+      },
+      userAgent: String,
+    },
+
+    // Disclaimer
     disclaimer: {
       type: String,
       default:
@@ -147,7 +223,9 @@ const medicalReportSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model(
-  "MedicalReport",
-  medicalReportSchema
-);
+// Indexes
+medicalReportSchema.index({ user: 1, createdAt: -1 });
+medicalReportSchema.index({ processingStatus: 1 });
+medicalReportSchema.index({ "abnormalResults.severity": 1 });
+
+module.exports = mongoose.model("MedicalReport", medicalReportSchema);
