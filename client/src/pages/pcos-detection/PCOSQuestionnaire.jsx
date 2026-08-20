@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Info, Check } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import { questions, TOTAL_QUESTIONS } from "../../data/pcosQuestions";
+
 function frequencyToBoolean(value) {
   return ["Often", "Frequently"].includes(value);
 }
@@ -30,46 +31,18 @@ function buildPayload(answers) {
 
   return {
     age: Number(answers.age),
-
     height: heightInCm,
-
     weight,
-
     bmi,
-
     cycleLength: Number(answers.cycleLength),
-
-    irregularPeriods: frequencyToBoolean(
-      answers.irregularCycles
-    ),
-
-    weightGain: frequencyToBoolean(
-      answers.weightGain
-    ),
-
-    acne: frequencyToBoolean(
-      answers.acne
-    ),
-
-    hairLoss: frequencyToBoolean(
-      answers.hairLoss
-    ),
-
-    excessiveHairGrowth: frequencyToBoolean(
-      answers.hirsutism
-    ),
-
-    darkSkinPatches: frequencyToBoolean(
-      answers.skinPatches
-    ),
-
-    exerciseFrequency: Number(
-      answers.exerciseFrequency
-    ),
-
-    fastFood: frequencyToBoolean(
-      answers.fastFood
-    ),
+    irregularPeriods: frequencyToBoolean(answers.irregularCycles),
+    weightGain: frequencyToBoolean(answers.weightGain),
+    acne: frequencyToBoolean(answers.acne),
+    hairLoss: frequencyToBoolean(answers.hairLoss),
+    excessiveHairGrowth: frequencyToBoolean(answers.hirsutism),
+    darkSkinPatches: frequencyToBoolean(answers.skinPatches),
+    exerciseFrequency: Number(answers.exerciseFrequency),
+    fastFood: frequencyToBoolean(answers.fastFood),
   };
 }
 
@@ -117,7 +90,7 @@ export default function PCOSQuestionnaire() {
   // Handle number input - only prevent negative values
   const handleNumberChange = (e) => {
     const value = e.target.value;
-    if (value === '' || value === '-' || value === '.') {
+    if (value === '' || value === '-') {
       setAnswer(value);
       return;
     }
@@ -127,39 +100,65 @@ export default function PCOSQuestionnaire() {
     }
   };
 
-  // Handle height input - only prevent negative values
+  // Handle height input
   const handleHeightChange = (e) => {
     const value = e.target.value;
-    if (value === '' || value === '-' || value === '.') {
+    const currentHeightWeight = answers.heightWeight || { heightUnit: 'cm' };
+    
+    // Allow empty string for clearing the input
+    if (value === '') {
       setAnswer({
-        ...answers.heightWeight,
-        height: value,
+        ...currentHeightWeight,
+        height: '',
       });
       return;
     }
+    
+    // Allow decimal point for typing
+    if (value === '.') {
+      setAnswer({
+        ...currentHeightWeight,
+        height: '0.',
+      });
+      return;
+    }
+    
     const num = Number(value);
     if (!isNaN(num) && num >= 0) {
       setAnswer({
-        ...answers.heightWeight,
+        ...currentHeightWeight,
         height: value,
       });
     }
   };
 
-  // Handle weight input - only prevent negative values
+  // Handle weight input
   const handleWeightChange = (e) => {
     const value = e.target.value;
-    if (value === '' || value === '-' || value === '.') {
+    const currentHeightWeight = answers.heightWeight || { heightUnit: 'cm' };
+    
+    // Allow empty string for clearing the input
+    if (value === '') {
       setAnswer({
-        ...answers.heightWeight,
-        weight: value,
+        ...currentHeightWeight,
+        weight: '',
       });
       return;
     }
+    
+    // Allow decimal point for typing
+    if (value === '.') {
+      setAnswer({
+        ...currentHeightWeight,
+        weight: '0.',
+      });
+      return;
+    }
+    
     const num = Number(value);
     if (!isNaN(num) && num >= 0) {
       setAnswer({
-        ...answers.heightWeight,
+        ...currentHeightWeight,
         weight: value,
       });
     }
@@ -242,6 +241,7 @@ export default function PCOSQuestionnaire() {
                   <div className="flex gap-2">
                     <input
                       type="number"
+                      step="any"
                       value={answers.heightWeight?.height || ""}
                       onChange={handleHeightChange}
                       placeholder={getHeightPlaceholder()}
@@ -249,13 +249,15 @@ export default function PCOSQuestionnaire() {
                     />
                     <select
                       value={answers.heightWeight?.heightUnit || 'cm'}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const unit = e.target.value;
+                        const currentHeightWeight = answers.heightWeight || {};
                         setAnswer({
-                          ...answers.heightWeight,
-                          heightUnit: e.target.value,
+                          ...currentHeightWeight,
+                          heightUnit: unit,
                           height: '', // Clear height when switching units
-                        })
-                      }
+                        });
+                      }}
                       className="w-[70px] rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-2 py-3 text-sm font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15"
                     >
                       <option value="cm">cm</option>
@@ -270,6 +272,7 @@ export default function PCOSQuestionnaire() {
                   </label>
                   <input
                     type="number"
+                    step="any"
                     value={answers.heightWeight?.weight || ""}
                     onChange={handleWeightChange}
                     placeholder="60"
@@ -283,48 +286,47 @@ export default function PCOSQuestionnaire() {
             )}
 
             {current.type === "yesno" && (
-  <div className="grid grid-cols-2 gap-4">
-    {["Yes", "No"].map((opt) => (
-      <button
-        key={opt}
-        type="button"
-        onClick={() => setAnswer(opt)}
-        className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
-          answers[current.key] === opt
-            ? "border-[#F33B7D] bg-[#FEE4EB] text-[#F33B7D]"
-            : "border-[#F0DCE4] bg-white text-[#3D3939] hover:bg-[#FEF4F4]"
-        }`}
-      >
-        {opt}
-      </button>
-    ))}
-  </div>
-)}
+              <div className="grid grid-cols-2 gap-4">
+                {["Yes", "No"].map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setAnswer(opt)}
+                    className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+                      answers[current.key] === opt
+                        ? "border-[#F33B7D] bg-[#FEE4EB] text-[#F33B7D]"
+                        : "border-[#F0DCE4] bg-white text-[#3D3939] hover:bg-[#FEF4F4]"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
 
-{current.type === "frequency" && (
-  <div className="space-y-3">
-    {["Never", "Rarely", "Sometimes", "Often", "Frequently"].map(
-      (opt) => (
-        <button
-          key={opt}
-          type="button"
-          onClick={() => setAnswer(opt)}
-          className={`flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left text-sm font-semibold transition ${
-            answers[current.key] === opt
-              ? "border-[#F33B7D] bg-[#FEE4EB] text-[#F33B7D]"
-              : "border-[#F0DCE4] bg-white text-[#3D3939] hover:bg-[#FEF4F4]"
-          }`}
-        >
-          <span>{opt}</span>
-
-          {answers[current.key] === opt && (
-            <Check className="h-4 w-4 text-[#F33B7D]" />
-          )}
-        </button>
-      )
-    )}
-  </div>
-)}
+            {current.type === "frequency" && (
+              <div className="space-y-3">
+                {["Never", "Rarely", "Sometimes", "Often", "Frequently"].map(
+                  (opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setAnswer(opt)}
+                      className={`flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left text-sm font-semibold transition ${
+                        answers[current.key] === opt
+                          ? "border-[#F33B7D] bg-[#FEE4EB] text-[#F33B7D]"
+                          : "border-[#F0DCE4] bg-white text-[#3D3939] hover:bg-[#FEF4F4]"
+                      }`}
+                    >
+                      <span>{opt}</span>
+                      {answers[current.key] === opt && (
+                        <Check className="h-4 w-4 text-[#F33B7D]" />
+                      )}
+                    </button>
+                  )
+                )}
+              </div>
+            )}
 
             {current.helperNote && (
               <div className="mt-3 flex items-start gap-2 rounded-xl bg-[#FEE4EB] p-3">
@@ -335,15 +337,16 @@ export default function PCOSQuestionnaire() {
           </div>
 
           <div className="mt-5 rounded-xl bg-[#FEF4F4] p-3">
-  <p className="text-xs leading-relaxed text-[#6B5F63]">
-    <span className="font-semibold text-[#F33B7D]">
-      Important:
-    </span>{" "}
-    This assessment provides a PCOS risk screening and prediction based on
-    the information you provide. It does not detect or diagnose PCOS and
-    cannot replace evaluation by a qualified healthcare professional.
-  </p>
-</div>
+            <p className="text-xs leading-relaxed text-[#6B5F63]">
+              <span className="font-semibold text-[#F33B7D]">
+                Important:
+              </span>{" "}
+              This assessment provides a PCOS risk screening and prediction based on
+              the information you provide. It does not detect or diagnose PCOS and
+              cannot replace evaluation by a qualified healthcare professional.
+            </p>
+          </div>
+          
           <div className="mt-6 flex gap-3">
             <button
               onClick={handlePrevious}

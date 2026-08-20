@@ -1,5 +1,5 @@
 // DashboardPage.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import {
@@ -49,11 +49,14 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
+import { getCycleDashboard, getPrediction, getCycles } from "../../services/cycle.service";
+import { getAssessmentHistory } from "../../services/pcos.service";
 
-const stats = [
+// Keep static stats structure but we'll update values dynamically
+const statsConfig = [
   {
     label: "Next Period",
-    value: "5",
+    key: "nextPeriod",
     unit: "",
     sub: "Days Left",
     color: "#F33B7D",
@@ -61,15 +64,15 @@ const stats = [
   },
   {
     label: "Cycle Day",
-    value: "12",
-    unit: "/28",
+    key: "cycleDay",
+    unit: "",
     sub: "Today",
     color: "#A855F7",
     icon: Repeat,
   },
   {
     label: "PCOS Risk",
-    value: "Low",
+    key: "pcosRisk",
     unit: "",
     sub: "Risk Level",
     color: "#22C55E",
@@ -93,21 +96,7 @@ const stats = [
   },
 ];
 
-
-const cyclePieData = [
-  { name: "Period", value: 5, color: "#F33B7D" },
-  { name: "Follicular", value: 5, color: "#FBCFE8" },
-  { name: "Fertile", value: 6, color: "#A855F7" },
-  { name: "Luteal", value: 12, color: "#E5E7EB" },
-];
-
-const cycleLegend = [
-  { label: "Period", days: "Day 1 - 5", color: "#F33B7D" },
-  { label: "Fertile Window", days: "Day 10 - 16", color: "#A855F7" },
-  { label: "Ovulation", days: "Day 14", color: "#22C55E" },
-  { label: "Luteal Phase", days: "Day 15 - 28", color: "#D1D5DB" },
-];
-
+// Keep static insights
 const insights = [
   {
     icon: ActivityIcon,
@@ -139,15 +128,7 @@ const insights = [
   },
 ];
 
-const quickActions = [
-  { icon: Calendar, label: "Log Period" },
-  { icon: ShieldCheck, label: "PCOS Assessment" },
-  { icon: Upload, label: "Upload Report" },
-  { icon: MessageCircle, label: "Talk to Doctor" },
-  { icon: BookOpen, label: "Health Education" },
-  { icon: Dumbbell, label: "Diet & Exercise" },
-];
-
+// Keep static recent activity
 const recentActivity = [
   {
     icon: Calendar,
@@ -179,6 +160,7 @@ const recentActivity = [
   },
 ];
 
+// Keep static reminders
 const reminders = [
   {
     title: "Doctor Appointment",
@@ -204,21 +186,6 @@ const reminders = [
     tag: "Upcoming",
     tagColor: "#A855F7",
   },
-];
-
-const cycleHistory = [
-  { month: "Jan", period: 5, cycle: 27, ovulation: 13 },
-  { month: "Feb", period: 6, cycle: 28, ovulation: 14 },
-  { month: "Mar", period: 5, cycle: 29, ovulation: 15 },
-  { month: "Apr", period: 5, cycle: 28, ovulation: 14 },
-  { month: "May", period: 4, cycle: 27, ovulation: 13 },
-  { month: "Jun", period: 5, cycle: 28, ovulation: 14 },
-  { month: "Jul", period: 5, cycle: 28, ovulation: 14 },
-  { month: "Aug", period: 6, cycle: 29, ovulation: 15 },
-  { month: "Sep", period: 5, cycle: 28, ovulation: 14 },
-  { month: "Oct", period: 4, cycle: 27, ovulation: 13 },
-  { month: "Nov", period: 5, cycle: 28, ovulation: 14 },
-  { month: "Dec", period: 5, cycle: 28, ovulation: 14 },
 ];
 
 function Sparkline({ color }) {
@@ -265,14 +232,399 @@ function StatCard({ label, value, unit, sub, color, icon: Icon }) {
   );
 }
 
+function getRiskColor(risk) {
+  const r = (risk || "").toLowerCase();
+  if (r.includes("high")) return "#F33B7D";
+  if (r.includes("medium") || r.includes("moderate")) return "#F59E0B";
+  if (r.includes("low")) return "#22C55E";
+  return "#F59E0B";
+}
+
+function getRiskLevel(risk) {
+  const r = (risk || "").toLowerCase();
+  if (r.includes("high")) return "High";
+  if (r.includes("medium") || r.includes("moderate")) return "Moderate";
+  if (r.includes("low")) return "Low";
+  return "Unknown";
+}
+
 export default function DashboardPage() {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [predictionData, setPredictionData] = useState(null);
+  const [cyclesData, setCyclesData] = useState([]);
+  const [pcosAssessments, setPcosAssessments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [hasCycleData, setHasCycleData] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Load all data in parallel
+        const [dashboardRes, predictionRes, cyclesRes, pcosRes] = await Promise.all([
+          getCycleDashboard().catch(() => ({ data: null })),
+          getPrediction().catch(() => ({ data: null })),
+          getCycles().catch(() => ({ data: [] })),
+          getAssessmentHistory().catch(() => []),
+        ]);
+
+        const dashboard = dashboardRes.data || dashboardRes || null;
+        const prediction = predictionRes.data || predictionRes || null;
+        const cycles = cyclesRes.data || cyclesRes.cycles || cyclesRes || [];
+        const pcos = Array.isArray(pcosRes) ? pcosRes : [];
+
+        setDashboardData(dashboard);
+        setPredictionData(prediction);
+        setCyclesData(Array.isArray(cycles) ? cycles : []);
+        setPcosAssessments(pcos);
+        
+        // Check if we have any cycle data
+        const hasData = (Array.isArray(cycles) && cycles.length > 0) || 
+                       (dashboard && (dashboard.latestCycle || dashboard.prediction));
+        setHasCycleData(hasData);
+      } catch (err) {
+        setError("Could not load data");
+        console.error("Error loading dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Get latest PCOS assessment
+  const getLatestPCOS = () => {
+    if (!pcosAssessments || pcosAssessments.length === 0) {
+      return null;
+    }
+    // Sort by createdAt descending and get the latest
+    const sorted = [...pcosAssessments].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+    return sorted[0];
+  };
+
+  // Compute dynamic stats
+  const getStats = () => {
+    const stats = [...statsConfig];
+
+    if (!hasCycleData) {
+      // No cycle data state
+      stats[0].value = "-";
+      stats[0].sub = "No data";
+      stats[1].value = "-";
+      stats[1].unit = "";
+      stats[1].sub = "No data";
+    } else {
+      // Update Next Period
+      if (predictionData?.nextPeriod) {
+        const daysUntil = Math.ceil(
+          (new Date(predictionData.nextPeriod) - Date.now()) / (1000 * 60 * 60 * 24)
+        );
+        stats[0].value = daysUntil > 0 ? daysUntil : 0;
+        stats[0].sub = daysUntil > 0 ? "Days Left" : "Due Today";
+      } else {
+        stats[0].value = "-";
+        stats[0].sub = "No data";
+      }
+
+      // Update Cycle Day
+      if (dashboardData?.prediction?.currentPhase?.cycleDay) {
+        const cycleDay = dashboardData.prediction.currentPhase.cycleDay;
+        const cycleLength = dashboardData.prediction?.averageCycleLength || 28;
+        stats[1].value = cycleDay;
+        stats[1].unit = `/${cycleLength}`;
+        stats[1].sub = `Day ${cycleDay}`;
+      } else if (predictionData?.currentPhase?.cycleDay) {
+        const cycleDay = predictionData.currentPhase.cycleDay;
+        const cycleLength = predictionData?.averageCycleLength || 28;
+        stats[1].value = cycleDay;
+        stats[1].unit = `/${cycleLength}`;
+        stats[1].sub = `Day ${cycleDay}`;
+      }
+    }
+
+    // Update PCOS Risk
+    const latestPCOS = getLatestPCOS();
+    if (latestPCOS) {
+      const risk = getRiskLevel(latestPCOS.risk);
+      const color = getRiskColor(latestPCOS.risk);
+      stats[2].value = risk;
+      stats[2].sub = `${Math.round(latestPCOS.probability || 0)}% Probability`;
+      stats[2].color = color;
+    } else {
+      stats[2].value = "No Data";
+      stats[2].sub = "Take assessment";
+      stats[2].color = "#8F8C8C";
+    }
+
+    return stats;
+  };
+
+  // Compute cycle pie data
+  const getCyclePieData = () => {
+    if (!hasCycleData) {
+      // Show empty state with greyed out pie
+      return [
+        { name: "No Data", value: 1, color: "#E5E7EB" },
+      ];
+    }
+
+    const cycleDay = dashboardData?.prediction?.currentPhase?.cycleDay || 
+                    predictionData?.currentPhase?.cycleDay || 1;
+    const cycleLength = dashboardData?.prediction?.averageCycleLength || 
+                       predictionData?.averageCycleLength || 28;
+
+    return [
+      { name: "Current Day", value: cycleDay, color: "#F33B7D" },
+      { name: "Remaining", value: Math.max(0, cycleLength - cycleDay), color: "#FBCFE8" },
+    ];
+  };
+
+  // Get period length from user data
+  const getPeriodLength = () => {
+    if (!hasCycleData) return 5; // Default if no data
+    
+    // Try to get from prediction
+    if (predictionData?.periodLength) {
+      return predictionData.periodLength;
+    }
+    if (dashboardData?.prediction?.periodLength) {
+      return dashboardData.prediction.periodLength;
+    }
+    
+    // Try to get from latest cycle
+    if (cyclesData.length > 0) {
+      const latestCycle = cyclesData[cyclesData.length - 1];
+      if (latestCycle?.periodLength) {
+        return latestCycle.periodLength;
+      }
+    }
+    
+    return 5; // Default if not found
+  };
+
+  // Get ovulation day - calculate it properly from cycle data
+  const getOvulationDay = () => {
+    if (!hasCycleData) return null;
+    
+    // If we have a prediction with ovulation date, use it
+    if (predictionData?.ovulation) {
+      const ovDate = new Date(predictionData.ovulation);
+      const day = ovDate.getDate();
+      // Validate the ovulation day is reasonable
+      if (day >= 10 && day <= 20) {
+        return day;
+      }
+    }
+    if (dashboardData?.prediction?.ovulation) {
+      const ovDate = new Date(dashboardData.prediction.ovulation);
+      const day = ovDate.getDate();
+      if (day >= 10 && day <= 20) {
+        return day;
+      }
+    }
+    
+    // Calculate from cycle length - ovulation typically occurs 14 days before period
+    const cycleLength = dashboardData?.prediction?.averageCycleLength || 
+                       predictionData?.averageCycleLength || 28;
+    
+    // Standard calculation: ovulation day = cycle length - 14
+    // For a 28-day cycle, this gives day 14
+    // For a 30-day cycle, this gives day 16
+    const calculatedOvulation = cycleLength - 14;
+    
+    // Ensure it's within a reasonable range (day 10-20 for most women)
+    if (calculatedOvulation >= 10 && calculatedOvulation <= 20) {
+      return calculatedOvulation;
+    }
+    
+    // Default to day 14 for a standard 28-day cycle
+    return 14;
+  };
+
+  // Get current phase name with proper formatting
+  const getCurrentPhase = () => {
+    if (!hasCycleData) {
+      return null;
+    }
+
+    let phase = dashboardData?.prediction?.currentPhase?.phase || 
+                predictionData?.currentPhase?.phase;
+    
+    if (!phase) return null;
+    
+    // Ensure "Phase" is appended if not already present
+    const phaseLower = phase.toLowerCase();
+    if (phaseLower === "menstrual" || phaseLower === "follicular" || 
+        phaseLower === "luteal" || phaseLower === "ovulation") {
+      // For ovulation, it's already a phase name without needing "Phase"
+      if (phaseLower === "ovulation") {
+        return "Ovulation";
+      }
+      return `${phase} Phase`;
+    }
+    
+    return phase;
+  };
+
+  // Get insight
+  const getInsight = () => {
+    if (!hasCycleData) {
+      return "Start logging your periods to get personalized health insights.";
+    }
+
+    const insights = dashboardData?.prediction?.health?.insights || 
+                    predictionData?.health?.insights || 
+                    ["Log your next period to keep predictions accurate."];
+    return insights[0] || "Log your next period to keep predictions accurate.";
+  };
+
+  // Get dynamic cycle history data
+  const getCycleHistoryData = () => {
+    if (!cyclesData || cyclesData.length === 0) {
+      return [];
+    }
+
+    // Sort cycles by periodStart date (oldest to newest)
+    const sortedCycles = [...cyclesData]
+      .filter(c => c.periodStart)
+      .sort((a, b) => new Date(a.periodStart) - new Date(b.periodStart));
+
+    // Take the last 6 cycles or all if less than 6
+    const lastSixCycles = sortedCycles.slice(-6);
+
+    // Transform cycle data for the chart
+    return lastSixCycles.map((cycle) => {
+      const startDate = new Date(cycle.periodStart);
+      const month = startDate.toLocaleDateString('en-US', { month: 'short' });
+      
+      // Calculate ovulation day from cycle length
+      const cycleLength = cycle.cycleLength || 28;
+      const ovulationDay = cycleLength - 14; // Typical ovulation calculation
+      
+      return {
+        month: month,
+        period: cycle.periodLength || 5,
+        cycle: cycleLength,
+        ovulation: Math.max(10, Math.min(20, ovulationDay)), // Clamp between 10-20
+      };
+    });
+  };
+
+  const stats = getStats();
+  const cyclePieData = getCyclePieData();
+  const ovulationDay = getOvulationDay();
+  const periodLength = getPeriodLength();
+  const insight = getInsight();
+  const cycleHistoryData = getCycleHistoryData();
+  const cycleLength = dashboardData?.prediction?.averageCycleLength || 
+                     predictionData?.averageCycleLength || 28;
+  const currentPhase = getCurrentPhase();
+  const latestPCOS = getLatestPCOS();
+
+  // Get user-friendly cycle phase labels and days
+  const getCyclePhases = () => {
+    if (!hasCycleData || !ovulationDay) {
+      return [
+        { 
+          label: "Menstrual Phase", 
+          days: "Log to track", 
+          color: "#D1D5DB"
+        },
+        { 
+          label: "Follicular Phase", 
+          days: "Log to track", 
+          color: "#D1D5DB"
+        },
+        { 
+          label: "Fertile Window", 
+          days: "Log to track", 
+          color: "#D1D5DB"
+        },
+        { 
+          label: "Ovulation", 
+          days: "Log to track", 
+          color: "#D1D5DB"
+        },
+        { 
+          label: "Luteal Phase", 
+          days: "Log to track", 
+          color: "#D1D5DB"
+        },
+      ];
+    }
+
+    const periodStart = 1;
+    const periodEnd = periodLength;
+    const follicularStart = periodEnd + 1;
+    const follicularEnd = ovulationDay - 1;
+    const fertileStart = ovulationDay - 5;
+    const fertileEnd = ovulationDay - 1;
+    const lutealStart = ovulationDay + 1;
+    const lutealEnd = cycleLength;
+
+    return [
+      { 
+        label: "Menstrual Phase", 
+        days: `Day ${periodStart} - ${periodEnd}`, 
+        color: "#F33B7D"
+      },
+      { 
+        label: "Follicular Phase", 
+        days: `Day ${follicularStart} - ${follicularEnd}`, 
+        color: "#FBCFE8"
+      },
+      { 
+        label: "Fertile Window", 
+        days: `Day ${fertileStart} - ${fertileEnd}`, 
+        color: "#A855F7"
+      },
+      { 
+        label: "Ovulation", 
+        days: `Day ${ovulationDay}`, 
+        color: "#22C55E"
+      },
+      { 
+        label: "Luteal Phase", 
+        days: `Day ${lutealStart} - ${lutealEnd}`, 
+        color: "#D1D5DB"
+      },
+    ];
+  };
+
+  const cyclePhases = getCyclePhases();
+
+  // Quick actions with proper paths
+  const quickActions = [
+    { icon: Calendar, label: "Log Period", path: "/cycle-tracker/log" },
+    { icon: ShieldCheck, label: "PCOS Assessment", path: "/pcos-detection" },
+    { icon: Upload, label: "Upload Report", path: "#" },
+    { icon: MessageCircle, label: "Talk to Doctor", path: "#" },
+    { icon: BookOpen, label: "Health Education", path: "#" },
+    { icon: Dumbbell, label: "Diet & Exercise", path: "#" },
+  ];
+
+  if (loading) {
+    return (
+      <DashboardLayout subtitle="Here's your personalized health overview.">
+        <div className="flex items-center justify-center py-12">
+          <p className="text-sm text-[#8F8C8C]">Loading your health data...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout subtitle="Here's your personalized health overview.">
       {/* Log Health Data Button */}
       <div className="mb-6 flex justify-end">
-        <button className="flex items-center gap-1.5 rounded-full bg-[#FEE4EB] px-4 py-2 text-xs font-semibold text-[#F33B7D]">
-          <Plus className="h-3.5 w-3.5" /> Log Health Data
-        </button>
+        <Link to="/cycle-tracker/log">
+          <button className="flex items-center gap-1.5 rounded-full bg-[#FEE4EB] px-4 py-2 text-xs font-semibold text-[#F33B7D]">
+            <Plus className="h-3.5 w-3.5" /> Log Health Data
+          </button>
+        </Link>
       </div>
 
       {/* Stats Grid */}
@@ -290,9 +642,9 @@ export default function DashboardPage() {
             <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
               Cycle Overview
             </h2>
-            <button className="text-xs font-semibold text-[#F33B7D]">
+            <Link to="/cycle-tracker/history?view=calendar" className="text-xs font-semibold text-[#F33B7D]">
               View Calendar
-            </button>
+            </Link>
           </div>
 
           <div className="relative mx-auto h-36 w-36">
@@ -315,30 +667,43 @@ export default function DashboardPage() {
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <p className="text-xs text-[#8F8C8C]">Day</p>
-              <p className="font-display text-2xl font-semibold text-[#0D0D0D]">12</p>
-              <p className="text-xs text-[#8F8C8C]">of 28</p>
+              <p className="font-display text-2xl font-semibold text-[#0D0D0D]">
+                {hasCycleData ? (dashboardData?.prediction?.currentPhase?.cycleDay || 
+                 predictionData?.currentPhase?.cycleDay || "-") : "-"}
+              </p>
+              <p className="text-xs text-[#8F8C8C]">
+                {hasCycleData ? `of ${cycleLength}` : "No data"}
+              </p>
             </div>
           </div>
 
-          <div className="mt-4 space-y-2">
-            {cycleLegend.map(({ label, days, color }) => (
+          <div className="mt-4 space-y-1.5">
+            {cyclePhases.map(({ label, days, color }) => (
               <div key={label} className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-2 text-[#3D3939]">
+                <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-                  {label}
-                </span>
+                  <span className="text-[#3D3939]">{label}</span>
+                </div>
                 <span className="text-[#B8AEB2]">{days}</span>
               </div>
             ))}
           </div>
 
-          <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#FEE4EB] p-3">
-            <Sparkles className="h-4 w-4 flex-shrink-0 text-[#F33B7D]" />
-            <p className="text-xs text-[#3D3939]">
-              You are in your <span className="font-semibold text-[#F33B7D]">fertile window</span>. Chance of getting pregnant is high.
-            </p>
-            <ChevronRight className="ml-auto h-4 w-4 flex-shrink-0 text-[#F33B7D]" />
-          </div>
+          {hasCycleData && currentPhase && (
+            <div className="mt-4 rounded-xl bg-[#FEE4EB] p-3 text-center">
+              <p className="text-sm font-bold text-[#F33B7D]">
+                {currentPhase}
+              </p>
+            </div>
+          )}
+
+          {!hasCycleData && (
+            <div className="mt-4 rounded-xl bg-[#FEE4EB] p-3 text-center">
+              <p className="text-xs text-[#3D3939]">
+                Log your first period to start tracking your cycle.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Health Insights */}
@@ -416,8 +781,7 @@ export default function DashboardPage() {
           <div className="relative flex-1 overflow-hidden rounded-2xl bg-[#F33B7D] p-4 text-white shadow-[0_10px_24px_-4px_rgba(243,59,125,0.4)]">
             <p className="text-sm font-semibold">Tip of the Day</p>
             <p className="mt-1 max-w-[70%] text-xs text-white/85">
-              A balanced diet and regular exercise can improve your mood and
-              energy levels during pregnancy.
+              {insight}
             </p>
           </div>
         </div>
@@ -425,27 +789,27 @@ export default function DashboardPage() {
 
       {/* Quick Actions + Recent Activity */}
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-      
-<div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-  <h2 className="mb-4 font-display text-base font-semibold text-[#0D0D0D]">
-    Quick Actions
-  </h2>
-  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-    {quickActions.map(({ icon: Icon, label }) => (
-      <button
-        key={label}
-        className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] px-4 py-3 text-left transition hover:bg-[#FEE4EB]"
-      >
-        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#F33B7D] shadow-sm">
-          <Icon className="h-4 w-4" />
-        </span>
-        <span className="text-sm font-medium text-[#3D3939]">
-          {label}
-        </span>
-      </button>
-    ))}
-  </div>
-</div>
+        <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <h2 className="mb-4 font-display text-base font-semibold text-[#0D0D0D]">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {quickActions.map(({ icon: Icon, label, path }) => (
+              <Link
+                key={label}
+                to={path}
+                className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] px-4 py-3 text-left transition hover:bg-[#FEE4EB]"
+              >
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#F33B7D] shadow-sm">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="text-sm font-medium text-[#3D3939]">
+                  {label}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
 
         <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
           <div className="mb-4 flex items-center justify-between">
@@ -483,7 +847,7 @@ export default function DashboardPage() {
         <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 lg:col-span-2">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
-              Cycle History <span className="font-normal text-[#8F8C8C]">(Last 6 Cycles)</span>
+              Cycle History <span className="font-normal text-[#8F8C8C]">(Last {Math.min(cycleHistoryData.length, 6)} Cycles)</span>
             </h2>
             <div className="flex items-center gap-3 text-[10px] text-[#8F8C8C]">
               <span className="flex items-center gap-1">
@@ -498,38 +862,44 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={cycleHistory.slice(-6)}>
-                <CartesianGrid vertical={false} stroke="#F5EAEF" />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 11, fill: "#8F8C8C" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: "#8F8C8C" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip />
-                <Bar dataKey="period" fill="#F33B7D" radius={[3, 3, 0, 0]} barSize={8} />
-                <Bar dataKey="cycle" fill="#A855F7" radius={[3, 3, 0, 0]} barSize={8} />
-                <Line
-                  type="monotone"
-                  dataKey="ovulation"
-                  stroke="#22C55E"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {cycleHistoryData.length === 0 ? (
+            <div className="flex h-48 items-center justify-center text-sm text-[#8F8C8C]">
+              No cycle data available yet. Start logging your cycles to see your history.
+            </div>
+          ) : (
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={cycleHistoryData}>
+                  <CartesianGrid vertical={false} stroke="#F5EAEF" />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 11, fill: "#8F8C8C" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "#8F8C8C" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip />
+                  <Bar dataKey="period" fill="#F33B7D" radius={[3, 3, 0, 0]} barSize={8} />
+                  <Bar dataKey="cycle" fill="#A855F7" radius={[3, 3, 0, 0]} barSize={8} />
+                  <Line
+                    type="monotone"
+                    dataKey="ovulation"
+                    stroke="#22C55E"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
           
-          <button className="mt-3 w-full text-center text-xs font-semibold text-[#F33B7D]">
+          <Link to="/cycle-tracker/history" className="mt-3 block w-full text-center text-xs font-semibold text-[#F33B7D]">
             View Full History →
-          </button>
+          </Link>
         </div>
 
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#A855F7] to-[#F33B7D] p-5 text-white shadow-[0_20px_40px_-10px_rgba(168,85,247,0.4)]">
