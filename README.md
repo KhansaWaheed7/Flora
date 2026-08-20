@@ -1,4 +1,4 @@
-# Flora — Women’s Gynae Health Platform
+# Flora: Women’s Gynae Health Platform
 
 **Flora** is an AI-powered women’s gynecological health platform designed to provide accessible, secure, and culturally appropriate healthcare support for women, with a focus on the needs of women in Pakistan.
 
@@ -7,31 +7,6 @@ The platform brings essential gynecological and reproductive health services tog
 Flora supports **English and Urdu** to improve accessibility and provide health information in a more understandable and culturally relevant way.
 
 > **Disclaimer:** Flora is an academic Final Year Project. AI-based features provide risk indications and informational guidance only and are **not intended to replace professional medical diagnosis or treatment**.
-
-
-## System Architecture
-
-Flora is designed as a multi-component system consisting of:
-
-```text
-                    ┌──────────────────────┐
-                    │     Flora Client     │
-                    │  Web / Mobile App    │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │      REST API        │
-                    │   Node.js + Express  │
-                    └──────────┬───────────┘
-                               │
-             ┌─────────────────┼─────────────────┐
-             ▼                 ▼                 ▼
-      ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
-      │   MongoDB   │   │  AI / ML    │   │   Services  │
-      │   Database  │   │   Python    │   │ OCR / NLP   │
-      └─────────────┘   └─────────────┘   └─────────────┘
-```
 
 ## Security & Privacy
 
