@@ -270,17 +270,18 @@ export default function FloraLanding() {
           </button>
         </div>
 
-        {/* Mobile Menu - Full Screen Overlay */}
+        {/* Mobile Menu - Transparent Background with Blur */}
         <div
           className={`
-            fixed inset-x-0 bottom-0 z-40 bg-gradient-to-b from-[#FFF5F7] via-[#FDE8EE] to-[#FEF6F6]
+            fixed inset-x-0 bottom-0 z-40
+            bg-white/80 backdrop-blur-xl
             transition-all duration-300 ease-in-out md:hidden
             ${menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
           `}
           style={{ top: "72px", height: "calc(100dvh - 72px)" }}
         >
           <div className="relative flex flex-col h-full px-6 py-8 overflow-y-auto overscroll-contain mobile-menu-scroll">
-            {/* Decorative elements */}
+            {/* Subtle decorative elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#EB6991]/5 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#F33B7D]/5 rounded-full blur-3xl" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#EB6991]/5 rounded-full blur-3xl" />
@@ -292,7 +293,7 @@ export default function FloraLanding() {
                   key={label}
                   href={href}
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-4 px-5 py-4 rounded-2xl bg-white/70 backdrop-blur-md border border-[#FBE4EC] shadow-sm hover:shadow-lg hover:border-[#EB6991]/40 transition-all duration-300 group hover:bg-white/90"
+                  className="flex items-center gap-4 px-5 py-4 rounded-2xl bg-white/60 backdrop-blur-md border border-[#FBE4EC]/60 shadow-sm hover:shadow-lg hover:border-[#EB6991]/40 transition-all duration-300 group hover:bg-white/80"
                 >
                   <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-[#FEE4EB] to-[#FDE3E5] text-[#EB6991] group-hover:bg-gradient-to-br group-hover:from-[#EB6991] group-hover:to-[#F33B7D] group-hover:text-white transition-all duration-300 shadow-[0_4px_12px_rgba(235,105,145,0.15)] group-hover:shadow-[0_8px_20px_rgba(235,105,145,0.35)]">
                     <Icon className="h-5 w-5" />
@@ -308,7 +309,7 @@ export default function FloraLanding() {
             {/* Divider with decorative dots */}
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#FBE4EC]"></div>
+                <div className="w-full border-t border-[#FBE4EC]/60"></div>
               </div>
               <div className="relative flex justify-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#EB6991]"></span>
@@ -319,7 +320,7 @@ export default function FloraLanding() {
 
             {/* Language & CTA */}
             <div className="relative space-y-4">
-              <button className="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-xl bg-white/70 backdrop-blur-md border border-[#FBE4EC] text-sm font-medium text-[#5B4650] hover:border-[#EB6991]/40 hover:shadow-md transition-all duration-300">
+              <button className="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-xl bg-white/60 backdrop-blur-md border border-[#FBE4EC]/60 text-sm font-medium text-[#5B4650] hover:border-[#EB6991]/40 hover:shadow-md transition-all duration-300">
                 <Globe className="h-4 w-4" />
                 EN <ChevronDown className="h-3.5 w-3.5" />
               </button>
@@ -337,9 +338,9 @@ export default function FloraLanding() {
             {/* Quick Links at bottom */}
             <div className="relative mt-6 flex justify-center gap-6 pb-6">
               <a href="#features" className="text-xs text-[#8F7C87] hover:text-[#EB6991] transition-colors" onClick={() => setMenuOpen(false)}>Features</a>
-              <span className="text-[#FBE4EC]">|</span>
+              <span className="text-[#FBE4EC]/60">|</span>
               <a href="#about" className="text-xs text-[#8F7C87] hover:text-[#EB6991] transition-colors" onClick={() => setMenuOpen(false)}>About</a>
-              <span className="text-[#FBE4EC]">|</span>
+              <span className="text-[#FBE4EC]/60">|</span>
               <a href="#resources" className="text-xs text-[#8F7C87] hover:text-[#EB6991] transition-colors" onClick={() => setMenuOpen(false)}>Resources</a>
             </div>
           </div>

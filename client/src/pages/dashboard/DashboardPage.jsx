@@ -34,6 +34,7 @@ import {
   Droplets,
   Sun,
   ChevronDown,
+  Bot,
 } from "lucide-react";
 import {
   LineChart,
@@ -188,6 +189,74 @@ const reminders = [
   },
 ];
 
+// Enhanced Quick Actions with matching background colors
+const quickActions = [
+  { 
+    icon: Calendar, 
+    label: "Log Period", 
+    path: "/cycle-tracker/log",
+    description: "Track your cycle",
+    iconColor: "#F33B7D",
+    bgColor: "#FEE4EB"
+  },
+  { 
+    icon: ShieldCheck, 
+    label: "PCOS Assessment", 
+    path: "/pcos-detection",
+    description: "Check your risk",
+    iconColor: "#F33B7D",
+    bgColor: "#FEE4EB"
+  },
+  { 
+    icon: Upload, 
+    label: "Upload Report", 
+    path: "#",
+    description: "Analyze health data",
+    iconColor: "#F33B7D",
+    bgColor: "#FEE4EB"
+  },
+  { 
+    icon: MessageCircle, 
+    label: "Talk to Doctor", 
+    path: "#",
+    description: "Get expert advice",
+    iconColor: "#F33B7D",
+    bgColor: "#FEE4EB"
+  },
+  { 
+    icon: Bot, 
+    label: "Gynae Assistant", 
+    path: "#",
+    description: "AI health guidance",
+    iconColor: "#F33B7D",
+    bgColor: "#FEE4EB"
+  },
+  { 
+    icon: BookOpen, 
+    label: "Health Education", 
+    path: "#",
+    description: "Learn more",
+    iconColor: "#F33B7D",
+    bgColor: "#FEE4EB"
+  },
+  { 
+    icon: Apple, 
+    label: "Diet & Nutrition", 
+    path: "#",
+    description: "Healthy eating guide",
+    iconColor: "#F33B7D",
+    bgColor: "#FEE4EB"
+  },
+  { 
+    icon: Dumbbell, 
+    label: "Exercise", 
+    path: "#",
+    description: "Stay active & fit",
+    iconColor: "#F33B7D",
+    bgColor: "#FEE4EB"
+  },
+];
+
 function Sparkline({ color }) {
   const data = Array.from({ length: 8 }, (_, i) => ({
     v: 10 + Math.abs(Math.sin(i / 1.3 + 0.5) * 8) + 0.5,
@@ -256,6 +325,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [hasCycleData, setHasCycleData] = useState(false);
+  const [hoveredAction, setHoveredAction] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -596,16 +666,6 @@ export default function DashboardPage() {
 
   const cyclePhases = getCyclePhases();
 
-  // Quick actions with proper paths
-  const quickActions = [
-    { icon: Calendar, label: "Log Period", path: "/cycle-tracker/log" },
-    { icon: ShieldCheck, label: "PCOS Assessment", path: "/pcos-detection" },
-    { icon: Upload, label: "Upload Report", path: "#" },
-    { icon: MessageCircle, label: "Talk to Doctor", path: "#" },
-    { icon: BookOpen, label: "Health Education", path: "#" },
-    { icon: Dumbbell, label: "Diet & Exercise", path: "#" },
-  ];
-
   if (loading) {
     return (
       <DashboardLayout subtitle="Here's your personalized health overview.">
@@ -621,7 +681,7 @@ export default function DashboardPage() {
       {/* Log Health Data Button */}
       <div className="mb-6 flex justify-end">
         <Link to="/cycle-tracker/log">
-          <button className="flex items-center gap-1.5 rounded-full bg-[#FEE4EB] px-4 py-2 text-xs font-semibold text-[#F33B7D]">
+          <button className="flex items-center gap-1.5 rounded-full bg-[#FEE4EB] px-4 py-2 text-xs font-semibold text-[#F33B7D] hover:bg-[#FDD5E0] transition-colors">
             <Plus className="h-3.5 w-3.5" /> Log Health Data
           </button>
         </Link>
@@ -642,7 +702,7 @@ export default function DashboardPage() {
             <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
               Cycle Overview
             </h2>
-            <Link to="/cycle-tracker/history?view=calendar" className="text-xs font-semibold text-[#F33B7D]">
+            <Link to="/cycle-tracker/history?view=calendar" className="text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors">
               View Calendar
             </Link>
           </div>
@@ -712,7 +772,7 @@ export default function DashboardPage() {
             <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
               Health Insights
             </h2>
-            <button className="flex items-center gap-1 text-xs font-medium text-[#8F8C8C]">
+            <button className="flex items-center gap-1 text-xs font-medium text-[#8F8C8C] hover:text-[#3D3939] transition-colors">
               This Week <ChevronDown className="h-3 w-3" />
             </button>
           </div>
@@ -738,7 +798,7 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-          <button className="mt-4 w-full text-center text-xs font-semibold text-[#F33B7D]">
+          <button className="mt-4 w-full text-center text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors">
             View Detailed Insights →
           </button>
         </div>
@@ -750,7 +810,7 @@ export default function DashboardPage() {
               <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
                 Upcoming Reminders
               </h2>
-              <button className="text-xs font-semibold text-[#F33B7D]">
+              <button className="text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors">
                 View All
               </button>
             </div>
@@ -787,53 +847,93 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick Actions + Recent Activity */}
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-          <h2 className="mb-4 font-display text-base font-semibold text-[#0D0D0D]">
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {quickActions.map(({ icon: Icon, label, path }) => (
+      {/* Quick Actions + Recent Activity - Enhanced Layout */}
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Quick Actions - Now spans 2 columns */}
+        <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 lg:col-span-2">
+          <div className="mb-5">
+            <h2 className="font-display text-lg font-semibold text-[#0D0D0D]">
+              Quick Actions
+            </h2>
+            <p className="text-sm text-[#8F8C8C]">Manage your health with one tap</p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {quickActions.map(({ icon: Icon, label, path, description, iconColor, bgColor }, index) => (
               <Link
                 key={label}
                 to={path}
-                className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] px-4 py-3 text-left transition hover:bg-[#FEE4EB]"
+                className="group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+                style={{ backgroundColor: bgColor }}
+                onMouseEnter={() => setHoveredAction(index)}
+                onMouseLeave={() => setHoveredAction(null)}
               >
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#F33B7D] shadow-sm">
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="text-sm font-medium text-[#3D3939]">
-                  {label}
-                </span>
+                <div className="relative flex flex-col items-start gap-2.5">
+                  {/* Icon - background turns dark pink on hover */}
+                  <div 
+                    className="flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-300 shadow-sm"
+                    style={{ 
+                      backgroundColor: hoveredAction === index ? '#F33B7D' : bgColor
+                    }}
+                  >
+                    <Icon 
+                      className="h-6 w-6 transition-all duration-300" 
+                      style={{ 
+                        color: hoveredAction === index ? '#FFFFFF' : iconColor,
+                        strokeWidth: 1.5 
+                      }} 
+                    />
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="w-full">
+                    <p className="text-sm font-semibold text-[#0D0D0D] group-hover:text-[#F33B7D] transition-colors">
+                      {label}
+                    </p>
+                    <p className="text-xs text-[#8F8C8C]">{description}</p>
+                  </div>
+                  
+                  {/* Arrow indicator on hover */}
+                  <div className="absolute right-3 top-3 opacity-0 transition-all duration-300 group-hover:opacity-100">
+                    <ChevronRight className="h-4 w-4" style={{ color: iconColor }} />
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
-              Recent Activity
-            </h2>
-            <button className="text-xs font-semibold text-[#F33B7D]">
+        {/* Recent Activity - Spans 1 column */}
+        <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-lg font-semibold text-[#0D0D0D]">
+                Recent Activity
+              </h2>
+              <p className="text-sm text-[#8F8C8C]">Your latest health updates</p>
+            </div>
+            <button className="text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors">
               View All
             </button>
           </div>
-          <div className="space-y-3">
-            {recentActivity.map(({ icon: Icon, color, title, detail, time }) => (
-              <div key={title} className="flex items-center gap-3">
-                <span
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
+          
+          <div className="space-y-4">
+            {recentActivity.slice(0, 4).map(({ icon: Icon, color, title, detail, time }) => (
+              <div 
+                key={title} 
+                className="group flex items-center gap-4 rounded-xl p-3 transition-all duration-300 hover:bg-[#FEF4F4] cursor-pointer"
+              >
+                <div
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110"
                   style={{ backgroundColor: `${color}1A`, color }}
                 >
-                  <Icon className="h-4 w-4" />
-                </span>
+                  <Icon className="h-5 w-5" />
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-[#0D0D0D]">{title}</p>
                   <p className="truncate text-xs text-[#8F8C8C]">{detail}</p>
                 </div>
-                <span className="flex-shrink-0 text-[10px] text-[#B8AEB2]">
+                <span className="flex-shrink-0 text-[10px] text-[#B8AEB2] group-hover:text-[#8F8C8C] transition-colors">
                   {time}
                 </span>
               </div>
@@ -897,7 +997,7 @@ export default function DashboardPage() {
             </div>
           )}
           
-          <Link to="/cycle-tracker/history" className="mt-3 block w-full text-center text-xs font-semibold text-[#F33B7D]">
+          <Link to="/cycle-tracker/history" className="mt-3 block w-full text-center text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors">
             View Full History →
           </Link>
         </div>
