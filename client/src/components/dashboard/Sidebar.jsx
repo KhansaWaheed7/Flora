@@ -29,7 +29,7 @@ const navItems = [
   { icon: HeartHandshake, label: "Gynae Assistant", path: "/gynae-assistant" },
   { icon: Apple, label: "Diet & Nutrition", path: "/diet-nutrition" },
   { icon: Dumbbell, label: "Exercise", path: "/exercise" },
-  { icon: FileText, label: "Reports", path: "/reports" },
+  { icon: FileText, label: "Medical Reports", path: "/medical-reports" },
   { icon: BookOpen, label: "Education", path: "/education" },
   { icon: Bell, label: "Notifications", badge: 2, path: "/notifications" },
   { icon: User, label: "Profile", path: "/profile" },
