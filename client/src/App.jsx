@@ -39,6 +39,10 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import GynaeAssistantPage from "./pages/gynae-assistant/GynaeAssistantPage";
 import GynaeConversationHistoryPage from "./pages/gynae-assistant/GynaeConversationHistoryPage";
 import GynaeConversationDetailPage from "./pages/gynae-assistant/GynaeConversationDetailPage";
+import MedicalReportsPage from "./pages/medical-reports/MedicalReportsPage";
+import UploadMedicalReportPage from "./pages/medical-reports/UploadMedicalReportPage";
+import ReportProcessingPage from "./pages/medical-reports/ReportProcessingPage";
+import MedicalReportDetailsPage from "./pages/medical-reports/MedicalReportDetailsPage";
 
 function App() {
   return (
@@ -283,6 +287,39 @@ function App() {
   element={
     <ProtectedRoute>
       <GynaeConversationDetailPage />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/medical-reports"
+  element={
+    <ProtectedRoute>
+      <MedicalReportsPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/medical-reports/upload"
+  element={
+    <ProtectedRoute>
+      <UploadMedicalReportPage />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/medical-reports/:id/processing"
+  element={
+    <ProtectedRoute>
+      <ReportProcessingPage />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/medical-reports/:id"
+  element={
+    <ProtectedRoute>
+      <MedicalReportDetailsPage />
     </ProtectedRoute>
   }
 />
