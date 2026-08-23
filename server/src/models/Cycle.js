@@ -13,23 +13,23 @@ const cycleSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+periodEnd: {
+  type: Date,
+  default: null,
+},
 
-    periodEnd: {
-      type: Date,
-      required: true,
-    },
+cycleLength: {
+  type: Number,
+  min: 15,
+  max: 60,
+},
 
-    cycleLength: {
-      type: Number,
-      min: 15,
-      max: 60,
-    },
-
-    periodLength: {
-      type: Number,
-      min: 1,
-      max: 10,
-    },
+periodLength: {
+  type: Number,
+  min: 1,
+  max: 10,
+  default: null,
+},
 
     symptoms: [
       {

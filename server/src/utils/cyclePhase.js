@@ -1,8 +1,9 @@
 const getCyclePhase = ({
   cycleStart,
+  periodEnd = null,
   currentDate = new Date(),
   cycleLength = 28,
-  periodLength = 5,
+  periodLength = null,
 }) => {
   const start = new Date(cycleStart);
   const current = new Date(currentDate);
@@ -12,7 +13,8 @@ const getCyclePhase = ({
 
   const cycleDay =
     Math.floor(
-      (current - start) / (1000 * 60 * 60 * 24)
+      (current - start) /
+        (1000 * 60 * 60 * 24)
     ) + 1;
 
   // If current date is before the cycle started
@@ -21,6 +23,20 @@ const getCyclePhase = ({
       phase: "Unknown",
       cycleDay: 0,
       description: "Cycle has not started yet.",
+    };
+  }
+
+  /*
+   * IMPORTANT:
+   * If there is no period end date, the current period
+   * is still in progress.
+   */
+  if (!periodEnd) {
+    return {
+      phase: "Menstrual",
+      cycleDay,
+      description:
+        "Your period is currently in progress.",
     };
   }
 
@@ -34,7 +50,7 @@ const getCyclePhase = ({
   const fertileEnd = ovulationDay + 1;
 
   // Menstrual phase
-  if (cycleDay <= periodLength) {
+  if (periodLength && cycleDay <= periodLength) {
     return {
       phase: "Menstrual",
       cycleDay,
@@ -54,7 +70,10 @@ const getCyclePhase = ({
   }
 
   // Fertile window / ovulation
-  if (cycleDay >= fertileStart && cycleDay <= fertileEnd) {
+  if (
+    cycleDay >= fertileStart &&
+    cycleDay <= fertileEnd
+  ) {
     if (cycleDay === ovulationDay) {
       return {
         phase: "Ovulation",
@@ -73,7 +92,10 @@ const getCyclePhase = ({
   }
 
   // Luteal phase
-  if (cycleDay > fertileEnd && cycleDay <= cycleLength) {
+  if (
+    cycleDay > fertileEnd &&
+    cycleDay <= cycleLength
+  ) {
     return {
       phase: "Luteal",
       cycleDay,
@@ -90,5 +112,7 @@ const getCyclePhase = ({
       "Your cycle has gone beyond the estimated cycle length.",
   };
 };
+
+module.exports = getCyclePhase;
 
 module.exports = getCyclePhase;

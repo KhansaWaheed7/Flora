@@ -137,8 +137,11 @@ export default function EditCycle() {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-[#3D3939]">
-                End Date
-              </label>
+  End Date{" "}
+  <span className="font-normal text-[#B8AEB2]">
+    (Add when period finishes)
+  </span>
+</label>
               <input
                 type="date"
                 value={periodEnd}

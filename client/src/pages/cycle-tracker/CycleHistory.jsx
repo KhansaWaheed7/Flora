@@ -23,11 +23,26 @@ const symptomEmoji = {
 };
 
 function formatRange(start, end) {
-  if (!start || !end) return "";
+  if (!start) return "";
+
   const s = new Date(start);
+
+  const opts = {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  };
+
+  if (!end) {
+    return `${s.toLocaleDateString("en-US", opts)} - Present`;
+  }
+
   const e = new Date(end);
-  const opts = { day: "numeric", month: "long", year: "numeric" };
-  return `${s.getDate()} - ${e.toLocaleDateString("en-US", opts)}`;
+
+  return `${s.getDate()} - ${e.toLocaleDateString(
+    "en-US",
+    opts
+  )}`;
 }
 
 // Local-date-only key (avoids timezone shifting a date to the wrong day)
@@ -244,12 +259,20 @@ function CalendarGrid({ cycles, prediction, monthCursor, setMonthCursor }) {
 
   // Build lookup sets so each day only needs an O(1) check
   const periodDays = new Set();
-  cycles.forEach((c) => {
-    if (!c.periodStart || !c.periodEnd) return;
-    eachDay(c.periodStart, c.periodEnd).forEach((d) =>
-      periodDays.add(dayKey(d))
-    );
+
+cycles.forEach((c) => {
+  if (!c.periodStart) return;
+
+  const start = new Date(c.periodStart);
+
+  const end = c.periodEnd
+    ? new Date(c.periodEnd)
+    : new Date();
+
+  eachDay(start, end).forEach((d) => {
+    periodDays.add(dayKey(d));
   });
+});
 
   const predictedPeriodDays = new Set();
   if (prediction?.nextPeriod) {

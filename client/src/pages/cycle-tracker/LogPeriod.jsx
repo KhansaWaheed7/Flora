@@ -39,26 +39,51 @@ export default function LogPeriod() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      await createCycle({
-        periodStart,
-        periodEnd,
-        periodLength,
-        symptoms: symptoms.map((s) => symptomLabelToEnum[s]),
-        notes,
-      });
-      navigate("/cycle-tracker");
-    } catch (err) {
-      setError(
-        err?.response?.data?.message || "Failed to save cycle. Try again."
-      );
-    } finally {
-      setLoading(false);
+  e.preventDefault();
+
+  setError("");
+
+  if (!periodStart) {
+    setError("Please select your period start date.");
+    return;
+  }
+
+  if (
+    periodEnd &&
+    new Date(periodEnd) < new Date(periodStart)
+  ) {
+    setError("End date cannot be before start date.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const payload = {
+      periodStart,
+      symptoms: symptoms.map(
+        (s) => symptomLabelToEnum[s]
+      ),
+      notes,
+    };
+
+    // Only send periodEnd if the user has entered it.
+    if (periodEnd) {
+      payload.periodEnd = periodEnd;
     }
-  };
+
+    await createCycle(payload);
+
+    navigate("/cycle-tracker");
+  } catch (err) {
+    setError(
+      err?.response?.data?.message ||
+        "Failed to save cycle. Try again."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <PageLayout
@@ -76,13 +101,13 @@ export default function LogPeriod() {
         {/* Period Dates */}
         <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
           <h2 className="mb-4 font-display text-sm font-semibold text-[#0D0D0D]">
-            1. Select Period Dates
-          </h2>
+  1. Period Dates
+</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-[#3D3939]">
-                Start Date
-              </label>
+  Start Date
+</label>
               <input
                 type="date"
                 value={periodStart}
@@ -92,14 +117,22 @@ export default function LogPeriod() {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-[#3D3939]">
-                End Date
-              </label>
+  End Date{" "}
+  <span className="font-normal text-[#B8AEB2]">
+    (Optional)
+  </span>
+</label>
+
               <input
                 type="date"
                 value={periodEnd}
                 onChange={(e) => setPeriodEnd(e.target.value)}
                 className="w-full rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-3.5 py-2.5 text-sm text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15"
               />
+              <p className="mt-3 text-xs text-[#8F8C8C]">
+  You can log your period as soon as it starts.
+  Add the end date when your period finishes.
+</p>
             </div>
           </div>
           {periodLength && (
@@ -165,7 +198,11 @@ export default function LogPeriod() {
           disabled={loading}
           className="w-full rounded-full bg-[#F33B7D] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_-6px_rgba(243,59,125,0.5)] transition hover:-translate-y-0.5 disabled:opacity-60"
         >
-          {loading ? "Saving..." : "Save Cycle"}
+          {loading
+  ? "Saving..."
+  : periodEnd
+    ? "Save Period"
+    : "Start Period"}
         </button>
       </form>
     </PageLayout>

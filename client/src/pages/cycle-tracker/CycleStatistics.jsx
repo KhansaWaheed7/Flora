@@ -76,9 +76,19 @@ export default function CycleStatistics() {
       const avgCycle =
         sorted.reduce((sum, c) => sum + (c.cycleLength || 0), 0) /
         sorted.length;
-      const avgPeriod =
-        sorted.reduce((sum, c) => sum + (c.periodLength || 0), 0) /
-        sorted.length;
+      const completedCycles = sorted.filter(
+  (c) =>
+    c.periodEnd &&
+    c.periodLength != null
+);
+
+const avgPeriod =
+  completedCycles.length > 0
+    ? completedCycles.reduce(
+        (sum, c) => sum + c.periodLength,
+        0
+      ) / completedCycles.length
+    : null;
 
       const cycleLengthData = sorted.map((c) => ({
         month: new Date(c.periodStart).toLocaleDateString("en-US", {
@@ -87,12 +97,15 @@ export default function CycleStatistics() {
         length: c.cycleLength || 0,
       }));
 
-      const periodLengthData = sorted.map((c) => ({
-        month: new Date(c.periodStart).toLocaleDateString("en-US", {
-          month: "short",
-        }),
-        length: c.periodLength || 0,
-      }));
+      const periodLengthData = completedCycles.map((c) => ({
+  month: new Date(c.periodStart).toLocaleDateString(
+    "en-US",
+    {
+      month: "short",
+    }
+  ),
+  length: c.periodLength,
+}));
 
       const symptomCounts = {};
       sorted.forEach((c) => {
@@ -117,9 +130,12 @@ export default function CycleStatistics() {
             value: `${Math.round(avgCycle)} Days`,
           },
           {
-            label: "Average Period Length",
-            value: `${Math.round(avgPeriod)} Days`,
-          },
+  label: "Average Period Length",
+  value:
+    avgPeriod == null
+      ? "-"
+      : `${Math.round(avgPeriod)} Days`,
+},
           {
             label: "Regularity",
             value: regularity || "-",

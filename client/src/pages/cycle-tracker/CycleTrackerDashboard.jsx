@@ -94,7 +94,8 @@ export default function CycleTrackerDashboard() {
   //                fertileWindow: { start, end }, irregularCycle, health: { status, insights } }
   const { latestCycle, prediction } = data;
 
-  
+  const periodInProgress =
+  !latestCycle?.periodEnd;
 
 const cycleLength =
   prediction?.averageCycleLength ??
@@ -162,9 +163,27 @@ const cyclePieData = [
   </span>
 </div>
 
-<p className="mt-2 text-xs text-[#8F8C8C]">
-  {phaseDescription}
-</p>
+
+{periodInProgress && (
+  <div className="mt-3 rounded-xl bg-[#FEE4EB] p-3">
+    <p className="text-xs font-semibold text-[#F33B7D]">
+      Period in progress
+    </p>
+
+    <p className="mt-1 text-xs text-[#3D3939]">
+      Your period started on{" "}
+      {formatDate(latestCycle.periodStart)}.
+      Add the end date when your period finishes.
+    </p>
+
+    <Link
+      to={`/cycle-tracker/${latestCycle._id}/edit`}
+      className="mt-2 inline-flex text-xs font-semibold text-[#F33B7D] hover:underline"
+    >
+      Add End Date →
+    </Link>
+  </div>
+)}
 
           <div className="relative mx-auto my-4 h-36 w-36">
             <ResponsiveContainer width="100%" height="100%">
@@ -220,14 +239,16 @@ const cyclePieData = [
         <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
           <p className="text-xs font-semibold text-[#8F8C8C]">Next Period</p>
           <p className="mt-1 font-display text-3xl font-semibold text-[#F33B7D]">
-            {daysUntilNextPeriod === null
-              ? "-"
-              : daysUntilNextPeriod < 0
-              ? `${Math.abs(daysUntilNextPeriod)} Days Late`
-              : `${daysUntilNextPeriod} Days Left`}
-          </p>
+  {periodInProgress
+    ? "Period in progress"
+    : daysUntilNextPeriod === null
+    ? "-"
+    : daysUntilNextPeriod < 0
+    ? `${Math.abs(daysUntilNextPeriod)} Days Late`
+    : `${daysUntilNextPeriod} Days Left`}
+</p>
           <p className="mt-1 text-sm text-[#8F8C8C]">
-            Expected on{" "}
+            {periodInProgress ? "Next period expected on" : "Expected on"}{" "}
             <span className="font-semibold text-[#0D0D0D]">
               {formatDate(prediction?.nextPeriod)}
             </span>
@@ -253,9 +274,7 @@ const cyclePieData = [
             <p className="text-xs font-semibold text-[#F33B7D]">
               Today's Insight
             </p>
-            <p className="mt-1 text-xs text-[#3D3939]">
-  {phaseDescription}
-</p>
+            
 
 <p className="mt-2 text-xs text-[#3D3939]">
   {insight}

@@ -22,6 +22,20 @@ const analyzeCycle = (
     );
   }
 
+  // Period is currently in progress
+  if (periodLength == null) {
+    if (insights.length === 0) {
+      insights.push(
+        "Your period is currently in progress. Complete it to analyze period length."
+      );
+    }
+
+    return {
+      status,
+      insights,
+    };
+  }
+
   if (periodLength > 7) {
     insights.push(
       "Period lasts longer than expected."
@@ -47,3 +61,4 @@ const analyzeCycle = (
 };
 
 module.exports = analyzeCycle;
+
