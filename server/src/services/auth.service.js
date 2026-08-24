@@ -19,21 +19,35 @@ const registerUser = async (data) => {
   });
 
   if (existingUser) {
-    throw new ApiError(409, "Email already exists");
+    throw new ApiError(
+      409,
+      "Email already exists"
+    );
   }
 
-  // -----------------------------
-  // Patients are approved immediately
-  // Doctors require admin approval
-  // -----------------------------
+  // -----------------------------------------
+  // Public registration can NEVER create admin
+  // -----------------------------------------
 
-  if (data.role === "doctor") {
-    data.doctorApprovalStatus = "pending";
-  } else {
-    data.doctorApprovalStatus = "approved";
-  }
+  const role = data.role === "doctor"
+    ? "doctor"
+    : "user";
 
-  const user = await User.create(data);
+  // -----------------------------------------
+  // Doctor approval
+  // -----------------------------------------
+
+  const doctorApprovalStatus =
+    role === "doctor"
+      ? "pending"
+      : "approved";
+
+  const user = await User.create({
+    ...data,
+    role,
+    doctorApprovalStatus,
+    accountStatus: "active",
+  });
 
   await sendVerificationEmail(user);
 
@@ -53,6 +67,13 @@ const loginUser = async (email, password) => {
   if (!isPasswordCorrect) {
     throw new ApiError(401, "Invalid email or password");
   }
+
+  if (user.accountStatus === "suspended") {
+  throw new ApiError(
+    403,
+    "Your account has been suspended. Please contact support."
+  );
+}
 
   if (!user.isEmailVerified) {
   throw new ApiError(
@@ -477,6 +498,16 @@ const loginWithGoogle = async (idToken) => {
   };
 };
 
+const deleteAccount = async (userId) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  await User.findByIdAndDelete(userId);
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -487,4 +518,5 @@ module.exports = {
   sendVerificationEmail,
   verifyEmail,
   resendVerificationEmail,
+  deleteAccount,
 };

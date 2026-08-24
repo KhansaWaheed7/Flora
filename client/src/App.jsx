@@ -1,6 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import LandingPage from "./pages/public/Landing/LandingPage";
+import TermsAndConditions from "./pages/public/TermsAndConditions"
+import PrivacyPolicy from "./pages/public/PrivacyPolicy"
 import LoginPage from "./pages/auth/Login/LoginPage";
 import RegisterPage from "./pages/auth/Register/RegisterPage";
 import ForgotPasswordPage from "./pages/auth/ForgetPassword/ForgotPasswordPage";
@@ -40,6 +42,8 @@ function App() {
   return (
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/terms" element={<TermsAndConditions />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />

@@ -48,6 +48,12 @@ provider: {
       default: "user",
     },
 
+    accountStatus: {
+  type: String,
+  enum: ["active", "suspended"],
+  default: "active",
+},
+
     doctorApprovalStatus: {
   type: String,
   enum: ["pending", "approved", "rejected"],

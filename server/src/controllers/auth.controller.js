@@ -18,6 +18,7 @@ const {
   sendVerificationEmail,
   resendVerificationEmail,
   verifyEmail: verifyEmailService,
+  deleteAccount,
 } = require("../services/auth.service");
 
 exports.register = asyncHandler(async (req, res) => {
@@ -243,4 +244,16 @@ exports.resendVerification = asyncHandler(async (req, res) => {
 
     );
 
+});
+
+exports.deleteAccount = asyncHandler(async (req, res) => {
+  await deleteAccount(req.user._id);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Account deleted successfully",
+      null
+    )
+  );
 });

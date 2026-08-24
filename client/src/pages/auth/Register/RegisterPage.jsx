@@ -150,8 +150,14 @@ export default function RegisterPage() {
     toast.loading("Creating your account...", { 
       id: "register-loading",
       style: {
-        background: '#F3F4F6',
+        background: 'rgba(243, 244, 246, 0.7)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
         color: '#1F2937',
+        borderRadius: '16px',
+        padding: '16px 24px',
       },
     });
 
@@ -168,11 +174,11 @@ export default function RegisterPage() {
       // Dismiss loading toast
       toast.dismiss("register-loading");
 
-      // Success message with green styling
+      // Success message with glassmorphic effect
       toast.success(
         (t) => (
           <div className="flex flex-col gap-1">
-            <span className="font-semibold">Registration Successful!</span>
+            <span className="font-semibold">🎉 Registration Successful!</span>
             <span className="text-sm">Welcome to Flora! You can now log in to your account.</span>
             {response?.data?.requiresEmailVerification && (
               <span className="text-xs text-gray-600 mt-1">
@@ -184,11 +190,16 @@ export default function RegisterPage() {
         { 
           duration: 5000,
           style: {
-            background: '#DCFCE7',
+            background: 'rgba(220, 252, 231, 0.7)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(134, 239, 172, 0.4)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(134, 239, 172, 0.15)',
             color: '#166534',
-            border: '1px solid #86EFAC',
+            borderRadius: '16px',
+            padding: '16px 24px',
           },
-          icon: '✅',
+          icon: '',
         }
       );
 
@@ -228,19 +239,23 @@ export default function RegisterPage() {
         } else if (errors.password) {
           setFieldErrors((prev) => ({ ...prev, password: errors.password }));
         } else {
-          // Handle common status codes
+          // Handle common status codes with glassmorphic error toasts
           if (status === 400) {
             if (message.toLowerCase().includes("email already") || 
                 message.toLowerCase().includes("already exists") ||
                 message.toLowerCase().includes("already registered")) {
               setFieldErrors((prev) => ({ ...prev, email: "Email already exists" }));
             } else {
-              // Show a simple error toast for other 400 errors
               toast.error(message || "Invalid registration details. Please check your input.", {
                 style: {
-                  background: '#FEE2E2',
+                  background: 'rgba(254, 226, 226, 0.7)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(252, 165, 165, 0.4)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
                   color: '#991B1B',
-                  border: '1px solid #FCA5A5',
+                  borderRadius: '16px',
+                  padding: '16px 24px',
                 },
                 icon: '❌',
               });
@@ -250,69 +265,104 @@ export default function RegisterPage() {
           } else if (status === 422) {
             toast.error("Please check all fields and try again.", {
               style: {
-                background: '#FEE2E2',
+                background: 'rgba(254, 226, 226, 0.7)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(252, 165, 165, 0.4)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
                 color: '#991B1B',
-                border: '1px solid #FCA5A5',
+                borderRadius: '16px',
+                padding: '16px 24px',
               },
               icon: '❌',
             });
           } else if (status === 429) {
             toast.error("Too many attempts. Please wait a moment before trying again.", {
               style: {
-                background: '#FEE2E2',
+                background: 'rgba(254, 226, 226, 0.7)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(252, 165, 165, 0.4)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
                 color: '#991B1B',
-                border: '1px solid #FCA5A5',
+                borderRadius: '16px',
+                padding: '16px 24px',
               },
               icon: '❌',
             });
           } else if (status >= 500) {
             toast.error("Server error. Please try again later.", {
               style: {
-                background: '#FEE2E2',
+                background: 'rgba(254, 226, 226, 0.7)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(252, 165, 165, 0.4)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
                 color: '#991B1B',
-                border: '1px solid #FCA5A5',
+                borderRadius: '16px',
+                padding: '16px 24px',
               },
               icon: '❌',
             });
           } else {
             toast.error(message || "Registration failed. Please try again.", {
               style: {
-                background: '#FEE2E2',
+                background: 'rgba(254, 226, 226, 0.7)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(252, 165, 165, 0.4)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
                 color: '#991B1B',
-                border: '1px solid #FCA5A5',
+                borderRadius: '16px',
+                padding: '16px 24px',
               },
               icon: '❌',
             });
           }
         }
       } else if (error.request) {
-        // Network errors
+        // Network errors with glassmorphic effect
         if (!navigator.onLine) {
           toast.error("No internet connection. Please check your network.", {
             style: {
-              background: '#FEE2E2',
+              background: 'rgba(254, 226, 226, 0.7)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(252, 165, 165, 0.4)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
               color: '#991B1B',
-              border: '1px solid #FCA5A5',
+              borderRadius: '16px',
+              padding: '16px 24px',
             },
-            icon: '❌',
+            icon: '🌐',
           });
         } else {
           toast.error("Connection error. Please check your internet and try again.", {
             style: {
-              background: '#FEE2E2',
+              background: 'rgba(254, 226, 226, 0.7)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(252, 165, 165, 0.4)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
               color: '#991B1B',
-              border: '1px solid #FCA5A5',
+              borderRadius: '16px',
+              padding: '16px 24px',
             },
-            icon: '❌',
+            icon: '📡',
           });
         }
       } else {
-        // Other errors
+        // Other errors with glassmorphic effect
         toast.error("Registration failed. Please try again.", {
           style: {
-            background: '#FEE2E2',
+            background: 'rgba(254, 226, 226, 0.7)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(252, 165, 165, 0.4)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
             color: '#991B1B',
-            border: '1px solid #FCA5A5',
+            borderRadius: '16px',
+            padding: '16px 24px',
           },
           icon: '❌',
         });

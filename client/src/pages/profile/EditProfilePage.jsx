@@ -7,6 +7,7 @@ import {
   getProfile,
   updateProfile,
   uploadAvatar,
+  removeAvatar,
 } from "../../services/profile.service";
 
 import {
@@ -37,7 +38,9 @@ function SelectField({ label, options, ...props }) {
         className="w-full rounded-xl border border-[#F0DCE4] bg-white px-3 py-2.5 text-sm text-[#0D0D0D] outline-none focus:border-[#EB6991]"
       >
         {options.map((o) => (
-          <option key={o}>{o}</option>
+          <option key={o} value={o}>
+  {o || "Select"}
+</option>
         ))}
       </select>
     </label>
@@ -110,6 +113,7 @@ const handleChange = (e) => {
 };
 
 
+
 const handleAvatarUpload = async (e) => {
   try {
     const file = e.target.files[0];
@@ -117,19 +121,45 @@ const handleAvatarUpload = async (e) => {
     if (!file) return;
 
     const data = new FormData();
-
     data.append("avatar", file);
+
+    console.log("Uploading avatar:", file.name, file.type, file.size);
 
     const res = await uploadAvatar(data);
 
+    console.log("Avatar upload response:", res);
+
     setAvatar(res.data.avatar);
 
-    fetchProfile();
+    await fetchProfile();
 
   } catch (err) {
-    console.log(err);
+    console.error(
+      "Avatar upload error:",
+      err.response?.data || err.message || err
+    );
   }
 };
+
+
+const handleRemoveAvatar = async () => {
+  try {
+    await removeAvatar();
+
+    setAvatar("");
+
+    await fetchProfile();
+  } catch (err) {
+    console.log("Avatar removal error:", err);
+
+    const message =
+      err.response?.data?.message ||
+      "Failed to remove profile picture.";
+
+    alert(message);
+  }
+};
+
   const handleSave = async (e) => {
   e.preventDefault();
 
@@ -236,10 +266,11 @@ onChange={handleChange}
   value={formData.gender}
   onChange={handleChange}
   options={[
-    "Female",
-    "Male",
-    "Prefer not to say",
-  ]}
+  "",
+  "Female",
+  "Male",
+  "Prefer not to say",
+]}
 />
               <SelectField
   label="Blood Group"
@@ -247,15 +278,16 @@ onChange={handleChange}
   value={formData.bloodGroup}
   onChange={handleChange}
   options={[
-    "A+",
-    "A-",
-    "B+",
-    "B-",
-    "O+",
-    "O-",
-    "AB+",
-    "AB-",
-  ]}
+  "",
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "O+",
+  "O-",
+  "AB+",
+  "AB-",
+]}
 />
               <div className="sm:col-span-2">
                 <Field label="Location" name="location"
@@ -301,6 +333,15 @@ className="mt-4 w-full cursor-pointer rounded-full bg-[#F33B7D] px-4 py-2.5 text
 >
 Change Photo
 </label>
+{avatar && (
+  <button
+    type="button"
+    onClick={handleRemoveAvatar}
+    className="mt-2 w-full rounded-full border border-[#F0DCE4] bg-white px-4 py-2.5 text-xs font-semibold text-[#F33B7D] transition hover:bg-[#FFF5F8]"
+  >
+    Remove Photo
+  </button>
+)}
             </div>
 
             {/* Medical Information */}

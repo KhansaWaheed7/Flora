@@ -86,18 +86,20 @@ const updateProfile = async (userId, body) => {
   const profile = await Profile.findOneAndUpdate(
     { user: userId },
     {
-      dateOfBirth,
-      gender,
-      bloodGroup,
-      location,
-      height,
-      weight,
-      allergies,
-      medicalConditions,
-    },
+    dateOfBirth: dateOfBirth || undefined,
+    gender: gender || undefined,
+    bloodGroup: bloodGroup || undefined,
+    location: location || undefined,
+    height: height ?? undefined,
+    weight: weight ?? undefined,
+    allergies: allergies || [],
+    medicalConditions: medicalConditions || [],
+  },
+
     {
       new: true,
       upsert: true,
+      runValidators: true,
     }
   );
 
@@ -105,6 +107,9 @@ const updateProfile = async (userId, body) => {
 };
 
 const uploadAvatar = async (userId, file) => {
+  if (!file) {
+    throw new ApiError(400, "No image file provided");
+  }
 
   const profile = await Profile.findOne({ user: userId });
 
@@ -112,28 +117,89 @@ const uploadAvatar = async (userId, file) => {
     throw new ApiError(404, "Profile not found");
   }
 
-  const result = await new Promise((resolve, reject) => {
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "flora/profile",
+          resource_type: "image",
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            return reject(error);
+          }
 
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: "flora/profile",
-      },
-      (error, result) => {
+          resolve(result);
+        }
+      );
 
-        if (error) return reject(error);
+      streamifier
+        .createReadStream(file.buffer)
+        .pipe(stream);
+    });
 
-        resolve(result);
-      }
+    console.log(
+      "Cloudinary upload successful:",
+      result.secure_url
     );
 
-    streamifier.createReadStream(file.buffer).pipe(stream);
-  });
+    // Update ONLY the avatar field
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { user: userId },
+      { avatar: result.secure_url },
+      { new: true }
+    );
 
-  profile.avatar = result.secure_url;
+    console.log(
+      "Avatar saved to profile:",
+      updatedProfile.avatar
+    );
 
+    return updatedProfile.avatar;
+
+  } catch (error) {
+    console.error("Avatar upload failed:", error);
+
+    throw new ApiError(
+      500,
+      error.message || "Failed to upload avatar"
+    );
+  }
+};
+
+const removeAvatar = async (userId) => {
+  const profile = await Profile.findOne({ user: userId });
+
+  if (!profile) {
+    throw new ApiError(404, "Profile not found");
+  }
+
+  // If there is no avatar, nothing to remove
+  if (!profile.avatar) {
+    return "";
+  }
+
+  // Extract Cloudinary public ID from the URL
+  const urlParts = profile.avatar.split("/upload/");
+
+  if (urlParts.length === 2) {
+    let publicId = urlParts[1];
+
+    // Remove version, e.g. v1786615004/
+    publicId = publicId.replace(/^v\d+\//, "");
+
+    // Remove file extension
+    publicId = publicId.replace(/\.[^/.]+$/, "");
+
+    await cloudinary.uploader.destroy(publicId);
+  }
+
+  // Remove avatar URL from database
+  profile.avatar = "";
   await profile.save();
 
-  return profile.avatar;
+  return "";
 };
 
 module.exports = {
@@ -141,4 +207,5 @@ module.exports = {
   getProfile,
   updateProfile,
   uploadAvatar,
+  removeAvatar,
 };
