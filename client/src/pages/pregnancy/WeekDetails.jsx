@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { CheckCircle2, AlertTriangle, Apple } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Apple, Ruler, Scale, Sparkles } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import { getPregnancyDashboard } from "../../services/pregnancy.service";
+import babyImg from "../../assets/baby.png";
+import motherImg from "../../assets/mother.png";
 
 const tabs = [
   { key: "overview", label: "Overview" },
@@ -36,6 +38,12 @@ export default function WeekDetails() {
   const currentWeek = data?.pregnancy?.currentWeek;
   const isCurrentWeek = weekNum === currentWeek;
   const weekInfo = isCurrentWeek ? data?.weekInfo : null;
+
+  // Same ring math as Dashboard/Weekly Guide, driven by real progress
+  const radius = 48;
+  const circumference = 2 * Math.PI * radius;
+  const pct = Math.min(100, Math.max(0, data?.progress ?? 0));
+  const offset = circumference - (pct / 100) * circumference;
 
   return (
     <PageLayout
@@ -89,42 +97,101 @@ export default function WeekDetails() {
 
           {tab === "overview" && (
             <div className="space-y-4">
+              {/* Baby Development */}
               <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-                <h2 className="mb-3 font-display text-sm font-semibold text-[#0D0D0D]">
+                <h2 className="mb-4 font-display text-sm font-semibold text-[#0D0D0D]">
                   Baby Development
                 </h2>
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="rounded-xl bg-[#FEF4F4] p-3">
-                    <p className="text-xs text-[#8F8C8C]">Size</p>
-                    <p className="mt-1 text-sm font-semibold text-[#0D0D0D]">
-                      {weekInfo?.babySize || "-"}
-                    </p>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#FEE4EB]">
+                        <Ruler className="h-4 w-4 text-[#F33B7D]" strokeWidth={1.5} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-[#8F8C8C]">Size</p>
+                        <p className="text-sm font-semibold text-[#0D0D0D]">
+                          {weekInfo?.babySize || "-"}
+                          {weekInfo?.babyLength ? ` (${weekInfo.babyLength})` : ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#FEE4EB]">
+                        <Scale className="h-4 w-4 text-[#F33B7D]" strokeWidth={1.5} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-[#8F8C8C]">Weight</p>
+                        <p className="text-sm font-semibold text-[#0D0D0D]">
+                          {weekInfo?.babyWeight || "-"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {weekInfo?.babyDevelopment && (
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#FEE4EB]">
+                          <Sparkles className="h-4 w-4 text-[#F33B7D]" strokeWidth={1.5} />
+                        </div>
+                        <div>
+                          <p className="text-xs text-[#8F8C8C]">Development</p>
+                          <p className="text-sm font-semibold leading-snug text-[#0D0D0D]">
+                            {weekInfo.babyDevelopment}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="rounded-xl bg-[#FEF4F4] p-3">
-                    <p className="text-xs text-[#8F8C8C]">Weight</p>
-                    <p className="mt-1 text-sm font-semibold text-[#0D0D0D]">
-                      {weekInfo?.babyWeight || "-"}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-[#FEF4F4] p-3">
-                    <p className="text-xs text-[#8F8C8C]">Length</p>
-                    <p className="mt-1 text-sm font-semibold text-[#0D0D0D]">
-                      {weekInfo?.babyLength || "-"}
-                    </p>
+
+                  {/* Same progress ring as Dashboard, driven by real progress */}
+                  <div className="relative hidden h-32 w-32 flex-shrink-0 sm:block">
+                    <svg viewBox="0 0 120 120" className="h-32 w-32 -rotate-90">
+                      <circle cx="60" cy="60" r={radius} fill="none" stroke="#FEE4EB" strokeWidth="9" />
+                      <circle
+                        cx="60"
+                        cy="60"
+                        r={radius}
+                        fill="none"
+                        stroke="#F33B7D"
+                        strokeWidth="9"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                        style={{ transition: "stroke-dashoffset 0.6s ease" }}
+                      />
+                    </svg>
+                    <div className="absolute inset-4 overflow-hidden rounded-full bg-white">
+                      <img
+                        src={babyImg}
+                        alt=""
+                        className="h-full w-full object-cover object-left"
+                      />
+                    </div>
                   </div>
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-[#3D3939]">
-                  {weekInfo?.babyDevelopment}
-                </p>
               </div>
 
-              <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-                <h2 className="mb-2 font-display text-sm font-semibold text-[#0D0D0D]">
-                  Mother's Body Changes
-                </h2>
-                <p className="text-sm leading-relaxed text-[#3D3939]">
-                  {weekInfo?.motherChanges}
-                </p>
+              {/* Mother's Body Changes */}
+              <div className="rounded-2xl bg-[#FEF4F4] p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <h2 className="mb-2 font-display text-sm font-semibold text-[#0D0D0D]">
+                      Mother's Body Changes
+                    </h2>
+                    <p className="text-sm leading-relaxed text-[#3D3939]">
+                      {weekInfo?.motherChanges}
+                    </p>
+                  </div>
+                  <div className="hidden h-32 w-32 flex-shrink-0 overflow-hidden rounded-2xl sm:block">
+                    <img
+                      src={motherImg}
+                      alt=""
+                      className="h-full w-full scale-110 object-cover"
+                      style={{ objectPosition: "50% 15%" }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}

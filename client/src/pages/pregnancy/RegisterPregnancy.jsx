@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageLayout from "../../layouts/PageLayout";
 import {
   getPregnancy,
+  createPregnancy,
   updatePregnancy,
   formatDate,
 } from "../../services/pregnancy.service";
@@ -10,7 +11,7 @@ import {
 function estimateDueDate(lmp) {
   if (!lmp) return null;
   const d = new Date(lmp);
-  d.setDate(d.getDate() + 280); // 40 weeks, matches standard LMP-based due date math
+  d.setDate(d.getDate() + 280);
   return d;
 }
 
@@ -23,11 +24,12 @@ function weeksPregnant(lmp) {
 export default function RegisterPregnancy() {
   const navigate = useNavigate();
   const [lastPeriodDate, setLastPeriodDate] = useState("");
+  const [isExisting, setIsExisting] = useState(false); // NEW
+  const [checkingExisting, setCheckingExisting] = useState(true); // NEW
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Pre-fill with the existing LMP date if there's already a pregnancy to update
     const load = async () => {
       try {
         const res = await getPregnancy();
@@ -35,9 +37,12 @@ export default function RegisterPregnancy() {
           setLastPeriodDate(
             new Date(res.pregnancy.lastPeriodDate).toISOString().split("T")[0]
           );
+          setIsExisting(true); // NEW — a record exists, so submit should UPDATE
         }
       } catch (err) {
-        // No existing pregnancy — fine, form just starts empty
+        // No existing pregnancy — fine, form just starts empty, stays a CREATE
+      } finally {
+        setCheckingExisting(false); // NEW
       }
     };
     load();
@@ -48,7 +53,11 @@ export default function RegisterPregnancy() {
     setError("");
     setLoading(true);
     try {
-      await updatePregnancy(lastPeriodDate);
+      if (isExisting) {
+        await updatePregnancy(lastPeriodDate);
+      } else {
+        await createPregnancy(lastPeriodDate); // NEW — actually creates on first register
+      }
       navigate("/pregnancy");
     } catch (err) {
       setError(
@@ -63,9 +72,17 @@ export default function RegisterPregnancy() {
   const dueDate = estimateDueDate(lastPeriodDate);
   const weeks = weeksPregnant(lastPeriodDate);
 
+  if (checkingExisting) {
+    return (
+      <PageLayout title="Register Pregnancy" subtitle="Enter your last menstrual period to get started." backTo="/pregnancy">
+        <p className="text-sm text-[#8F8C8C]">Loading...</p>
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout
-      title="Register Pregnancy"
+      title={isExisting ? "Update Pregnancy" : "Register Pregnancy"}
       subtitle="Enter your last menstrual period to get started."
       backTo="/pregnancy"
     >
