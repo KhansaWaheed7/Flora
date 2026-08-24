@@ -31,12 +31,15 @@ export default function PCOSIntro() {
     >
       <div className="mx-auto max-w-md">
         <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          
+          {/* Uterus Image */}
           <div className="relative mx-auto flex h-40 w-40 items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-[#FEE4EB]" />
+
             <img
               src={uterusImg}
               alt="Uterus illustration"
-              className="relative h-24 w-24 object-contain"
+              className="relative h-28 w-28 object-contain mix-blend-multiply"
             />
           </div>
 
@@ -44,6 +47,7 @@ export default function PCOSIntro() {
             <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
               What is PCOS?
             </h2>
+
             <p className="text-sm leading-relaxed text-[#8F8C8C]">
               Polycystic Ovary Syndrome (PCOS) is a hormonal condition that
               affects women of reproductive age and can impact menstrual
@@ -56,11 +60,15 @@ export default function PCOSIntro() {
                   <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
                     <Icon className="h-4 w-4" />
                   </span>
+
                   <div>
                     <p className="text-sm font-semibold text-[#0D0D0D]">
                       {title}
                     </p>
-                    <p className="text-xs text-[#8F8C8C]">{desc}</p>
+
+                    <p className="text-xs text-[#8F8C8C]">
+                      {desc}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -91,7 +99,8 @@ export default function PCOSIntro() {
           to="/pcos-detection/history"
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-[#F33B7D] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_-6px_rgba(243,59,125,0.5)] transition hover:-translate-y-0.5"
         >
-          <History className="h-4 w-4" /> View Assessment History
+          <History className="h-4 w-4" />
+          View Assessment History
         </Link>
       </div>
     </PageLayout>
