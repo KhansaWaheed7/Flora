@@ -2,7 +2,10 @@ const asyncHandler = require("../utils/asyncHandler");
 const ApiResponse = require("../utils/ApiResponse");
 const Cycle = require("../models/Cycle");
 
-const { cycleSchema } = require("../validators/cycle.validator");
+const {
+  cycleSchema,
+  updateCycleSchema,
+} = require("../validators/cycle.validator");
 
 const {
   createCycle: createCycleService,
@@ -43,7 +46,7 @@ exports.getCycle = asyncHandler(async (req, res) => {
 
 // Update Cycle
 exports.updateCycle = asyncHandler(async (req, res) => {
-  const validatedData = cycleSchema.partial().parse(req.body);
+  const validatedData = updateCycleSchema.parse(req.body);
 
   const updatedCycle = await updateCycleService(
     req.user._id,
@@ -52,7 +55,11 @@ exports.updateCycle = asyncHandler(async (req, res) => {
   );
 
   res.status(200).json(
-    new ApiResponse(200, "Cycle updated successfully", updatedCycle)
+    new ApiResponse(
+      200,
+      "Cycle updated successfully",
+      updatedCycle
+    )
   );
 });
 

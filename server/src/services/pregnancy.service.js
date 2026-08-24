@@ -194,6 +194,15 @@ if (daysDifference > 294) {
     calculateTrimester(pregnancy.currentWeek);
 
   await pregnancy.save();
+  await PregnancyReminder.updateMany(
+  { pregnancy: pregnancy._id },
+  {
+    $set: {
+      completed: false,
+      completedAt: null,
+    },
+  }
+);
 
   return pregnancy;
 };
