@@ -8,34 +8,6 @@ Flora supports **English and Urdu** to improve accessibility and provide health 
 
 > **Disclaimer:** Flora is an academic Final Year Project. AI-based features provide risk indications and informational guidance only and are **not intended to replace professional medical diagnosis or treatment**.
 
-<<<<<<< HEAD
-=======
-
-## System Architecture
-
-Flora is designed as a multi-component system consisting of:
-
-```text
-                    ┌──────────────────────┐
-                    │     Flora Client     │
-                    │  Web / Mobile App    │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │      REST API        │
-                    │   Node.js + Express  │
-                    └──────────┬───────────┘
-                               │
-             ┌─────────────────┼─────────────────┐
-             ▼                 ▼                 ▼
-      ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
-      │   MongoDB   │   │  AI / ML    │   │   Services  │
-      │   Database  │   │   Python    │   │ OCR / NLP   │
-      └─────────────┘   └─────────────┘   └─────────────┘
-```
-
->>>>>>> origin/feature/pregnancy
 ## Security & Privacy
 
 Because Flora handles sensitive health information, security and privacy are important parts of the system.
