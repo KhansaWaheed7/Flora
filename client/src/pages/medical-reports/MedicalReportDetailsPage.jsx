@@ -291,10 +291,13 @@ function OverviewTab({
           )}
         </Card>
 
-        <Card title="Summary">
-          <p className="text-sm leading-6 text-[#6F6A6B]">
-            {report.summary || "No report summary is available."}
-          </p>
+        <Card >
+          <div 
+            className="text-sm leading-6 text-[#6F6A6B] [&>strong]:font-semibold [&>strong]:text-[#2F2B2B]"
+            dangerouslySetInnerHTML={{ 
+              __html: report.summary || "No report summary is available." 
+            }}
+          />
         </Card>
       </div>
 

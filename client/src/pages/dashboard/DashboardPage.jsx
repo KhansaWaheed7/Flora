@@ -52,6 +52,7 @@ import {
 } from "recharts";
 import { getCycleDashboard, getPrediction, getCycles } from "../../services/cycle.service";
 import { getAssessmentHistory } from "../../services/pcos.service";
+import { getPregnancyDashboard, trimesterLabel } from "../../services/pregnancy.service";
 
 // Keep static stats structure but we'll update values dynamically
 const statsConfig = [
@@ -81,9 +82,9 @@ const statsConfig = [
   },
   {
     label: "Pregnancy",
-    value: "16 Weeks",
+    key: "pregnancy",
     unit: "",
-    sub: "3rd Trimester",
+    sub: "Trimester",
     color: "#F59E0B",
     icon: Baby,
   },
@@ -322,6 +323,7 @@ export default function DashboardPage() {
   const [predictionData, setPredictionData] = useState(null);
   const [cyclesData, setCyclesData] = useState([]);
   const [pcosAssessments, setPcosAssessments] = useState([]);
+  const [pregnancyData, setPregnancyData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [hasCycleData, setHasCycleData] = useState(false);
@@ -331,22 +333,25 @@ export default function DashboardPage() {
     const loadData = async () => {
       try {
         // Load all data in parallel
-        const [dashboardRes, predictionRes, cyclesRes, pcosRes] = await Promise.all([
+        const [dashboardRes, predictionRes, cyclesRes, pcosRes, pregnancyRes] = await Promise.all([
           getCycleDashboard().catch(() => ({ data: null })),
           getPrediction().catch(() => ({ data: null })),
           getCycles().catch(() => ({ data: [] })),
           getAssessmentHistory().catch(() => []),
+          getPregnancyDashboard().catch(() => ({ data: null })),
         ]);
 
         const dashboard = dashboardRes.data || dashboardRes || null;
         const prediction = predictionRes.data || predictionRes || null;
         const cycles = cyclesRes.data || cyclesRes.cycles || cyclesRes || [];
         const pcos = Array.isArray(pcosRes) ? pcosRes : [];
+        const pregnancy = pregnancyRes?.pregnancy ? pregnancyRes : null;
 
         setDashboardData(dashboard);
         setPredictionData(prediction);
         setCyclesData(Array.isArray(cycles) ? cycles : []);
         setPcosAssessments(pcos);
+        setPregnancyData(pregnancy);
         
         // Check if we have any cycle data
         const hasData = (Array.isArray(cycles) && cycles.length > 0) || 
@@ -378,6 +383,29 @@ export default function DashboardPage() {
   // Compute dynamic stats
   const getStats = () => {
     const stats = [...statsConfig];
+
+    // Update Pregnancy stat
+    if (pregnancyData?.pregnancy) {
+      const { currentWeek, trimester } = pregnancyData.pregnancy;
+      const weeksRemaining = pregnancyData.weeksRemaining;
+      
+      // Format the pregnancy display
+      const weeksDisplay = currentWeek ? `${currentWeek} Weeks` : "No Data";
+      const trimesterDisplay = trimester ? trimesterLabel[trimester] || "Unknown" : "No Data";
+      
+      stats[3].value = weeksDisplay;
+      stats[3].sub = trimesterDisplay;
+      
+      // Update color based on trimester
+      if (trimester === 1) stats[3].color = "#22C55E";
+      else if (trimester === 2) stats[3].color = "#F59E0B";
+      else if (trimester === 3) stats[3].color = "#F33B7D";
+    } else {
+      // No pregnancy data
+      stats[3].value = "Not Tracking";
+      stats[3].sub = "Start tracking";
+      stats[3].color = "#8F8C8C";
+    }
 
     if (!hasCycleData) {
       // No cycle data state
