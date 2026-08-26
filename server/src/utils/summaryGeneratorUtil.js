@@ -126,37 +126,75 @@ class SummaryGeneratorUtil {
    * Generate user-friendly key findings
    */
   static generateUserFriendlyFindings(abnormalResults, extractedData) {
-    if (abnormalResults.length === 0) {
-      return [
-        "All tested values are within healthy ranges",
-        "No abnormal results were detected in this report",
-        "Your results look great - keep up the good work!"
-      ];
-    }
-
-    const findings = [];
-    
-    abnormalResults.slice(0, 5).forEach((result) => {
-      const testName = this.capitalizeFirst(result.test);
-      let severityText = "";
-      
-      if (result.severity === "severe") {
-        severityText = "This value is significantly outside the normal range and should be discussed with your doctor promptly";
-      } else if (result.severity === "moderate") {
-        severityText = "This value is outside the normal range and deserves attention";
-      } else {
-        severityText = "This value is slightly outside the typical range";
-      }
-      
-      findings.push(`${severityText}: ${testName} is ${result.value} ${result.unit} (typical range: ${result.referenceRange})`);
-    });
-
-    if (abnormalResults.length > 5) {
-      findings.push(`And ${abnormalResults.length - 5} more result(s) that need review`);
-    }
-
-    return findings;
+  if (abnormalResults.length === 0) {
+    return [
+      "All tested values are within the reference ranges provided in the report.",
+      "No abnormal results were detected."
+    ];
   }
+
+  const findings = [];
+
+  abnormalResults.forEach((result) => {
+    const testName = this.capitalizeFirst(result.test);
+    const value = result.value;
+    const unit = result.unit || "";
+    const range = result.referenceRange || "the provided reference range";
+
+    let explanation = "";
+
+    const test = result.test.toLowerCase();
+
+    if (test.includes("hemoglobin")) {
+      explanation =
+        "Hemoglobin is below the provided reference range. Lower hemoglobin can be associated with anemia and may warrant further evaluation.";
+    } else if (test.includes("hematocrit")) {
+      explanation =
+        "Hematocrit is below the provided reference range. This can occur with anemia or other conditions affecting red blood cells.";
+    } else if (test.includes("mcv")) {
+      explanation =
+        "MCV is below the provided reference range, meaning the red blood cells are smaller than the typical range.";
+    } else if (test.includes("mch")) {
+      explanation =
+        "MCH is below the provided reference range, meaning the red blood cells contain less hemoglobin than typical.";
+    } else if (test.includes("ferritin")) {
+      explanation =
+        "Ferritin is below the provided reference range. Ferritin reflects stored iron in the body, so a low result may indicate reduced iron stores.";
+    } else if (test.includes("serum iron")) {
+      explanation =
+        "Serum iron is below the provided reference range, indicating that the measured iron level is lower than the laboratory's stated range.";
+    } else if (test.includes("transferrin saturation")) {
+      explanation =
+        "Transferrin saturation is below the provided reference range, which can occur when available iron is reduced.";
+    } else if (
+      test === "tsh" ||
+      test.includes("thyroid stimulating")
+    ) {
+      explanation =
+        "TSH is above the provided reference range. This can occur when thyroid hormone production is reduced, although TSH should be interpreted together with other thyroid tests.";
+    } else if (test.includes("ldl")) {
+      explanation =
+        "LDL cholesterol is above the laboratory's stated target range. LDL is commonly monitored as part of cardiovascular risk assessment.";
+    } else if (result.status === "low") {
+      explanation =
+        "This result is below the reference range provided by the laboratory.";
+    } else if (result.status === "high") {
+      explanation =
+        "This result is above the reference range provided by the laboratory.";
+    } else {
+      explanation =
+        "This result is outside the reference range provided by the laboratory.";
+    }
+
+    // IMPORTANT:
+    // Return a STRING because MedicalReport schema expects [String]
+    findings.push(
+      `${testName}: ${value} ${unit} (reference range: ${range}). ${explanation}`
+    );
+  });
+
+  return findings;
+}
 
   /**
    * Generate user-friendly normal results
@@ -248,21 +286,19 @@ class SummaryGeneratorUtil {
    * Generate a quick summary for the report card
    */
   static generateQuickSummary(abnormalResults, totalCount, percentage) {
-    if (totalCount === 0) return "No results extracted from this report";
-
-    if (abnormalResults.length === 0) {
-      return `All ${totalCount} results look good!`;
-    }
-
-    const abnormalCount = abnormalResults.length;
-    const normalCount = totalCount - abnormalCount;
-    
-    if (normalCount === 0) {
-      return `All ${totalCount} results need review`;
-    }
-
-    return `${abnormalCount} result(s) need attention, ${normalCount} look good`;
+  if (totalCount === 0) {
+    return "No laboratory results could be extracted from this report.";
   }
+
+  if (abnormalResults.length === 0) {
+    return `All ${totalCount} analyzed results are within the reference ranges provided by the report.`;
+  }
+
+  const abnormalCount = abnormalResults.length;
+  const normalCount = totalCount - abnormalCount;
+
+  return `${abnormalCount} of ${totalCount} results are outside the provided reference ranges, while ${normalCount} are within range.`;
+}
 
   /**
    * Helper function to capitalize first letter

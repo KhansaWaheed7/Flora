@@ -1,20 +1,46 @@
 // server/src/utils/ocrUtil.js
 const Tesseract = require("tesseract.js");
-const pdf = require("pdf-parse");
+const { PDFParse } = require("pdf-parse");
 
 class OCRUtil {
   /**
    * Extract text from PDF buffer
    */
   static async extractTextFromPDF(buffer) {
-    try {
-      const data = await pdf(buffer);
-      return data.text;
-    } catch (error) {
-      console.error("PDF extraction error:", error);
-      throw new Error("Failed to extract text from PDF");
+  try {
+    if (!buffer || !Buffer.isBuffer(buffer)) {
+      throw new Error("Invalid PDF buffer");
     }
+
+    const parser = new PDFParse({
+      data: buffer,
+    });
+
+    const result = await parser.getText();
+
+    await parser.destroy();
+
+    const text = result?.text || "";
+
+    console.log(
+      `PDF extracted ${text.length} characters from ${
+        result?.total || 0
+      } pages`
+    );
+
+    if (!text.trim()) {
+      throw new Error("PDF contains no extractable text");
+    }
+
+    return text;
+  } catch (error) {
+    console.error("PDF extraction error:", error);
+
+    throw new Error(
+      `Failed to extract text from PDF: ${error.message}`
+    );
   }
+}
 
   /**
    * Extract text from image using Tesseract OCR
@@ -35,11 +61,19 @@ class OCRUtil {
    * Clean and preprocess extracted text
    */
   static cleanText(text) {
-    return text
-      .replace(/\n\n+/g, "\n") // Remove multiple newlines
-      .replace(/\s+/g, " ") // Normalize spaces
-      .trim();
+  if (!text) {
+    return "";
   }
+
+  return text
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split("\n")
+    .map((line) => line.replace(/[ \t]+/g, " ").trim())
+    .filter(Boolean)
+    .join("\n")
+    .trim();
+}
 
   /**
    * Detect report type from text
