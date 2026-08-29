@@ -3,7 +3,7 @@ const MedicalReport = require("../models/MedicalReport");
 const EncryptionUtil = require("../utils/encryptionUtil");
 const OCRUtil = require("../utils/ocrUtil");
 const DataParserUtil = require("../utils/dataParserUtil");
-const SummaryGeneratorUtil = require("../utils/summaryGeneratorUtil");
+const MedicalAIUtil = require("../utils/medicalAIUtil");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 
@@ -117,33 +117,62 @@ class MedicalReportController {
       await report.save();
 
       // Step 3: Parse data
-      const extractedData = DataParserUtil.parseExtractedText(
-  extractedText,
-  "female"
+      // Step 3: AI + RAG analysis
+report.processingStatus = "parsing_done";
+await report.save();
+
+const aiAnalysis = await MedicalAIUtil.analyzeReport(
+  extractedText
 );
-      const abnormalResults =
-        DataParserUtil.findAbnormalResults(extractedData);
 
-      report.extractedData = extractedData;
-      report.abnormalResults = abnormalResults;
-      report.processingStatus = "parsing_done";
-      await report.save();
+// Store AI analysis
+report.aiAnalysis = {
+  reportType: aiAnalysis.reportType,
+  overview: aiAnalysis.overview,
+  keyFindings: aiAnalysis.keyFindings,
+  recommendations: aiAnalysis.recommendations,
+  whenToSeeDoctor: aiAnalysis.whenToSeeDoctor,
+  disclaimer: aiAnalysis.disclaimer,
+  model: "gemini-3.6-flash",
+  ragUsed: aiAnalysis.ragUsed || false,
+  analyzedAt: new Date(),
+};
 
-      // Step 4: Generate summary and insights
-      report.summary = SummaryGeneratorUtil.generateSummary(
-        report.reportType,
-        extractedData,
-        abnormalResults
-      );
+// Store structured test results
+report.extractedData = aiAnalysis.tests.map((test) => ({
+  test: test.test,
+  value: test.value,
+  unit: test.unit || "",
+  reportReferenceRange: test.reportReferenceRange || "",
+  knowledgeReferenceRange: test.knowledgeReferenceRange || "",
+  referenceSource: test.referenceSource || "none",
+  status: test.status || "unknown",
+  confidence: test.confidence || 0,
+  explanation: test.explanation || "",
+}));
 
-      report.insights = SummaryGeneratorUtil.generateInsights(
-        extractedData,
-        abnormalResults,
-        report.reportType
-      );
+// Store abnormal results
+report.abnormalResults = aiAnalysis.abnormalResults || [];
 
-      report.processingStatus = "completed";
-      await report.save();
+// Backward-compatible summary
+report.summary = aiAnalysis.overview || "";
+
+// Backward-compatible insights
+report.insights = {
+  overview: aiAnalysis.overview || "",
+  keyFindings: aiAnalysis.keyFindings || [],
+  normalResults: aiAnalysis.normalResults || [],
+  recommendations: aiAnalysis.recommendations || [],
+  whenToSeeDoctor: aiAnalysis.whenToSeeDoctor || "",
+};
+
+report.processingStatus = "completed";
+
+await report.save();
+
+console.log(
+  `✅ AI + RAG analysis completed for report ${reportId}`
+);
 
       console.log(`✅ Report ${reportId} processing completed`);
     } catch (error) {

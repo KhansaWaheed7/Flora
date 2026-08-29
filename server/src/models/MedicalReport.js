@@ -84,38 +84,73 @@ const medicalReportSchema = new mongoose.Schema(
 
     // Structured extracted data
     extractedData: [
-      {
-        test: {
-          type: String,
-          trim: true,
-        },
-        value: {
-          type: String,
-          trim: true,
-        },
-        unit: {
-          type: String,
-          trim: true,
-          default: "",
-        },
-        referenceRange: {
-          type: String,
-          trim: true,
-          default: "N/A",
-        },
-        status: {
-          type: String,
-          enum: ["normal", "low", "high", "abnormal", "unknown"],
-          default: "unknown",
-        },
-        confidence: {
-          type: Number,
-          min: 0,
-          max: 100,
-          default: 0,
-        },
-      },
-    ],
+  {
+    test: {
+      type: String,
+      trim: true,
+    },
+
+    value: {
+      type: String,
+      trim: true,
+    },
+
+    unit: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    // Range printed on the uploaded report
+    reportReferenceRange: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    // Range obtained from trusted medical knowledge/RAG
+    knowledgeReferenceRange: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    // Which source determined the range
+    referenceSource: {
+      type: String,
+      enum: [
+        "report",
+        "knowledge_base",
+        "none",
+      ],
+      default: "none",
+    },
+
+    status: {
+      type: String,
+      enum: [
+        "normal",
+        "low",
+        "high",
+        "abnormal",
+        "unknown",
+      ],
+      default: "unknown",
+    },
+
+    confidence: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
+
+    explanation: {
+      type: String,
+      default: "",
+    },
+  },
+],
 
     // Abnormal results
     abnormalResults: [
@@ -168,6 +203,51 @@ const medicalReportSchema = new mongoose.Schema(
       whenToSeeDoctor: String,
     },
 
+    aiAnalysis: {
+  reportType: {
+    type: String,
+    default: "Unknown",
+  },
+
+  overview: {
+    type: String,
+    default: "",
+  },
+
+  keyFindings: {
+    type: [String],
+    default: [],
+  },
+
+  recommendations: {
+    type: [String],
+    default: [],
+  },
+
+  whenToSeeDoctor: {
+    type: String,
+    default: "",
+  },
+
+  disclaimer: {
+    type: String,
+    default: "",
+  },
+
+  model: {
+    type: String,
+    default: "",
+  },
+
+  ragUsed: {
+    type: Boolean,
+    default: false,
+  },
+
+  analyzedAt: {
+    type: Date,
+  },
+},
     // Processing status
     processingStatus: {
       type: String,
