@@ -57,7 +57,7 @@ export default function UploadMedicalReportPage() {
     if (!isAllowedFile(file)) {
       setError("Select a PDF, JPG, PNG, WEBP or TXT file.");
       return;
-      
+
     }
 
     if (file.size > maximumFileSize) {
@@ -194,6 +194,7 @@ export default function UploadMedicalReportPage() {
               <p className="mt-1 text-xs text-[#8F8C8C]">
                 {formatFileSize(selectedFile.size)}
               </p>
+              
 
               <p className="mt-1 flex items-center gap-1 text-xs font-medium text-green-600">
                 <CheckCircle2 className="h-3.5 w-3.5" />

@@ -254,7 +254,7 @@ export default function MedicalReportDetailsPage() {
           )}
         </div>
 
-        <div className="mt-5 flex gap-3 rounded-2xl border border-[#F7DCE7] bg-[#FFF5F8] p-5">
+        <div className="mt-5 flex gap-3 rounded-2xl border border-[#FEE4EB] bg-[#fcd7e6] p-5">
           <ShieldCheck className="h-5 w-5 flex-shrink-0 text-[#F33B7D]" />
           <p className="text-xs leading-5 text-[#6F6A6B]">
             {disclaimer}
