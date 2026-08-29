@@ -386,68 +386,50 @@ ${extractedText}
     );
 
     return {
-      reportType: data.reportType
-        ? String(data.reportType).trim()
-        : "Unknown",
+  reportType: data.reportType
+    ? String(data.reportType).trim()
+    : "Unknown",
 
-      tests: normalizedTests,
+  tests: normalizedTests,
 
-      abnormalResults: abnormalTests.map((test) => ({
-        test: test.test,
-        value: test.value,
-        unit: test.unit || "",
-        referenceRange:
-          test.referenceSource === "report"
-            ? test.reportReferenceRange
-            : test.knowledgeReferenceRange,
-        status: test.status,
-        severity: "mild",
-        recommendation:
-          "Discuss this result with your healthcare provider.",
-      })),
+  abnormalResults: abnormalTests,
 
-      normalResults: normalTests.map((test) => {
-        return `${test.test}: ${test.value}${
-          test.unit ? ` ${test.unit}` : ""
-        } - within the applicable reference range`;
-      }),
+  overview: data.overview
+    ? String(data.overview).trim()
+    : "",
 
-      overview: data.overview
-        ? String(data.overview).trim()
-        : "",
+  keyFindings: Array.isArray(data.keyFindings)
+    ? data.keyFindings.map(String)
+    : [],
 
-      keyFindings: Array.isArray(data.keyFindings)
-        ? data.keyFindings
-            .filter(Boolean)
-            .map((item) => String(item).trim())
-        : [],
+  recommendations: Array.isArray(data.recommendations)
+    ? data.recommendations.map(String)
+    : [],
 
-      recommendations: Array.isArray(data.recommendations)
-        ? data.recommendations
-            .filter(Boolean)
-            .map((item) => String(item).trim())
-        : [],
+  whenToSeeDoctor: data.whenToSeeDoctor
+    ? String(data.whenToSeeDoctor).trim()
+    : "",
 
-      whenToSeeDoctor: data.whenToSeeDoctor
-        ? String(data.whenToSeeDoctor).trim()
-        : "",
+  disclaimer: data.disclaimer
+    ? String(data.disclaimer).trim()
+    : "This analysis is for informational purposes and is not a medical diagnosis.",
 
-      disclaimer: data.disclaimer
-        ? String(data.disclaimer).trim()
-        : "This analysis is for informational purposes and is not a medical diagnosis.",
+  // RAG was used to build the analysis context
+  ragUsed: true,
 
-      ragUsed: normalizedTests.some(
-        (test) =>
-          test.referenceSource === "knowledge_base"
-      ),
+  statistics: {
+    total: normalizedTests.length,
+    normal: normalizedTests.length -
+      abnormalTests.length -
+      normalizedTests.filter((test) => test.status === "unknown").length,
 
-      statistics: {
-        total: normalizedTests.length,
-        normal: normalTests.length,
-        abnormal: abnormalTests.length,
-        unknown: unknownTests.length,
-      },
-    };
+    abnormal: abnormalTests.length,
+
+    unknown: normalizedTests.filter(
+      (test) => test.status === "unknown"
+    ).length,
+  },
+};
   }
 
   /**
