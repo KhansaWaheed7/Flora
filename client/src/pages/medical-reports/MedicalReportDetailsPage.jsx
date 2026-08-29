@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   Stethoscope,
 } from "lucide-react";
-
 import PageLayout from "../../layouts/PageLayout";
 import {
   downloadMedicalReport,
@@ -26,7 +25,6 @@ const tabs = [
 
 function formatDate(date) {
   if (!date) return "Date unavailable";
-
   return new Date(date).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -38,20 +36,16 @@ function formatDate(date) {
 
 function formatFileSize(bytes = 0) {
   if (!bytes) return "";
-
   const megabytes = bytes / (1024 * 1024);
-
   if (megabytes >= 1) {
     return `${megabytes.toFixed(1)} MB`;
   }
-
   return `${Math.ceil(bytes / 1024)} KB`;
 }
 
 export default function MedicalReportDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [report, setReport] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
@@ -63,7 +57,6 @@ export default function MedicalReportDetailsPage() {
       try {
         setLoading(true);
         setError("");
-
         const response = await getMedicalReport(id);
         const reportData = response.data;
 
@@ -92,17 +85,14 @@ export default function MedicalReportDetailsPage() {
     try {
       setDownloading(true);
       setError("");
-
       const response = await downloadMedicalReport(id);
       const fileUrl = URL.createObjectURL(response.data);
       const link = document.createElement("a");
-
       link.href = fileUrl;
       link.download = report.fileName;
       document.body.appendChild(link);
       link.click();
       link.remove();
-
       URL.revokeObjectURL(fileUrl);
     } catch (requestError) {
       setError(
@@ -142,13 +132,48 @@ export default function MedicalReportDetailsPage() {
 
   const results = report?.extractedData || [];
   const abnormalResults = report?.abnormalResults || [];
-  const abnormalCount = abnormalResults.length;
+
+  const abnormalCount = results.filter(
+    (result) => ["low", "high", "abnormal"].includes(result.status)
+  ).length;
+
   const normalCount = results.filter(
     (result) => result.status === "normal"
   ).length;
+
   const unknownCount = results.filter(
     (result) => result.status === "unknown"
   ).length;
+
+  const aiAnalysis = report?.aiAnalysis || {};
+
+  const overview =
+    aiAnalysis.overview ||
+    report?.insights?.overview ||
+    report?.summary ||
+    "";
+
+  const keyFindings =
+    aiAnalysis.keyFindings?.length
+      ? aiAnalysis.keyFindings
+      : report?.insights?.keyFindings || [];
+
+  const recommendations =
+    aiAnalysis.recommendations?.length
+      ? aiAnalysis.recommendations
+      : report?.insights?.recommendations || [];
+
+  const whenToSeeDoctor =
+    aiAnalysis.whenToSeeDoctor ||
+    report?.insights?.whenToSeeDoctor ||
+    "";
+
+  const disclaimer =
+    aiAnalysis.disclaimer ||
+    report?.disclaimer ||
+    "This analysis is for informational purposes only and does not constitute a medical diagnosis.";
+
+  const ragUsed = aiAnalysis.ragUsed === true;
 
   return (
     <PageLayout
@@ -202,6 +227,9 @@ export default function MedicalReportDetailsPage() {
               normal={normalCount}
               abnormal={abnormalCount}
               unknown={unknownCount}
+              overview={overview}
+              keyFindings={keyFindings}
+              whenToSeeDoctor={whenToSeeDoctor}
             />
           )}
 
@@ -210,12 +238,17 @@ export default function MedicalReportDetailsPage() {
           )}
 
           {activeTab === "insights" && (
-            <InsightsTab insights={report.insights} />
+            <InsightsTab
+              overview={overview}
+              keyFindings={keyFindings}
+              whenToSeeDoctor={whenToSeeDoctor}
+              ragUsed={ragUsed}
+            />
           )}
 
           {activeTab === "recommendations" && (
             <RecommendationsTab
-              insights={report.insights}
+              recommendations={recommendations}
               abnormalResults={abnormalResults}
             />
           )}
@@ -223,10 +256,8 @@ export default function MedicalReportDetailsPage() {
 
         <div className="mt-5 flex gap-3 rounded-2xl border border-[#F7DCE7] bg-[#FFF5F8] p-5">
           <ShieldCheck className="h-5 w-5 flex-shrink-0 text-[#F33B7D]" />
-
           <p className="text-xs leading-5 text-[#6F6A6B]">
-            {report.disclaimer ||
-              "This analysis is for informational purposes only and does not constitute a medical diagnosis. Please consult a qualified healthcare professional."}
+            {disclaimer}
           </p>
         </div>
       </section>
@@ -240,6 +271,9 @@ function OverviewTab({
   normal,
   abnormal,
   unknown,
+  overview,
+  keyFindings,
+  whenToSeeDoctor,
 }) {
   return (
     <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
@@ -252,21 +286,18 @@ function OverviewTab({
               color="text-blue-600"
               background="bg-blue-50"
             />
-
             <StatBox
               value={normal}
               label="Normal"
               color="text-green-600"
               background="bg-green-50"
             />
-
             <StatBox
               value={abnormal}
               label="Abnormal"
               color="text-red-500"
               background="bg-red-50"
             />
-
             <StatBox
               value={unknown}
               label="Unknown"
@@ -291,11 +322,11 @@ function OverviewTab({
           )}
         </Card>
 
-        <Card >
-          <div 
+        <Card>
+          <div
             className="text-sm leading-6 text-[#6F6A6B] [&>strong]:font-semibold [&>strong]:text-[#2F2B2B]"
-            dangerouslySetInnerHTML={{ 
-              __html: report.summary || "No report summary is available." 
+            dangerouslySetInnerHTML={{
+              __html: report.summary || "No report summary is available.",
             }}
           />
         </Card>
@@ -304,13 +335,12 @@ function OverviewTab({
       <div className="space-y-5">
         <Card title="Flora's Insights">
           <p className="text-sm leading-6 text-[#6F6A6B]">
-            {report.insights?.overview ||
-              "No overview is available for this report."}
+            {overview || "No overview is available for this report."}
           </p>
 
           <InsightList
             title="Key findings"
-            items={report.insights?.keyFindings}
+            items={keyFindings}
           />
 
           <InsightList
@@ -320,18 +350,16 @@ function OverviewTab({
           />
         </Card>
 
-        {report.insights?.whenToSeeDoctor && (
+        {whenToSeeDoctor && (
           <div className="rounded-2xl border border-orange-100 bg-orange-50 p-5">
             <div className="flex gap-3">
               <Stethoscope className="h-5 w-5 flex-shrink-0 text-orange-500" />
-
               <div>
                 <h3 className="text-sm font-semibold text-[#2F2B2B]">
                   When to see a doctor
                 </h3>
-
                 <p className="mt-2 text-sm leading-6 text-[#6F6A6B]">
-                  {report.insights.whenToSeeDoctor}
+                  {whenToSeeDoctor}
                 </p>
               </div>
             </div>
@@ -360,10 +388,10 @@ function ResultsTab({ results }) {
               <th className="px-3 py-3 font-medium">Test</th>
               <th className="px-3 py-3 font-medium">Value</th>
               <th className="px-3 py-3 font-medium">Reference Range</th>
+              <th className="px-3 py-3 font-medium">Explanation</th>
               <th className="px-3 py-3 font-medium">Status</th>
             </tr>
           </thead>
-
           <tbody>
             {results.map((result, index) => (
               <tr
@@ -373,15 +401,24 @@ function ResultsTab({ results }) {
                 <td className="px-3 py-4 font-medium text-[#2F2B2B]">
                   {result.test || "Unknown test"}
                 </td>
-
                 <td className="px-3 py-4 text-[#6F6A6B]">
                   {result.value || "—"} {result.unit || ""}
                 </td>
-
                 <td className="px-3 py-4 text-[#6F6A6B]">
-                  {result.referenceRange || "N/A"}
+                  <div>
+                    {result.reportReferenceRange ||
+                      result.knowledgeReferenceRange ||
+                      "N/A"}
+                  </div>
+                  {result.referenceSource === "knowledge_base" && (
+                    <p className="mt-1 text-xs text-[#A19B9D]">
+                      Reference from Flora medical knowledge base
+                    </p>
+                  )}
                 </td>
-
+                <td className="px-3 py-4 text-[#6F6A6B]">
+                  {result.explanation || "No explanation available."}
+                </td>
                 <td className="px-3 py-4">
                   <StatusBadge status={result.status} />
                 </td>
@@ -394,41 +431,77 @@ function ResultsTab({ results }) {
   );
 }
 
-function InsightsTab({ insights }) {
+function InsightsTab({
+  overview,
+  keyFindings,
+  whenToSeeDoctor,
+  ragUsed,
+}) {
   return (
     <div className="grid gap-5 md:grid-cols-2">
       <InfoCard
         icon={HeartPulse}
         title="Overview"
-        text={insights?.overview}
+        text={overview}
       />
 
       <ListCard
         icon={Lightbulb}
         title="Key Findings"
-        items={insights?.keyFindings}
-      />
-
-      <ListCard
-        icon={CheckCircle2}
-        title="Normal Results"
-        items={insights?.normalResults}
-        green
+        items={keyFindings}
       />
 
       <InfoCard
         icon={Stethoscope}
         title="When to See a Doctor"
-        text={insights?.whenToSeeDoctor}
+        text={whenToSeeDoctor}
         orange
       />
+
+      <div className="rounded-2xl border border-[#F0DCE4] bg-white p-5">
+        <ShieldCheck className="h-6 w-6 text-[#F33B7D]" />
+
+        <h2 className="mt-4 font-semibold text-[#2F2B2B]">
+          Flora AI Analysis
+        </h2>
+
+        <p className="mt-2 text-sm leading-6 text-[#6F6A6B]">
+          This report was analyzed using Flora's medical report
+          analysis system.
+        </p>
+
+        <div className="mt-4">
+          <span
+            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+              ragUsed
+                ? "bg-green-100 text-green-600"
+                : "bg-gray-100 text-gray-600"
+            }`}
+          >
+            {ragUsed
+              ? "Medical knowledge base used"
+              : "Medical knowledge base not used"}
+          </span>
+        </div>
+
+        {ragUsed && (
+          <p className="mt-3 text-xs leading-5 text-[#8F8C8C]">
+            Reference information from Flora's medical knowledge base
+            was used when interpreting results without a report-provided
+            reference range.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
 
-function RecommendationsTab({ insights, abnormalResults }) {
-  const recommendations = [
-    ...(insights?.recommendations || []),
+function RecommendationsTab({
+  recommendations,
+  abnormalResults,
+}) {
+  const allRecommendations = [
+    ...(recommendations || []),
     ...abnormalResults
       .map((result) => result.recommendation)
       .filter(Boolean),
@@ -436,15 +509,14 @@ function RecommendationsTab({ insights, abnormalResults }) {
 
   return (
     <Card title="Recommendations">
-      {recommendations.length > 0 ? (
+      {allRecommendations.length > 0 ? (
         <ul className="space-y-3">
-          {recommendations.map((recommendation, index) => (
+          {allRecommendations.map((recommendation, index) => (
             <li
               key={`${recommendation}-${index}`}
               className="flex gap-3 rounded-xl bg-[#FFF7FA] p-4"
             >
               <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#F33B7D]" />
-
               <p className="text-sm leading-6 text-[#6F6A6B]">
                 {recommendation}
               </p>
@@ -464,7 +536,6 @@ function Card({ title, children }) {
       <h2 className="mb-4 text-sm font-semibold text-[#2F2B2B]">
         {title}
       </h2>
-
       {children}
     </div>
   );
@@ -483,22 +554,21 @@ function ResultRow({ result }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-red-50 p-4">
       <AlertTriangle className="h-5 w-5 flex-shrink-0 text-red-500" />
-
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-[#2F2B2B]">
           {result.test}
         </p>
-
         <p className="mt-1 text-xs text-[#8F8C8C]">
-          Reference: {result.referenceRange || "N/A"}
+          Reference:{" "}
+          {result.reportReferenceRange ||
+            result.knowledgeReferenceRange ||
+            "N/A"}
         </p>
       </div>
-
       <div className="text-right">
         <p className="text-sm font-semibold text-[#2F2B2B]">
-          {result.value} {result.unit}
+          {result.value || "—"} {result.unit || ""}
         </p>
-
         <StatusBadge status={result.status} />
       </div>
     </div>
@@ -533,7 +603,6 @@ function InsightList({ title, items = [], green = false }) {
       <h3 className="text-xs font-semibold uppercase text-[#8F8C8C]">
         {title}
       </h3>
-
       <ul className="mt-3 space-y-2">
         {items.map((item, index) => (
           <li
@@ -545,7 +614,6 @@ function InsightList({ title, items = [], green = false }) {
                 green ? "bg-green-500" : "bg-[#F33B7D]"
               }`}
             />
-
             {item}
           </li>
         ))}
@@ -568,11 +636,9 @@ function InfoCard({ icon: Icon, title, text, orange = false }) {
           orange ? "text-orange-500" : "text-[#F33B7D]"
         }`}
       />
-
       <h2 className="mt-4 font-semibold text-[#2F2B2B]">
         {title}
       </h2>
-
       <p className="mt-2 text-sm leading-6 text-[#6F6A6B]">
         {text || "No information is available."}
       </p>
@@ -588,11 +654,9 @@ function ListCard({ icon: Icon, title, items = [], green = false }) {
           green ? "text-green-500" : "text-[#F33B7D]"
         }`}
       />
-
       <h2 className="mt-4 font-semibold text-[#2F2B2B]">
         {title}
       </h2>
-
       {items?.length > 0 ? (
         <ul className="mt-3 space-y-3">
           {items.map((item, index) => (
@@ -605,7 +669,6 @@ function ListCard({ icon: Icon, title, items = [], green = false }) {
                   green ? "bg-green-500" : "bg-[#F33B7D]"
                 }`}
               />
-
               {item}
             </li>
           ))}

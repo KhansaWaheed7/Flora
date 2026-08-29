@@ -152,7 +152,17 @@ report.extractedData = aiAnalysis.tests.map((test) => ({
 }));
 
 // Store abnormal results
-report.abnormalResults = aiAnalysis.abnormalResults || [];
+report.abnormalResults = (aiAnalysis.abnormalResults || []).map((result) => ({
+  test: result.test || "",
+  value: result.value || "",
+  unit: result.unit || "",
+  referenceRange: result.referenceRange || "",
+  status: ["low", "high", "abnormal"].includes(result.status)
+    ? result.status
+    : "abnormal",
+  severity: result.severity || "mild",
+  recommendation: result.recommendation || "",
+}));
 
 // Backward-compatible summary
 report.summary = aiAnalysis.overview || "";
