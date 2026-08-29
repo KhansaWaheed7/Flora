@@ -57,6 +57,7 @@ export default function UploadMedicalReportPage() {
     if (!isAllowedFile(file)) {
       setError("Select a PDF, JPG, PNG, WEBP or TXT file.");
       return;
+      
     }
 
     if (file.size > maximumFileSize) {
