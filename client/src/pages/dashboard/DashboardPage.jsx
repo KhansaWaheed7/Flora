@@ -1,7 +1,8 @@
 // DashboardPage.jsx
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import { useAuth } from "../../context/AuthContext";
 import {
   Home,
   Repeat,
@@ -319,6 +320,17 @@ function getRiskLevel(risk) {
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // FIRST: Redirect admin users immediately
+  useEffect(() => {
+    if (user?.role === "admin") {
+      navigate("/admin/dashboard", { replace: true });
+      return;
+    }
+  }, [user?.role, navigate]);
+
   const [dashboardData, setDashboardData] = useState(null);
   const [predictionData, setPredictionData] = useState(null);
   const [cyclesData, setCyclesData] = useState([]);
@@ -330,6 +342,11 @@ export default function DashboardPage() {
   const [hoveredAction, setHoveredAction] = useState(null);
 
   useEffect(() => {
+    // Don't fetch data if user is admin (they'll be redirected anyway)
+    if (user?.role === "admin") {
+      return;
+    }
+
     const loadData = async () => {
       try {
         // Load all data in parallel
@@ -366,7 +383,7 @@ export default function DashboardPage() {
     };
 
     loadData();
-  }, []);
+  }, [user?.role]);
 
   // Get latest PCOS assessment
   const getLatestPCOS = () => {

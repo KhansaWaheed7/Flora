@@ -20,8 +20,8 @@ export const getConversations = async () => {
 POST /chat/request - send a consultation request to a doctor
 Body: { doctorId }
 */
-export const requestConsultation = async (doctorId) => {
-  const response = await api.post("/chat/request", { doctorId });
+export const requestConsultation = async (doctorId, reason = "") => {
+  const response = await api.post("/chat/request", { doctorId, reason });
   return response.data.data;
 };
 
@@ -35,14 +35,20 @@ export const getMyRequests = async () => {
 };
 
 /*
-NOTE: no confirmed REST endpoint exists for fetching a chat's message
-history (only real-time send/receive via socket events were shared:
-join-chat, send-message, new-message). This guesses a conventional
-path - if it 404s, message history simply won't preload and the chat
-will still work for new real-time messages. Share the actual route
-if one exists and this will be corrected.
+GET /messages/:chatId - confirmed real route (message.routes.js),
+mounted separately from /chat. Returns full message history for a
+chat, sorted oldest -> newest.
 */
 export const getChatMessages = async (chatId) => {
-  const response = await api.get(`/chat/${chatId}/messages`);
+  const response = await api.get(`/messages/${chatId}`);
+  return response.data.data;
+};
+
+/*
+POST /messages/:chatId - send a text message (chat must be "active")
+Body: { message }
+*/
+export const sendChatMessage = async (chatId, message) => {
+  const response = await api.post(`/messages/${chatId}`, { message });
   return response.data.data;
 };

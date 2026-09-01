@@ -12,6 +12,9 @@ import {
   AlertCircle,
   CheckCircle,
   Info,
+  Building2,
+  IdCard,
+  BriefcaseMedical,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { register } from "../../../services/auth.service";
@@ -58,6 +61,10 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     role: "user",
+    specialization: "",
+    licenseNumber: "",
+    hospital: "",
+    yearsOfExperience: "",
     terms: false,
   });
 
@@ -131,6 +138,26 @@ export default function RegisterPage() {
       isValid = false;
     }
 
+    // 6. Doctor-only required fields
+    if (form.role === "doctor") {
+      if (!form.specialization.trim()) {
+        errors.specialization = "Specialization is required";
+        isValid = false;
+      }
+      if (!form.licenseNumber.trim()) {
+        errors.licenseNumber = "License number is required";
+        isValid = false;
+      }
+      if (!form.hospital.trim()) {
+        errors.hospital = "Hospital is required";
+        isValid = false;
+      }
+      if (!form.yearsOfExperience || Number(form.yearsOfExperience) < 0) {
+        errors.yearsOfExperience = "Years of experience is required";
+        isValid = false;
+      }
+    }
+
     setFieldErrors(errors);
     return isValid;
   };
@@ -167,6 +194,12 @@ export default function RegisterPage() {
         email: form.email.trim().toLowerCase(),
         password: form.password,
         role: form.role,
+        ...(form.role === "doctor" && {
+          specialization: form.specialization.trim(),
+          licenseNumber: form.licenseNumber.trim(),
+          hospital: form.hospital.trim(),
+          yearsOfExperience: Number(form.yearsOfExperience),
+        }),
       });
 
       console.log(response);
@@ -210,6 +243,10 @@ export default function RegisterPage() {
         password: "",
         confirmPassword: "",
         role: "user",
+        specialization: "",
+        licenseNumber: "",
+        hospital: "",
+        yearsOfExperience: "",
         terms: false,
       });
 
@@ -545,6 +582,88 @@ export default function RegisterPage() {
             </button>
           </div>
         </div>
+
+        {form.role === "doctor" && (
+          <div className="space-y-3 rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] p-3">
+            <p className="text-[11px] font-semibold text-[#8F8C8C]">
+              Doctor details (required for approval)
+            </p>
+
+            <div>
+              <Label className="text-xs">Specialization</Label>
+              <TextField
+                icon={Stethoscope}
+                name="specialization"
+                placeholder="e.g. Gynecology"
+                value={form.specialization}
+                onChange={handleChange}
+                disabled={isLoading}
+              />
+              {fieldErrors.specialization && (
+                <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {fieldErrors.specialization}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label className="text-xs">License Number</Label>
+              <TextField
+                icon={IdCard}
+                name="licenseNumber"
+                placeholder="e.g. GY-12345-LHR"
+                value={form.licenseNumber}
+                onChange={handleChange}
+                disabled={isLoading}
+              />
+              {fieldErrors.licenseNumber && (
+                <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {fieldErrors.licenseNumber}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label className="text-xs">Hospital</Label>
+              <TextField
+                icon={Building2}
+                name="hospital"
+                placeholder="e.g. Lahore General Hospital"
+                value={form.hospital}
+                onChange={handleChange}
+                disabled={isLoading}
+              />
+              {fieldErrors.hospital && (
+                <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {fieldErrors.hospital}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label className="text-xs">Years of Experience</Label>
+              <TextField
+                icon={BriefcaseMedical}
+                type="number"
+                min="0"
+                name="yearsOfExperience"
+                placeholder="e.g. 8"
+                value={form.yearsOfExperience}
+                onChange={handleChange}
+                disabled={isLoading}
+              />
+              {fieldErrors.yearsOfExperience && (
+                <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {fieldErrors.yearsOfExperience}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         <label className="flex items-start gap-1.5 text-xs text-[#3D3939]">
           <input

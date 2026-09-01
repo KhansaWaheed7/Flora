@@ -103,12 +103,20 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      await login(
+      const response = await login(
         form.email,
         form.password
       );
 
-      navigate("/dashboard");
+      const role = response?.data?.user?.role;
+
+      if (role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (role === "doctor") {
+        navigate("/doctor/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
 
     } catch (err) {
       setError(
@@ -251,7 +259,16 @@ export default function LoginPage() {
             response.data
           );
           toast.success("Welcome back!");
-          navigate("/dashboard");
+
+          const role = response?.data?.user?.role;
+
+          if (role === "admin") {
+            navigate("/admin/dashboard");
+          } else if (role === "doctor") {
+            navigate("/doctor/dashboard");
+          } else {
+            navigate("/dashboard");
+          }
         } catch (err) {
           toast.error(
             err.response?.data?.message ||

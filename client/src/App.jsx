@@ -42,6 +42,23 @@ import WeekDetails from "./pages/pregnancy/WeekDetails";
 import PregnancyReminders from "./pages/pregnancy/PregnancyReminders";
 import ReminderDetails from "./pages/pregnancy/ReminderDetails";
 
+// ===== ADMIN PORTAL IMPORTS =====
+import AdminRoute from "./routes/AdminRoute";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import DoctorApproval from "./pages/admin/DoctorApproval";
+import DoctorDetails from "./pages/admin/DoctorDetails";
+import UsersManagement from "./pages/admin/UsersManagement";
+import ChatMonitoring from "./pages/admin/ChatMonitoring";
+import Consultations from "./pages/admin/Consultations";
+import Notifications from "./pages/admin/Notifications";
+import AdminSettings from "./pages/admin/Settings";
+
+// ===== DOCTOR PORTAL IMPORTS =====
+import DoctorRoute from "./routes/DoctorRoute";
+import DoctorDashboard from "./pages/doctor-portal/DoctorDashboard";
+import ConsultationRequests from "./pages/doctor-portal/ConsultationRequests";
+import ActivePatients from "./pages/doctor-portal/ActivePatients";
+
 // ===== MAIN BRANCH IMPORTS =====
 import ProtectedRoute from "./routes/ProtectedRoute";
 import GynaeAssistantPage from "./pages/gynae-assistant/GynaeAssistantPage";
@@ -61,6 +78,7 @@ import PendingConsultation from "./pages/chat/PendingConsultation";
 import RejectedConsultation from "./pages/chat/RejectedConsultation";
 import ChatWithDoctor from "./pages/chat/ChatWithDoctor";
 import ConsultationClosed from "./pages/chat/ConsultationClosed";
+import ClosedConsultations from "./pages/doctor-portal/ClosedConsultations";
 
 function App() {
   return (
@@ -452,6 +470,114 @@ function App() {
         }
       />
 
+      {/* ==================== ADMIN PORTAL ==================== */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        }
+      />
+
+      <Route
+        path="/admin/doctor-approval"
+        element={
+          <AdminRoute>
+            <DoctorApproval />
+          </AdminRoute>
+        }
+      />
+
+      <Route
+        path="/admin/doctor-details/:id"
+        element={
+          <AdminRoute>
+            <DoctorDetails />
+          </AdminRoute>
+        }
+      />
+
+      <Route
+        path="/admin/users"
+        element={
+          <AdminRoute>
+            <UsersManagement />
+          </AdminRoute>
+        }
+      />
+
+      <Route
+        path="/admin/chat-monitoring"
+        element={
+          <AdminRoute>
+            <ChatMonitoring />
+          </AdminRoute>
+        }
+      />
+
+      <Route
+        path="/admin/consultations"
+        element={
+          <AdminRoute>
+            <Consultations />
+          </AdminRoute>
+        }
+      />
+
+      <Route
+        path="/admin/notifications"
+        element={
+          <AdminRoute>
+            <Notifications />
+          </AdminRoute>
+        }
+      />
+
+      <Route
+        path="/admin/settings"
+        element={
+          <AdminRoute>
+            <AdminSettings />
+          </AdminRoute>
+        }
+      />
+
+      {/* ==================== DOCTOR PORTAL ==================== */}
+      <Route
+        path="/doctor/dashboard"
+        element={
+          <DoctorRoute>
+            <DoctorDashboard />
+          </DoctorRoute>
+        }
+      />
+
+      <Route
+        path="/doctor/consultation-requests"
+        element={
+          <DoctorRoute>
+            <ConsultationRequests />
+          </DoctorRoute>
+        }
+      />
+
+      <Route
+        path="/doctor/active-patients"
+        element={
+          <DoctorRoute>
+            <ActivePatients />
+          </DoctorRoute>
+        }
+      />
+      <Route
+  path="/doctor/closed-consultations"
+  element={
+    <DoctorRoute>
+      <ClosedConsultations />
+    </DoctorRoute>
+  }
+/>
       {/* ==================== FALLBACK ==================== */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
