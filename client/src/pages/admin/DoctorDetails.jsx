@@ -18,7 +18,6 @@ import {
   Phone,
   Clock,
   AlertCircle,
-  Eye,
   ExternalLink,
   File,
   Image as ImageIcon
@@ -37,8 +36,6 @@ export default function DoctorDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState(null);
-  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     const fetchDoctor = async () => {
@@ -58,9 +55,6 @@ export default function DoctorDetails() {
           setDoctor(foundInAll);
         }
         
-        // Fetch debug info for documents
-        await fetchDebugInfo(id);
-        
       } catch (err) {
         setError(err?.response?.data?.message || "Failed to load doctor details");
       } finally {
@@ -71,20 +65,11 @@ export default function DoctorDetails() {
     fetchDoctor();
   }, [id]);
 
-  const fetchDebugInfo = async (doctorId) => {
-    try {
-      const response = await api.get(`/admin/debug/doctor/${doctorId}/documents`);
-      setDebugInfo(response.data);
-    } catch (err) {
-      console.error("Failed to fetch debug info:", err);
-    }
-  };
-
   const handleApprove = async () => {
     try {
       setActionLoading(true);
       await approveDoctor(id);
-      toast.success("✅ Doctor approved successfully!");
+      toast.success("Doctor approved successfully!");
       navigate("/admin/doctor-approval");
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to approve doctor");
@@ -105,7 +90,7 @@ export default function DoctorDetails() {
     try {
       setActionLoading(true);
       await rejectDoctor(id, reason);
-      toast.success("✅ Doctor rejected successfully!");
+      toast.success("Doctor rejected successfully!");
       navigate("/admin/doctor-approval");
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to reject doctor");
@@ -323,29 +308,10 @@ export default function DoctorDetails() {
             {/* Verification Documents Section */}
             {doctor.doctorVerification?.documents?.length > 0 && (
               <div className="border-b border-[#F0DCE4] pb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-[#0D0D0D] flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-[#F33B7D]" />
-                    Verification Documents ({doctor.doctorVerification.documents.length})
-                  </h3>
-                  <button
-                    onClick={() => setShowDebug(!showDebug)}
-                    className="text-xs text-[#8F8C8C] hover:text-[#F33B7D] flex items-center gap-1"
-                  >
-                    <Eye className="h-3 w-3" />
-                    {showDebug ? 'Hide Debug' : 'Show Debug'}
-                  </button>
-                </div>
-                
-                {/* Debug Info */}
-                {showDebug && debugInfo && (
-                  <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs font-mono overflow-auto max-h-40">
-                    <p className="font-semibold text-gray-700 mb-1">Debug Info:</p>
-                    <pre className="text-gray-600 whitespace-pre-wrap">
-                      {JSON.stringify(debugInfo, null, 2)}
-                    </pre>
-                  </div>
-                )}
+                <h3 className="text-sm font-semibold text-[#0D0D0D] mb-3 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-[#F33B7D]" />
+                  Verification Documents ({doctor.doctorVerification.documents.length})
+                </h3>
 
                 <div className="space-y-2">
                   {doctor.doctorVerification.documents.map((doc, index) => {
@@ -383,7 +349,7 @@ export default function DoctorDetails() {
                               )}
                               {doc.originalName && (
                                 <p className="text-xs text-[#8F8C8C] truncate max-w-xs">
-                                  📎 {doc.originalName}
+                                  {doc.originalName}
                                 </p>
                               )}
                               {doc.publicId && (

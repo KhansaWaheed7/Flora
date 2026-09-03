@@ -23,7 +23,7 @@ export function AuthSplitLayout({
         {/* Left panel */}
         <div className="relative flex flex-col bg-gradient-to-br from-[#FEE4EB] to-[#FEF4F4] p-7 sm:p-15">
           <Logo />
-          <div className="mt-8 flex flex-1 flex-col items-center justify-center text-center">
+          <div className="mt-30 flex flex-1 flex-col items-center text-center">
             {illustrationSrc && (
               <img
                 src={illustrationSrc}
@@ -48,6 +48,3 @@ export function AuthSplitLayout({
     </div>
   );
 }
-
-
-

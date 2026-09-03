@@ -438,7 +438,8 @@ export default function LoginPage() {
           </div>
 
           <div className="flex items-center justify-between text-xs">
-            <label className="flex items-center gap-2 text-[#3D3939]">
+            {/* Temporarily commented out - Remember Me checkbox */}
+            {/* <label className="flex items-center gap-2 text-[#3D3939]">
               <input
                 type="checkbox"
                 name="rememberMe"
@@ -448,7 +449,8 @@ export default function LoginPage() {
                 disabled={loading}
               />
               Remember me
-            </label>
+            </label> */}
+            <div></div> {/* Spacer to maintain layout */}
             <Link to="/forgot-password" className="font-semibold text-[#F33B7D] hover:underline">
               Forgot Password?
             </Link>
