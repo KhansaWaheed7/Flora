@@ -25,14 +25,61 @@ exports.register = asyncHandler(async (req, res) => {
   console.log("📝 Registration request received");
   console.log("Body:", req.body);
   console.log("Files:", req.files?.length || 0);
-  
-  // Get the form data
-  const validatedData = registerSchema.parse(req.body);
-  
-  // Handle multiple document uploads
+
+  // =========================================
+  // Prepare data for Zod validation
+  // FormData sends everything as strings,
+  // so we need to convert types properly
+  // =========================================
+
+  const rawData = {
+    fullName: req.body.fullName,
+    email: req.body.email,
+    password: req.body.password,
+    role: req.body.role || "user",
+    phone: req.body.phone || "",
+    age: req.body.age ? Number(req.body.age) : undefined,
+    specialization: req.body.specialization || "",
+    hospital: req.body.hospital || "",
+    
+    // Convert yearsOfExperience to number
+    yearsOfExperience: req.body.yearsOfExperience !== undefined && req.body.yearsOfExperience !== "" 
+      ? Number(req.body.yearsOfExperience) 
+      : undefined,
+    
+    pmdcRegistrationNumber: req.body.pmdcRegistrationNumber || "",
+    registrationType: req.body.registrationType || undefined,
+    
+    // Parse qualifications from JSON string to array
+    qualifications: req.body.qualifications 
+      ? JSON.parse(req.body.qualifications) 
+      : [],
+    
+    terms: req.body.terms === "true" || req.body.terms === true,
+  };
+
+  console.log("📦 Parsed data for validation:", rawData);
+
+  // =========================================
+  // Validate with Zod
+  // =========================================
+
+  const validatedData = registerSchema.parse(rawData);
+
+  console.log("✅ Validation passed:", validatedData);
+
+  // =========================================
+  // Handle document uploads
+  // =========================================
+
   const files = req.files || [];
-  const documentTypes = req.body.documentTypes || [];
   
+  // documentTypes can be string or array depending on how many files
+  let documentTypes = req.body.documentTypes || [];
+  if (typeof documentTypes === "string") {
+    documentTypes = [documentTypes];
+  }
+
   console.log(`📎 Processing ${files.length} documents`);
 
   // Attach document types to the data

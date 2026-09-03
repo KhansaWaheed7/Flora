@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   User,
   Mail,
@@ -16,9 +16,8 @@ import {
   IdCard,
   BriefcaseMedical,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { registerWithFiles } from "../../../services/auth.service";
 
+import { registerWithFiles } from "../../../services/auth.service";
 import { AuthSplitLayout } from "../../../layouts/AuthLayout";
 import Label from "../../../components/ui/Label";
 import TextField from "../../../components/ui/TextField";
@@ -33,7 +32,10 @@ const perks = [
   { icon: ShieldCheck, text: "100% Secure and private" },
 ];
 
-// Validation functions
+// =========================================
+// Validation Helpers
+// =========================================
+
 const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -41,45 +43,78 @@ const validateEmail = (email) => {
 
 const validatePassword = (password) => {
   const errors = [];
-  if (password.length < 8) errors.push("at least 8 characters");
-  if (!/[A-Z]/.test(password)) errors.push("one uppercase letter");
-  if (!/[a-z]/.test(password)) errors.push("one lowercase letter");
-  if (!/[0-9]/.test(password)) errors.push("one number");
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) errors.push("one special character");
+
+  if (password.length < 8) {
+    errors.push("at least 8 characters");
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    errors.push("one uppercase letter");
+  }
+
+  if (!/[a-z]/.test(password)) {
+    errors.push("one lowercase letter");
+  }
+
+  if (!/[0-9]/.test(password)) {
+    errors.push("one number");
+  }
+
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push("one special character");
+  }
+
   return errors;
 };
 
+// =========================================
+// Initial Form
+// =========================================
+
+const initialForm = {
+  name: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  role: "user",
+
+  // Doctor fields
+  specialization: "",
+  hospital: "",
+  yearsOfExperience: "",
+  pmdcRegistrationNumber: "",
+  registrationType: "",
+
+  qualifications: [
+    {
+      degree: "",
+      institution: "",
+      completionYear: "",
+    },
+  ],
+
+  terms: false,
+};
+
+// =========================================
+// Component
+// =========================================
+
 export default function RegisterPage() {
   const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const [fieldErrors, setFieldErrors] = useState({});
   const [documents, setDocuments] = useState([]);
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "user",
+  const [form, setForm] = useState(initialForm);
 
-    // Doctor fields
-    specialization: "",
-    hospital: "",
-    yearsOfExperience: "",
-    pmdcRegistrationNumber: "",
-    registrationType: "",
-    qualifications: [
-      {
-        degree: "",
-        institution: "",
-        completionYear: "",
-      },
-    ],
-
-    terms: false,
-  });
+  // =========================================
+  // Handle Input Changes
+  // =========================================
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -89,21 +124,42 @@ export default function RegisterPage() {
       [name]: type === "checkbox" ? checked : value,
     }));
 
-    // Clear field-specific errors when user types
+    // Clear field error when user edits field
     if (fieldErrors[name]) {
-      setFieldErrors((prev) => ({ ...prev, [name]: null }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        [name]: null,
+      }));
     }
   };
 
+  // =========================================
+  // Handle Doctor Documents
+  // =========================================
+
   const handleDocumentsChange = (newDocuments) => {
     setDocuments(newDocuments);
+
+    if (fieldErrors.documents) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        documents: null,
+      }));
+    }
   };
+
+  // =========================================
+  // Validate Form
+  // =========================================
 
   const validateForm = () => {
     const errors = {};
     let isValid = true;
 
-    // 1. Validate Full Name
+    // -----------------------------------------
+    // Full Name
+    // -----------------------------------------
+
     if (!form.name.trim()) {
       errors.name = "Full name is required";
       isValid = false;
@@ -114,21 +170,29 @@ export default function RegisterPage() {
       errors.name = "Full name must be less than 50 characters";
       isValid = false;
     } else if (!/^[a-zA-Z\s\-']+$/.test(form.name.trim())) {
-      errors.name = "Full name can only contain letters, spaces, hyphens, and apostrophes";
+      errors.name =
+        "Full name can only contain letters, spaces, hyphens, and apostrophes";
       isValid = false;
     }
 
-    // 2. Validate Email
+    // -----------------------------------------
+    // Email
+    // -----------------------------------------
+
     if (!form.email.trim()) {
       errors.email = "Email is required";
       isValid = false;
-    } else if (!validateEmail(form.email)) {
+    } else if (!validateEmail(form.email.trim())) {
       errors.email = "Please enter a valid email address";
       isValid = false;
     }
 
-    // 3. Validate Password
+    // -----------------------------------------
+    // Password
+    // -----------------------------------------
+
     const passwordErrors = validatePassword(form.password);
+
     if (!form.password) {
       errors.password = "Password is required";
       isValid = false;
@@ -140,7 +204,10 @@ export default function RegisterPage() {
       isValid = false;
     }
 
-    // 4. Validate Confirm Password
+    // -----------------------------------------
+    // Confirm Password
+    // -----------------------------------------
+
     if (!form.confirmPassword) {
       errors.confirmPassword = "Please confirm your password";
       isValid = false;
@@ -149,47 +216,63 @@ export default function RegisterPage() {
       isValid = false;
     }
 
-    // 5. Validate Terms
+    // -----------------------------------------
+    // Terms
+    // -----------------------------------------
+
     if (!form.terms) {
       errors.terms = "You must accept the Terms & Conditions";
       isValid = false;
     }
 
-    // 6. Doctor-only required fields
+    // =========================================
+    // Doctor Validation
+    // =========================================
+
     if (form.role === "doctor") {
+      // Specialization
       if (!form.specialization.trim()) {
         errors.specialization = "Specialization is required";
         isValid = false;
       }
 
+      // Hospital
       if (!form.hospital.trim()) {
         errors.hospital = "Hospital or clinic is required";
         isValid = false;
       }
 
+      // Years of Experience
       if (form.yearsOfExperience === "") {
         errors.yearsOfExperience = "Years of experience is required";
         isValid = false;
-      } else if (
-        Number(form.yearsOfExperience) < 0 ||
-        !Number.isInteger(Number(form.yearsOfExperience))
-      ) {
-        errors.yearsOfExperience = "Years of experience must be a whole number";
-        isValid = false;
+      } else {
+        const experience = Number(form.yearsOfExperience);
+
+        if (!Number.isInteger(experience) || experience < 0) {
+          errors.yearsOfExperience =
+            "Years of experience must be a whole number";
+          isValid = false;
+        }
       }
 
+      // PMDC Registration Number
       if (!form.pmdcRegistrationNumber.trim()) {
-        errors.pmdcRegistrationNumber = "PMDC registration number is required";
+        errors.pmdcRegistrationNumber =
+          "PMDC registration number is required";
         isValid = false;
       }
 
+      // Registration Type
       if (!form.registrationType) {
         errors.registrationType = "Registration type is required";
         isValid = false;
       }
 
+      // Qualifications
       if (!form.qualifications.length) {
-        errors.qualifications = "At least one medical qualification is required";
+        errors.qualifications =
+          "At least one medical qualification is required";
         isValid = false;
       }
 
@@ -200,117 +283,312 @@ export default function RegisterPage() {
         }
 
         if (!qualification.institution.trim()) {
-          errors[`qualification_institution_${index}`] = "Institution is required";
+          errors[`qualification_institution_${index}`] =
+            "Institution is required";
           isValid = false;
         }
 
         if (!qualification.completionYear) {
-          errors[`qualification_year_${index}`] = "Completion year is required";
+          errors[`qualification_year_${index}`] =
+            "Completion year is required";
           isValid = false;
-        } else if (
-          !Number.isInteger(Number(qualification.completionYear)) ||
-          Number(qualification.completionYear) < 1950 ||
-          Number(qualification.completionYear) > new Date().getFullYear()
-        ) {
-          errors[`qualification_year_${index}`] = "Please enter a valid completion year";
-          isValid = false;
+        } else {
+          const year = Number(qualification.completionYear);
+          const currentYear = new Date().getFullYear();
+
+          if (
+            !Number.isInteger(year) ||
+            year < 1950 ||
+            year > currentYear
+          ) {
+            errors[`qualification_year_${index}`] =
+              "Please enter a valid completion year";
+            isValid = false;
+          }
         }
       });
 
-      // Validate documents
+      // Documents
       if (documents.length === 0) {
-        errors.documents = "Please upload at least one verification document";
+        errors.documents =
+          "Please upload at least one verification document";
         isValid = false;
       } else {
-        const hasInvalidDoc = documents.some(doc => !doc.documentType);
-        if (hasInvalidDoc) {
-          errors.documents = "Please select a document type for each uploaded file";
+        const hasInvalidDocument = documents.some(
+          (doc) => !doc.documentType
+        );
+
+        if (hasInvalidDocument) {
+          errors.documents =
+            "Please select a document type for each uploaded file";
           isValid = false;
         }
       }
     }
 
     setFieldErrors(errors);
+
     return isValid;
   };
 
+  // =========================================
+  // Backend Error Helpers
+  // =========================================
+
+  const showErrorToast = (message, icon = "❌") => {
+    toast.error(message, {
+      style: {
+        background: "rgba(254, 226, 226, 0.7)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        border: "1px solid rgba(252, 165, 165, 0.4)",
+        boxShadow:
+          "0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)",
+        color: "#991B1B",
+        borderRadius: "16px",
+        padding: "16px 24px",
+      },
+      icon,
+    });
+  };
+
+  // =========================================
+  // Map Backend Validation Errors
+  // =========================================
+
+  const handleBackendValidationErrors = (backendErrors) => {
+    console.log("Backend validation errors:", backendErrors);
+
+    const mappedErrors = {};
+
+    // -----------------------------------------
+    // Case 1:
+    // Zod returns an array of issues
+    // -----------------------------------------
+
+    if (Array.isArray(backendErrors)) {
+      backendErrors.forEach((err) => {
+        const path = err?.path?.[0];
+        const message = err?.message || "Invalid value";
+
+        if (path === "fullName") {
+          mappedErrors.name = message;
+        } else if (path === "email") {
+          mappedErrors.email = message;
+        } else if (path === "password") {
+          mappedErrors.password = message;
+        } else if (path === "specialization") {
+          mappedErrors.specialization = message;
+        } else if (path === "hospital") {
+          mappedErrors.hospital = message;
+        } else if (path === "yearsOfExperience") {
+          mappedErrors.yearsOfExperience = message;
+        } else if (path === "pmdcRegistrationNumber") {
+          mappedErrors.pmdcRegistrationNumber = message;
+        } else if (path === "registrationType") {
+          mappedErrors.registrationType = message;
+        } else if (path === "qualifications") {
+          mappedErrors.qualifications = message;
+        } else if (path === "terms") {
+          mappedErrors.terms = message;
+        } else {
+          showErrorToast(message);
+        }
+      });
+
+      setFieldErrors((prev) => ({
+        ...prev,
+        ...mappedErrors,
+      }));
+
+      return true;
+    }
+
+    // -----------------------------------------
+    // Case 2:
+    // Zod flatten().fieldErrors returns object
+    //
+    // Example:
+    // {
+    //   email: ["Invalid email"],
+    //   password: ["Password too short"]
+    // }
+    // -----------------------------------------
+
+    if (
+      backendErrors &&
+      typeof backendErrors === "object" &&
+      !Array.isArray(backendErrors)
+    ) {
+      Object.entries(backendErrors).forEach(([field, value]) => {
+        let message = "Invalid value";
+
+        if (Array.isArray(value)) {
+          message = value[0] || "Invalid value";
+        } else if (typeof value === "string") {
+          message = value;
+        } else if (value?.message) {
+          message = value.message;
+        }
+
+        // Backend -> Frontend field mapping
+        if (field === "fullName") {
+          mappedErrors.name = message;
+        } else if (field.startsWith("qualification")) {
+          mappedErrors[field] = message;
+        } else {
+          mappedErrors[field] = message;
+        }
+      });
+
+      setFieldErrors((prev) => ({
+        ...prev,
+        ...mappedErrors,
+      }));
+
+      return true;
+    }
+
+    return false;
+  };
+
+  // =========================================
+  // Submit Registration
+  // =========================================
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Clear previous errors
+
     setFieldErrors({});
-    
-    // Validate form
+
+    // -----------------------------------------
+    // Frontend Validation
+    // -----------------------------------------
+
     if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
-    toast.loading("Creating your account...", { 
+
+    toast.loading("Creating your account...", {
       id: "register-loading",
       style: {
-        background: 'rgba(243, 244, 246, 0.7)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-        color: '#1F2937',
-        borderRadius: '16px',
-        padding: '16px 24px',
+        background: "rgba(243, 244, 246, 0.7)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        border: "1px solid rgba(255, 255, 255, 0.3)",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+        color: "#1F2937",
+        borderRadius: "16px",
+        padding: "16px 24px",
       },
     });
 
     try {
+      // =========================================
+      // Create FormData
+      // =========================================
+
       const formData = new FormData();
+
       formData.append("fullName", form.name.trim());
       formData.append("email", form.email.trim().toLowerCase());
       formData.append("password", form.password);
       formData.append("role", form.role);
-      
+
+      // =========================================
+      // Doctor Data
+      // =========================================
+
       if (form.role === "doctor") {
-        formData.append("specialization", form.specialization.trim());
+        formData.append(
+          "specialization",
+          form.specialization.trim()
+        );
+
         formData.append("hospital", form.hospital.trim());
-        formData.append("yearsOfExperience", Number(form.yearsOfExperience));
-        formData.append("pmdcRegistrationNumber", form.pmdcRegistrationNumber.trim());
-        formData.append("registrationType", form.registrationType);
-        
-        const qualifications = form.qualifications.map((qualification) => ({
-          degree: qualification.degree.trim(),
-          institution: qualification.institution.trim(),
-          completionYear: Number(qualification.completionYear),
-        }));
-        formData.append("qualifications", JSON.stringify(qualifications));
-        
-        // Append documents
+
+        formData.append(
+          "yearsOfExperience",
+          String(Number(form.yearsOfExperience))
+        );
+
+        formData.append(
+          "pmdcRegistrationNumber",
+          form.pmdcRegistrationNumber.trim()
+        );
+
+        formData.append(
+          "registrationType",
+          form.registrationType
+        );
+
+        // Qualifications
+        const qualifications = form.qualifications.map(
+          (qualification) => ({
+            degree: qualification.degree.trim(),
+            institution: qualification.institution.trim(),
+            completionYear: Number(
+              qualification.completionYear
+            ),
+          })
+        );
+
+        formData.append(
+          "qualifications",
+          JSON.stringify(qualifications)
+        );
+
+        // Documents
         documents.forEach((doc) => {
           formData.append("documents", doc.file);
-          formData.append("documentTypes", doc.documentType);
+          formData.append(
+            "documentTypes",
+            doc.documentType
+          );
         });
       }
 
+      // =========================================
+      // API Request
+      // =========================================
+
       const response = await registerWithFiles(formData);
 
-      // Dismiss loading toast
+      // =========================================
+      // Success
+      // =========================================
+
       toast.dismiss("register-loading");
 
       const isDoctor = form.role === "doctor";
 
-      // Show success toast with longer duration for doctors
       toast.success(
         (t) => (
           <div className="flex flex-col gap-1">
-            <span className="font-semibold"> Registration Successful!</span>
-            <span className="text-sm">Welcome to Flora! You can now log in to your account.</span>
+            <span className="font-semibold">
+              Registration Successful!
+            </span>
+
+            <span className="text-sm">
+              Welcome to Flora! You can now log in to your account.
+            </span>
+
             {isDoctor && (
               <>
                 <span className="text-sm font-medium text-amber-600 mt-1">
-                  📋 Your doctor registration has been submitted for admin approval.
+                  📋 Your doctor registration has been submitted
+                  for admin approval.
                 </span>
+
                 <span className="text-xs text-gray-500 mt-0.5">
-                  You will be able to login once your account is verified by an admin.
+                  You will be able to login once your account is
+                  verified by an admin.
                 </span>
               </>
             )}
+
             {response?.data?.requiresEmailVerification && (
               <span className="text-xs text-gray-600 mt-1">
                 Please check your email to verify your account.
@@ -318,250 +596,223 @@ export default function RegisterPage() {
             )}
           </div>
         ),
-        { 
-          duration: isDoctor ? 10000 : 5000, // 10 seconds for doctors, 5 seconds for regular users
+        {
+          duration: isDoctor ? 10000 : 5000,
+
           style: {
-            background: isDoctor 
-              ? 'rgba(251, 191, 36, 0.15)' // Amber tint for doctors
-              : 'rgba(220, 252, 231, 0.7)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
+            background: isDoctor
+              ? "rgba(251, 191, 36, 0.15)"
+              : "rgba(220, 252, 231, 0.7)",
+
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+
             border: isDoctor
-              ? '1px solid rgba(251, 191, 36, 0.4)'
-              : '1px solid rgba(134, 239, 172, 0.4)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(134, 239, 172, 0.15)',
-            color: isDoctor ? '#92400E' : '#166534',
-            borderRadius: '16px',
-            padding: '16px 24px',
-            maxWidth: '420px',
+              ? "1px solid rgba(251, 191, 36, 0.4)"
+              : "1px solid rgba(134, 239, 172, 0.4)",
+
+            boxShadow:
+              "0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(134, 239, 172, 0.15)",
+
+            color: isDoctor ? "#92400E" : "#166534",
+
+            borderRadius: "16px",
+            padding: "16px 24px",
+            maxWidth: "420px",
           },
-          icon: isDoctor ? '📋' : '',
+
+          icon: isDoctor ? "📋" : "",
         }
       );
 
-      // Reset form after successful registration
-      setForm({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        role: "user",
-        specialization: "",
-        hospital: "",
-        yearsOfExperience: "",
-        pmdcRegistrationNumber: "",
-        registrationType: "",
-        qualifications: [
-          {
-            degree: "",
-            institution: "",
-            completionYear: "",
-          },
-        ],
-        terms: false,
-      });
-      setDocuments([]);
+      // =========================================
+      // Reset Form
+      // =========================================
 
-      // Navigate after a longer delay for doctors
+      setForm(initialForm);
+      setDocuments([]);
+      setFieldErrors({});
+
+      // =========================================
+      // Navigate to Login
+      // =========================================
+
       const navigationDelay = isDoctor ? 4000 : 2000;
+
       setTimeout(() => {
         navigate("/login");
       }, navigationDelay);
-      
     } catch (error) {
       console.error("Registration error:", error);
-      
-      // Dismiss loading toast
+
       toast.dismiss("register-loading");
 
-      // Handle validation errors from Zod
-      if (error.response?.status === 400 && error.response?.data?.errors) {
-        const zodErrors = error.response.data.errors;
-        
-        // Map Zod errors to field errors
-        zodErrors.forEach((err) => {
-          const path = err.path[0];
-          if (path === "fullName") {
-            setFieldErrors((prev) => ({ ...prev, name: err.message }));
-          } else if (path === "email") {
-            setFieldErrors((prev) => ({ ...prev, email: err.message }));
-          } else if (path === "password") {
-            setFieldErrors((prev) => ({ ...prev, password: err.message }));
-          } else if (path === "specialization") {
-            setFieldErrors((prev) => ({ ...prev, specialization: err.message }));
-          } else if (path === "hospital") {
-            setFieldErrors((prev) => ({ ...prev, hospital: err.message }));
-          } else if (path === "yearsOfExperience") {
-            setFieldErrors((prev) => ({ ...prev, yearsOfExperience: err.message }));
-          } else if (path === "pmdcRegistrationNumber") {
-            setFieldErrors((prev) => ({ ...prev, pmdcRegistrationNumber: err.message }));
-          } else if (path === "registrationType") {
-            setFieldErrors((prev) => ({ ...prev, registrationType: err.message }));
-          } else if (path === "qualifications") {
-            setFieldErrors((prev) => ({ ...prev, qualifications: err.message }));
-          } else {
-            toast.error(err.message, {
-              style: {
-                background: 'rgba(254, 226, 226, 0.7)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(252, 165, 165, 0.4)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
-                color: '#991B1B',
-                borderRadius: '16px',
-                padding: '16px 24px',
-              },
-              icon: '❌',
-            });
+      // =========================================
+      // Backend Response Exists
+      // =========================================
+
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data || {};
+
+        console.log("Registration backend response:", data);
+
+        // -----------------------------------------
+        // Validation Errors
+        // -----------------------------------------
+
+        if (data.errors) {
+          const handled = handleBackendValidationErrors(
+            data.errors
+          );
+
+          if (handled) {
+            return;
           }
-        });
+        }
+
+        // -----------------------------------------
+        // General Backend Message
+        // -----------------------------------------
+
+        const message =
+          data.message ||
+          data.error ||
+          "";
+
+        // -----------------------------------------
+        // Email Already Exists
+        // -----------------------------------------
+
+        if (
+          status === 400 ||
+          status === 409
+        ) {
+          const lowerMessage = message.toLowerCase();
+
+          if (
+            lowerMessage.includes("email already") ||
+            lowerMessage.includes("already exists") ||
+            lowerMessage.includes("already registered")
+          ) {
+            setFieldErrors((prev) => ({
+              ...prev,
+              email: "Email already exists",
+            }));
+
+            return;
+          }
+        }
+
+        // -----------------------------------------
+        // Bad Request
+        // -----------------------------------------
+
+        if (status === 400) {
+          showErrorToast(
+            message ||
+              "Invalid registration details. Please check your input."
+          );
+
+          return;
+        }
+
+        // -----------------------------------------
+        // Conflict
+        // -----------------------------------------
+
+        if (status === 409) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            email: "Email already exists",
+          }));
+
+          return;
+        }
+
+        // -----------------------------------------
+        // Unprocessable Entity
+        // -----------------------------------------
+
+        if (status === 422) {
+          showErrorToast(
+            "Please check all fields and try again."
+          );
+
+          return;
+        }
+
+        // -----------------------------------------
+        // Too Many Requests
+        // -----------------------------------------
+
+        if (status === 429) {
+          showErrorToast(
+            "Too many attempts. Please wait a moment before trying again."
+          );
+
+          return;
+        }
+
+        // -----------------------------------------
+        // Server Error
+        // -----------------------------------------
+
+        if (status >= 500) {
+          showErrorToast(
+            "Server error. Please try again later."
+          );
+
+          return;
+        }
+
+        // -----------------------------------------
+        // Other HTTP Errors
+        // -----------------------------------------
+
+        showErrorToast(
+          message ||
+            "Registration failed. Please try again."
+        );
+
         return;
       }
 
-      // Handle other errors
-      if (error.response) {
-        const status = error.response.status;
-        const message = error.response.data?.message || error.response.data?.error || "";
-        const errors = error.response.data?.errors || {};
+      // =========================================
+      // Request Sent But No Response
+      // =========================================
 
-        // Handle field-specific errors from backend
-        if (errors.email) {
-          const emailError = errors.email;
-          setFieldErrors((prev) => ({ ...prev, email: emailError }));
-        } else if (errors.fullName) {
-          setFieldErrors((prev) => ({ ...prev, name: errors.fullName }));
-        } else if (errors.password) {
-          setFieldErrors((prev) => ({ ...prev, password: errors.password }));
-        } else {
-          if (status === 400) {
-            if (message.toLowerCase().includes("email already") || 
-                message.toLowerCase().includes("already exists") ||
-                message.toLowerCase().includes("already registered")) {
-              setFieldErrors((prev) => ({ ...prev, email: "Email already exists" }));
-            } else {
-              toast.error(message || "Invalid registration details. Please check your input.", {
-                style: {
-                  background: 'rgba(254, 226, 226, 0.7)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(252, 165, 165, 0.4)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
-                  color: '#991B1B',
-                  borderRadius: '16px',
-                  padding: '16px 24px',
-                },
-                icon: '❌',
-              });
-            }
-          } else if (status === 409) {
-            setFieldErrors((prev) => ({ ...prev, email: "Email already exists" }));
-          } else if (status === 422) {
-            toast.error("Please check all fields and try again.", {
-              style: {
-                background: 'rgba(254, 226, 226, 0.7)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(252, 165, 165, 0.4)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
-                color: '#991B1B',
-                borderRadius: '16px',
-                padding: '16px 24px',
-              },
-              icon: '❌',
-            });
-          } else if (status === 429) {
-            toast.error("Too many attempts. Please wait a moment before trying again.", {
-              style: {
-                background: 'rgba(254, 226, 226, 0.7)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(252, 165, 165, 0.4)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
-                color: '#991B1B',
-                borderRadius: '16px',
-                padding: '16px 24px',
-              },
-              icon: '❌',
-            });
-          } else if (status >= 500) {
-            toast.error("Server error. Please try again later.", {
-              style: {
-                background: 'rgba(254, 226, 226, 0.7)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(252, 165, 165, 0.4)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
-                color: '#991B1B',
-                borderRadius: '16px',
-                padding: '16px 24px',
-              },
-              icon: '❌',
-            });
-          } else {
-            toast.error(message || "Registration failed. Please try again.", {
-              style: {
-                background: 'rgba(254, 226, 226, 0.7)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(252, 165, 165, 0.4)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
-                color: '#991B1B',
-                borderRadius: '16px',
-                padding: '16px 24px',
-              },
-              icon: '❌',
-            });
-          }
-        }
-      } else if (error.request) {
+      if (error.request) {
         if (!navigator.onLine) {
-          toast.error("No internet connection. Please check your network.", {
-            style: {
-              background: 'rgba(254, 226, 226, 0.7)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(252, 165, 165, 0.4)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
-              color: '#991B1B',
-              borderRadius: '16px',
-              padding: '16px 24px',
-            },
-            icon: '🌐',
-          });
+          showErrorToast(
+            "No internet connection. Please check your network.",
+            "🌐"
+          );
         } else {
-          toast.error("Connection error. Please check your internet and try again.", {
-            style: {
-              background: 'rgba(254, 226, 226, 0.7)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(252, 165, 165, 0.4)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
-              color: '#991B1B',
-              borderRadius: '16px',
-              padding: '16px 24px',
-            },
-            icon: '📡',
-          });
+          showErrorToast(
+            "Connection error. Please check your internet and try again.",
+            "📡"
+          );
         }
-      } else {
-        toast.error("Registration failed. Please try again.", {
-          style: {
-            background: 'rgba(254, 226, 226, 0.7)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(252, 165, 165, 0.4)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
-            color: '#991B1B',
-            borderRadius: '16px',
-            padding: '16px 24px',
-          },
-          icon: '❌',
-        });
+
+        return;
       }
+
+      // =========================================
+      // Unknown Error
+      // =========================================
+
+      showErrorToast(
+        "Registration failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
   };
+
+  // =========================================
+  // JSX
+  // =========================================
 
   return (
     <AuthSplitLayout
@@ -571,39 +822,66 @@ export default function RegisterPage() {
       leftExtra={
         <ul className="mt-6 w-full space-y-3 text-left">
           {perks.map(({ icon: Icon, text }) => (
-            <li key={text} className="flex items-center gap-3">
+            <li
+              key={text}
+              className="flex items-center gap-3"
+            >
               <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-[#EB6991] shadow-sm">
                 <Icon className="h-3.5 w-3.5" />
               </span>
-              <span className="text-sm text-[#3D3939]">{text}</span>
+
+              <span className="text-sm text-[#3D3939]">
+                {text}
+              </span>
             </li>
           ))}
         </ul>
       }
     >
-      {/* Moved heading and subtitle to be centered */}
+      {/* Heading */}
+
       <div className="flex flex-col items-center justify-center mb-6">
         <h2 className="font-display text-lg font-semibold text-[#0D0D0D] text-center">
           Register
         </h2>
+
         <p className="mt-0.5 text-sm text-[#8F8C8C] text-center">
           Create your account to get started.
         </p>
       </div>
 
-      <form className="mt-4 space-y-3" onSubmit={handleSubmit} noValidate>
+      {/* Form */}
+
+      <form
+        className="mt-4 space-y-3"
+        onSubmit={handleSubmit}
+        noValidate
+      >
+        {/* =========================================
+            Full Name
+        ========================================= */}
+
         <div>
-          <Label className="text-xs">Full Name</Label>
-          <TextField 
-            icon={User} 
-            type="text" 
+          <Label className="text-xs">
+            Full Name
+          </Label>
+
+          <TextField
+            icon={User}
+            type="text"
             placeholder="Enter your full name"
             name="name"
             value={form.name}
             onChange={handleChange}
-            className={`py-2 text-sm ${fieldErrors.name ? 'border-red-500' : ''}`}
+            className={`py-2 text-sm ${
+              fieldErrors.name
+                ? "border-red-500"
+                : ""
+            }`}
             disabled={isLoading}
+            autoComplete="name"
           />
+
           {fieldErrors.name && (
             <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" />
@@ -612,103 +890,175 @@ export default function RegisterPage() {
           )}
         </div>
 
+        {/* =========================================
+            Email
+        ========================================= */}
+
         <div>
-          <Label className="text-xs">Email</Label>
-          <TextField 
-            icon={Mail} 
-            type="email" 
+          <Label className="text-xs">
+            Email
+          </Label>
+
+          <TextField
+            icon={Mail}
+            type="email"
             placeholder="Enter your email"
             name="email"
             value={form.email}
             onChange={handleChange}
-            className={`py-2 text-sm ${fieldErrors.email ? 'border-red-500' : ''}`}
+            className={`py-2 text-sm ${
+              fieldErrors.email
+                ? "border-red-500"
+                : ""
+            }`}
             disabled={isLoading}
             autoComplete="email"
           />
+
           {fieldErrors.email && (
             <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" />
               {fieldErrors.email}
             </p>
           )}
-          {form.email && !fieldErrors.email && validateEmail(form.email) && (
-            <p className="mt-1 text-xs text-green-500 flex items-center gap-1">
-              <CheckCircle className="w-3 h-3" />
-              Valid email format
-            </p>
-          )}
+
+          {form.email &&
+            !fieldErrors.email &&
+            validateEmail(form.email) && (
+              <p className="mt-1 text-xs text-green-500 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Valid email format
+              </p>
+            )}
         </div>
 
+        {/* =========================================
+            Password
+        ========================================= */}
+
         <div>
-          <Label className="text-xs">Password</Label>
+          <Label className="text-xs">
+            Password
+          </Label>
+
           <PasswordField
             icon={Lock}
             show={showPassword}
-            onToggle={() => setShowPassword((v) => !v)}
+            onToggle={() =>
+              setShowPassword((v) => !v)
+            }
             placeholder="Create a password"
             name="password"
             value={form.password}
             onChange={handleChange}
-            className={`py-2 text-sm ${fieldErrors.password ? 'border-red-500' : ''}`}
+            className={`py-2 text-sm ${
+              fieldErrors.password
+                ? "border-red-500"
+                : ""
+            }`}
             disabled={isLoading}
             autoComplete="new-password"
           />
+
           {fieldErrors.password && (
             <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" />
               {fieldErrors.password}
             </p>
           )}
-          {form.password && !fieldErrors.password && validatePassword(form.password).length === 0 && (
-            <p className="mt-1 text-xs text-green-500 flex items-center gap-1">
-              <CheckCircle className="w-3 h-3" />
-              Strong password ✓
-            </p>
-          )}
-          {form.password && validatePassword(form.password).length > 0 && (
-            <p className="mt-1 text-xs text-amber-500 flex items-center gap-1">
-              <Info className="w-3 h-3" />
-              Password needs: {validatePassword(form.password).join(", ")}
-            </p>
-          )}
+
+          {form.password &&
+            !fieldErrors.password &&
+            validatePassword(form.password).length ===
+              0 && (
+              <p className="mt-1 text-xs text-green-500 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Strong password ✓
+              </p>
+            )}
+
+          {form.password &&
+            validatePassword(form.password).length > 0 && (
+              <p className="mt-1 text-xs text-amber-500 flex items-center gap-1">
+                <Info className="w-3 h-3" />
+                Password needs:{" "}
+                {validatePassword(form.password).join(
+                  ", "
+                )}
+              </p>
+            )}
         </div>
 
+        {/* =========================================
+            Confirm Password
+        ========================================= */}
+
         <div>
-          <Label className="text-xs">Confirm Password</Label>
+          <Label className="text-xs">
+            Confirm Password
+          </Label>
+
           <PasswordField
             icon={Lock}
             show={showConfirm}
-            onToggle={() => setShowConfirm((v) => !v)}
+            onToggle={() =>
+              setShowConfirm((v) => !v)
+            }
             placeholder="Confirm your password"
             name="confirmPassword"
             value={form.confirmPassword}
             onChange={handleChange}
-            className={`py-2 text-sm ${fieldErrors.confirmPassword ? 'border-red-500' : ''}`}
+            className={`py-2 text-sm ${
+              fieldErrors.confirmPassword
+                ? "border-red-500"
+                : ""
+            }`}
             disabled={isLoading}
             autoComplete="new-password"
           />
+
           {fieldErrors.confirmPassword && (
             <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" />
               {fieldErrors.confirmPassword}
             </p>
           )}
-          {form.confirmPassword && !fieldErrors.confirmPassword && form.password === form.confirmPassword && (
-            <p className="mt-1 text-xs text-green-500 flex items-center gap-1">
-              <CheckCircle className="w-3 h-3" />
-              Passwords match ✓
-            </p>
-          )}
+
+          {form.confirmPassword &&
+            !fieldErrors.confirmPassword &&
+            form.password ===
+              form.confirmPassword && (
+              <p className="mt-1 text-xs text-green-500 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Passwords match ✓
+              </p>
+            )}
         </div>
 
+        {/* =========================================
+            Role
+        ========================================= */}
+
         <div>
-          <Label className="text-xs">I am a</Label>
+          <Label className="text-xs">
+            I am a
+          </Label>
+
           <div className="grid grid-cols-2 gap-2">
+            {/* User */}
+
             <button
               type="button"
               onClick={() => {
-                setForm((prev) => ({ ...prev, role: "user" }));
-                setFieldErrors((prev) => ({ ...prev, role: null }));
+                setForm((prev) => ({
+                  ...prev,
+                  role: "user",
+                }));
+
+                setFieldErrors((prev) => ({
+                  ...prev,
+                  role: null,
+                }));
               }}
               className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
                 form.role === "user"
@@ -719,11 +1069,21 @@ export default function RegisterPage() {
             >
               Patient / User
             </button>
+
+            {/* Doctor */}
+
             <button
               type="button"
               onClick={() => {
-                setForm((prev) => ({ ...prev, role: "doctor" }));
-                setFieldErrors((prev) => ({ ...prev, role: null }));
+                setForm((prev) => ({
+                  ...prev,
+                  role: "doctor",
+                }));
+
+                setFieldErrors((prev) => ({
+                  ...prev,
+                  role: null,
+                }));
               }}
               className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
                 form.role === "doctor"
@@ -737,6 +1097,10 @@ export default function RegisterPage() {
           </div>
         </div>
 
+        {/* =========================================
+            Doctor Details
+        ========================================= */}
+
         {form.role === "doctor" && (
           <div className="space-y-3 rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] p-4">
             <p className="text-[11px] font-semibold text-[#8F8C8C] mb-2">
@@ -744,8 +1108,12 @@ export default function RegisterPage() {
             </p>
 
             {/* Specialization */}
+
             <div>
-              <Label className="text-xs">Specialization</Label>
+              <Label className="text-xs">
+                Specialization
+              </Label>
+
               <TextField
                 icon={Stethoscope}
                 name="specialization"
@@ -753,10 +1121,13 @@ export default function RegisterPage() {
                 value={form.specialization}
                 onChange={handleChange}
                 className={`py-2 text-sm ${
-                  fieldErrors.specialization ? "border-red-500" : ""
+                  fieldErrors.specialization
+                    ? "border-red-500"
+                    : ""
                 }`}
                 disabled={isLoading}
               />
+
               {fieldErrors.specialization && (
                 <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
@@ -766,30 +1137,45 @@ export default function RegisterPage() {
             </div>
 
             {/* PMDC Registration Number */}
+
             <div>
-              <Label className="text-xs">PMDC Registration Number</Label>
+              <Label className="text-xs">
+                PMDC Registration Number
+              </Label>
+
               <TextField
                 icon={IdCard}
                 name="pmdcRegistrationNumber"
                 placeholder="Enter PMDC registration number"
-                value={form.pmdcRegistrationNumber}
+                value={
+                  form.pmdcRegistrationNumber
+                }
                 onChange={handleChange}
                 className={`py-2 text-sm ${
-                  fieldErrors.pmdcRegistrationNumber ? "border-red-500" : ""
+                  fieldErrors.pmdcRegistrationNumber
+                    ? "border-red-500"
+                    : ""
                 }`}
                 disabled={isLoading}
               />
+
               {fieldErrors.pmdcRegistrationNumber && (
                 <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
-                  {fieldErrors.pmdcRegistrationNumber}
+                  {
+                    fieldErrors.pmdcRegistrationNumber
+                  }
                 </p>
               )}
             </div>
 
             {/* Registration Type */}
+
             <div>
-              <Label className="text-xs">Registration Type</Label>
+              <Label className="text-xs">
+                Registration Type
+              </Label>
+
               <select
                 name="registrationType"
                 value={form.registrationType}
@@ -801,11 +1187,23 @@ export default function RegisterPage() {
                 }`}
                 disabled={isLoading}
               >
-                <option value="">Select registration type</option>
-                <option value="permanent">Permanent</option>
-                <option value="provisional">Provisional</option>
-                <option value="specialist">Specialist</option>
+                <option value="">
+                  Select registration type
+                </option>
+
+                <option value="permanent">
+                  Permanent
+                </option>
+
+                <option value="provisional">
+                  Provisional
+                </option>
+
+                <option value="specialist">
+                  Specialist
+                </option>
               </select>
+
               {fieldErrors.registrationType && (
                 <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
@@ -815,13 +1213,21 @@ export default function RegisterPage() {
             </div>
 
             {/* Medical Qualification */}
+
             <div>
-              <Label className="text-xs">Medical Qualification</Label>
+              <Label className="text-xs">
+                Medical Qualification
+              </Label>
+
               <div className="space-y-2">
+                {/* Degree */}
+
                 <TextField
                   type="text"
                   placeholder="Degree (e.g. MBBS)"
-                  value={form.qualifications[0].degree}
+                  value={
+                    form.qualifications[0].degree
+                  }
                   onChange={(e) => {
                     setForm((prev) => ({
                       ...prev,
@@ -832,70 +1238,120 @@ export default function RegisterPage() {
                         },
                       ],
                     }));
+
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      qualification_degree_0:
+                        null,
+                    }));
                   }}
                   className={`py-2 text-sm ${
-                    fieldErrors.qualification_degree_0 ? "border-red-500" : ""
+                    fieldErrors
+                      .qualification_degree_0
+                      ? "border-red-500"
+                      : ""
                   }`}
                   disabled={isLoading}
                 />
+
                 {fieldErrors.qualification_degree_0 && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
-                    {fieldErrors.qualification_degree_0}
+                    {
+                      fieldErrors
+                        .qualification_degree_0
+                    }
                   </p>
                 )}
+
+                {/* Institution */}
 
                 <TextField
                   type="text"
                   placeholder="Institution"
-                  value={form.qualifications[0].institution}
+                  value={
+                    form.qualifications[0]
+                      .institution
+                  }
                   onChange={(e) => {
                     setForm((prev) => ({
                       ...prev,
                       qualifications: [
                         {
                           ...prev.qualifications[0],
-                          institution: e.target.value,
+                          institution:
+                            e.target.value,
                         },
                       ],
                     }));
+
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      qualification_institution_0:
+                        null,
+                    }));
                   }}
                   className={`py-2 text-sm ${
-                    fieldErrors.qualification_institution_0 ? "border-red-500" : ""
+                    fieldErrors
+                      .qualification_institution_0
+                      ? "border-red-500"
+                      : ""
                   }`}
                   disabled={isLoading}
                 />
+
                 {fieldErrors.qualification_institution_0 && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
-                    {fieldErrors.qualification_institution_0}
+                    {
+                      fieldErrors
+                        .qualification_institution_0
+                    }
                   </p>
                 )}
+
+                {/* Completion Year */}
 
                 <TextField
                   type="number"
                   placeholder="Completion year"
-                  value={form.qualifications[0].completionYear}
+                  value={
+                    form.qualifications[0]
+                      .completionYear
+                  }
                   onChange={(e) => {
                     setForm((prev) => ({
                       ...prev,
                       qualifications: [
                         {
                           ...prev.qualifications[0],
-                          completionYear: e.target.value,
+                          completionYear:
+                            e.target.value,
                         },
                       ],
                     }));
+
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      qualification_year_0: null,
+                    }));
                   }}
                   className={`py-2 text-sm ${
-                    fieldErrors.qualification_year_0 ? "border-red-500" : ""
+                    fieldErrors
+                      .qualification_year_0
+                      ? "border-red-500"
+                      : ""
                   }`}
                   disabled={isLoading}
                 />
+
                 {fieldErrors.qualification_year_0 && (
                   <p className="text-xs text-red-500 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
-                    {fieldErrors.qualification_year_0}
+                    {
+                      fieldErrors
+                        .qualification_year_0
+                    }
                   </p>
                 )}
 
@@ -909,8 +1365,12 @@ export default function RegisterPage() {
             </div>
 
             {/* Hospital */}
+
             <div>
-              <Label className="text-xs">Hospital / Clinic</Label>
+              <Label className="text-xs">
+                Hospital / Clinic
+              </Label>
+
               <TextField
                 icon={Building2}
                 name="hospital"
@@ -918,10 +1378,13 @@ export default function RegisterPage() {
                 value={form.hospital}
                 onChange={handleChange}
                 className={`py-2 text-sm ${
-                  fieldErrors.hospital ? "border-red-500" : ""
+                  fieldErrors.hospital
+                    ? "border-red-500"
+                    : ""
                 }`}
                 disabled={isLoading}
               />
+
               {fieldErrors.hospital && (
                 <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
@@ -931,8 +1394,12 @@ export default function RegisterPage() {
             </div>
 
             {/* Years of Experience */}
+
             <div>
-              <Label className="text-xs">Years of Experience</Label>
+              <Label className="text-xs">
+                Years of Experience
+              </Label>
+
               <TextField
                 icon={BriefcaseMedical}
                 type="number"
@@ -942,25 +1409,37 @@ export default function RegisterPage() {
                 value={form.yearsOfExperience}
                 onChange={handleChange}
                 className={`py-2 text-sm ${
-                  fieldErrors.yearsOfExperience ? "border-red-500" : ""
+                  fieldErrors.yearsOfExperience
+                    ? "border-red-500"
+                    : ""
                 }`}
                 disabled={isLoading}
               />
+
               {fieldErrors.yearsOfExperience && (
                 <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
-                  {fieldErrors.yearsOfExperience}
+                  {
+                    fieldErrors.yearsOfExperience
+                  }
                 </p>
               )}
             </div>
 
-            {/* Document Upload */}
+            {/* Doctor Documents */}
+
             <DoctorDocumentUpload
-              onDocumentsChange={handleDocumentsChange}
+              onDocumentsChange={
+                handleDocumentsChange
+              }
               errors={fieldErrors}
             />
           </div>
         )}
+
+        {/* =========================================
+            Terms & Conditions
+        ========================================= */}
 
         <label className="flex items-start gap-1.5 text-xs text-[#3D3939]">
           <input
@@ -969,21 +1448,31 @@ export default function RegisterPage() {
             checked={form.terms}
             onChange={handleChange}
             className={`mt-0.5 h-3 w-3 rounded border-[#F0DCE4] text-[#EB6991] focus:ring-[#F33B7D]/30 ${
-              fieldErrors.terms ? 'border-red-500' : ''
+              fieldErrors.terms
+                ? "border-red-500"
+                : ""
             }`}
             disabled={isLoading}
           />
+
           <span>
-            I agree to the{" "}
-            <Link to="/terms" className="font-semibold text-[#EB6991] hover:underline">
+            I agree to{" "}
+            <Link
+              to="/terms"
+              className="font-semibold text-[#EB6991] hover:underline"
+            >
               Terms & Conditions
             </Link>{" "}
             and{" "}
-            <Link to="/privacy" className="font-semibold text-[#EB6991] hover:underline">
+            <Link
+              to="/privacy"
+              className="font-semibold text-[#EB6991] hover:underline"
+            >
               Privacy Policy
             </Link>
           </span>
         </label>
+
         {fieldErrors.terms && (
           <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
             <AlertCircle className="w-3 h-3" />
@@ -991,18 +1480,31 @@ export default function RegisterPage() {
           </p>
         )}
 
-        <Button 
-          type="submit" 
+        {/* =========================================
+            Submit
+        ========================================= */}
+
+        <Button
+          type="submit"
           className="mt-1 py-2 text-sm"
           disabled={isLoading}
         >
-          {isLoading ? "Creating Account..." : "Create Account"}
+          {isLoading
+            ? "Creating Account..."
+            : "Create Account"}
         </Button>
       </form>
 
+      {/* =========================================
+          Login Link
+      ========================================= */}
+
       <p className="mt-4 text-center text-xs text-[#8F8C8C]">
         Already have an account?{" "}
-        <Link to="/login" className="font-semibold text-[#F33B7D] hover:underline">
+        <Link
+          to="/login"
+          className="font-semibold text-[#F33B7D] hover:underline"
+        >
           Login →
         </Link>
       </p>
