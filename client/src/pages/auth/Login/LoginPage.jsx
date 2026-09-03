@@ -101,16 +101,16 @@ export default function LoginPage() {
       toast.success("Verification email resent successfully! Please check your inbox.", {
         duration: 5000,
         style: {
-          background: 'rgba(220, 252, 231, 0.7)',
+          background: '#FEE4EB',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(134, 239, 172, 0.4)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(134, 239, 172, 0.15)',
-          color: '#166534',
+          border: '1px solid rgba(244, 114, 182, 0.4)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(244, 114, 182, 0.15)',
+          color: '#831843',
           borderRadius: '16px',
           padding: '16px 24px',
         },
-        icon: '📧',
+        icon: '',
       });
     } catch (err) {
       toast.error(
@@ -126,7 +126,7 @@ export default function LoginPage() {
             borderRadius: '16px',
             padding: '16px 24px',
           },
-          icon: '❌',
+          icon: '',
         }
       );
     } finally {
@@ -157,16 +157,16 @@ export default function LoginPage() {
       // Show success toast
       toast.success("Welcome back!", {
         style: {
-          background: 'rgba(220, 252, 231, 0.7)',
+          background: '#FEE4EB',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(134, 239, 172, 0.4)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(134, 239, 172, 0.15)',
-          color: '#166534',
+          border: '1px solid rgba(244, 114, 182, 0.4)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(244, 114, 182, 0.15)',
+          color: '#831843',
           borderRadius: '16px',
           padding: '16px 24px',
         },
-        icon: '✅',
+        icon: '',
       });
 
       if (role === "admin") {
@@ -210,7 +210,7 @@ export default function LoginPage() {
                 borderRadius: '16px',
                 padding: '16px 24px',
               },
-              icon: '❌',
+              icon: '',
             }
           );
           return;
@@ -229,7 +229,7 @@ export default function LoginPage() {
                 borderRadius: '16px',
                 padding: '16px 24px',
               },
-              icon: '🚫',
+              icon: '',
             }
           );
           return;
@@ -305,8 +305,8 @@ export default function LoginPage() {
         subtitle="Please verify your email address to continue"
       >
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-            <Mail className="w-10 h-10 text-blue-600" />
+          <div className="w-20 h-20 rounded-full bg-[#FEE4EB] flex items-center justify-center mb-4">
+            <Mail className="w-10 h-10 text-[#EB6991]" />
           </div>
           <h3 className="text-lg font-semibold text-[#0D0D0D] mb-2">
             Email Verification Required
@@ -322,8 +322,8 @@ export default function LoginPage() {
           )}
           
           <div className="mt-6 w-full max-w-md space-y-3">
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs text-blue-700 flex items-start gap-2">
+            <div className="p-4 bg-[#FEE4EB] rounded-lg border border-[#F0DCE4]">
+              <p className="text-xs text-[#831843] flex items-start gap-2">
                 <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span>Check your inbox and click the verification link to activate your account.</span>
               </p>
@@ -489,16 +489,16 @@ export default function LoginPage() {
                   saveGoogleLogin(response.data);
                   toast.success("Welcome back!", {
                     style: {
-                      background: 'rgba(220, 252, 231, 0.7)',
+                      background: '#FEE4EB',
                       backdropFilter: 'blur(20px)',
                       WebkitBackdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(134, 239, 172, 0.4)',
-                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(134, 239, 172, 0.15)',
-                      color: '#166534',
+                      border: '1px solid rgba(244, 114, 182, 0.4)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(244, 114, 182, 0.15)',
+                      color: '#831843',
                       borderRadius: '16px',
                       padding: '16px 24px',
                     },
-                    icon: '✅',
+                    icon: '',
                   });
 
                   const role = response?.data?.user?.role;
@@ -563,7 +563,7 @@ export default function LoginPage() {
                     borderRadius: '16px',
                     padding: '16px 24px',
                   },
-                  icon: '❌',
+                  icon: '',
                 });
               }}
             />

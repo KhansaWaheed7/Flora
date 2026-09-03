@@ -335,7 +335,7 @@ export default function RegisterPage() {
   // Backend Error Helpers
   // =========================================
 
-  const showErrorToast = (message, icon = "❌") => {
+  const showErrorToast = (message, icon = "") => {
     toast.error(message, {
       style: {
         background: "rgba(254, 226, 226, 0.7)",
@@ -578,7 +578,7 @@ export default function RegisterPage() {
             {isDoctor && (
               <>
                 <span className="text-sm font-medium text-amber-600 mt-1">
-                  📋 Your doctor registration has been submitted
+                  Your doctor registration has been submitted
                   for admin approval.
                 </span>
 
@@ -600,28 +600,19 @@ export default function RegisterPage() {
           duration: isDoctor ? 10000 : 5000,
 
           style: {
-            background: isDoctor
-              ? "rgba(251, 191, 36, 0.15)"
-              : "rgba(220, 252, 231, 0.7)",
-
+            background: "#FEE4EB",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-
-            border: isDoctor
-              ? "1px solid rgba(251, 191, 36, 0.4)"
-              : "1px solid rgba(134, 239, 172, 0.4)",
-
+            border: "1px solid rgba(244, 114, 182, 0.4)",
             boxShadow:
-              "0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(134, 239, 172, 0.15)",
-
-            color: isDoctor ? "#92400E" : "#166534",
-
+              "0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(244, 114, 182, 0.15)",
+            color: "#831843",
             borderRadius: "16px",
             padding: "16px 24px",
             maxWidth: "420px",
           },
 
-          icon: isDoctor ? "📋" : "",
+          icon: "",
         }
       );
 
@@ -786,12 +777,12 @@ export default function RegisterPage() {
         if (!navigator.onLine) {
           showErrorToast(
             "No internet connection. Please check your network.",
-            "🌐"
+            ""
           );
         } else {
           showErrorToast(
             "Connection error. Please check your internet and try again.",
-            "📡"
+            ""
           );
         }
 
@@ -973,7 +964,7 @@ export default function RegisterPage() {
               0 && (
               <p className="mt-1 text-xs text-green-500 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />
-                Strong password ✓
+                Strong password
               </p>
             )}
 
@@ -1030,7 +1021,7 @@ export default function RegisterPage() {
               form.confirmPassword && (
               <p className="mt-1 text-xs text-green-500 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />
-                Passwords match ✓
+                Passwords match
               </p>
             )}
         </div>
