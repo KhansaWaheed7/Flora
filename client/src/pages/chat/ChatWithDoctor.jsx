@@ -30,6 +30,24 @@ function Avatar({ name, image, size = "h-9 w-9" }) {
   );
 }
 
+function getUserId(value) {
+  if (!value) return null;
+
+  if (typeof value === "string") {
+    return value.toString();
+  }
+
+  if (value._id) {
+    return value._id.toString();
+  }
+
+  if (value.id) {
+    return value.id.toString();
+  }
+
+  return null;
+}
+
 function formatTime(value) {
   if (!value) return "";
   return new Date(value).toLocaleTimeString("en-US", {
@@ -43,6 +61,7 @@ export default function ChatWithDoctor() {
   const navigate = useNavigate();
   const { socket, connected } = useSocket();
   const { user } = useAuth();
+const currentUserId = getUserId(user);
 
   const [consultation, setConsultation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -88,11 +107,22 @@ export default function ChatWithDoctor() {
     socket.emit("mark-read", { chatId: id });
 
     const handleNewMessage = (message) => {
-      if (message.chat === id || message.chatId === id) {
-        setMessages((prev) => [...prev, message]);
-        socket.emit("mark-read", { chatId: id });
-      }
-    };
+  if (message.chat === id || message.chatId === id) {
+    setMessages((prev) => [...prev, message]);
+
+    // Tell backend that this message reached the receiver
+    if (message._id) {
+      socket.emit("message-delivered", {
+        messageId: message._id,
+      });
+    }
+
+    // Since this chat is currently open, mark it as read
+    socket.emit("mark-read", {
+      chatId: id,
+    });
+  }
+};
 
     const handleTyping = ({ userId }) => {
       if (userId !== user?._id) setOtherTyping(true);
@@ -181,33 +211,48 @@ export default function ChatWithDoctor() {
             </p>
           )}
           {messages.map((m) => {
-            const isMine =
-              (m.sender?._id || m.sender) === user?._id ||
-              (m.sender?._id || m.sender) === user?.id;
-            return (
-              <div
-                key={m._id}
-                className={`flex ${isMine ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
-                    isMine
-                      ? "bg-[#F33B7D] text-white"
-                      : "bg-[#FEF4F4] text-[#3D3939]"
-                  }`}
-                >
-                  <p>{m.message}</p>
-                  <p
-                    className={`mt-1 text-[10px] ${
-                      isMine ? "text-white/70" : "text-[#B8AEB2]"
-                    }`}
-                  >
-                    {formatTime(m.createdAt)}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+  const senderId = (
+    m.sender?._id ||
+    m.sender?.id ||
+    m.sender
+  )?.toString();
+
+  const isMine =
+    senderId === currentUserId;
+
+  return (
+    <div
+      key={m._id}
+      className={`flex ${
+        isMine
+          ? "justify-end"
+          : "justify-start"
+      }`}
+    >
+      <div
+        className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
+          isMine
+            ? "bg-[#F33B7D] text-white"
+            : "bg-[#FFF1F6] text-[#3D3939] border border-[#F7D9E5]"
+        }`}
+      >
+        <p className="whitespace-pre-wrap break-words">
+          {m.message}
+        </p>
+
+        <p
+          className={`mt-1 text-[10px] ${
+            isMine
+              ? "text-white/70"
+              : "text-[#B8AEB2]"
+          }`}
+        >
+          {formatTime(m.createdAt)}
+        </p>
+      </div>
+    </div>
+  );
+})}
           <div ref={bottomRef} />
         </div>
 

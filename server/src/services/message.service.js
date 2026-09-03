@@ -2,6 +2,8 @@ const Chat = require("../models/Chat");
 const Message = require("../models/Message");
 const ApiError = require("../utils/ApiError");
 
+
+
 // =========================================
 // Send Message
 // =========================================
@@ -77,10 +79,12 @@ const sendMessage = async (
 
   await chat.save();
 
-  return await newMessage.populate(
-    "sender",
-    "fullName profilePicture role"
-  );
+const populatedMessage = await newMessage.populate(
+  "sender",
+  "fullName profilePicture role"
+);
+
+return populatedMessage;
 
 };
 
@@ -156,17 +160,27 @@ const markMessagesAsRead = async (
     );
   }
 
-  await Message.updateMany(
-    {
-      chat: chatId,
-      receiver: userId,
-      isRead: false,
-    },
-    {
+  const result = await Message.updateMany(
+  {
+    chat: chatId,
+    receiver: userId,
+    isRead: false,
+  },
+  {
+    $set: {
+      isDelivered: true,
+      deliveredAt: new Date(),
       isRead: true,
       readAt: new Date(),
-    }
-  );
+    },
+  }
+);
+
+console.log("📖 Messages marked as read:", {
+  chatId,
+  userId: userId.toString(),
+  modifiedCount: result.modifiedCount,
+});
 
   if (chat.patient.toString() === userId.toString()) {
 

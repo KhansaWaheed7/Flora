@@ -29,7 +29,7 @@ const messageSchema = new mongoose.Schema(
 
     messageType: {
       type: String,
-      enum: ["text", "image", "file", "audio",],
+      enum: ["text", "image", "file", "audio", "system"],
       default: "text",
     },
 
@@ -40,6 +40,11 @@ const messageSchema = new mongoose.Schema(
       size: Number,
       mimeType: String,
     },
+
+    isDelivered: {
+  type: Boolean,
+  default: false,
+},
 
       deliveredAt: Date,
 

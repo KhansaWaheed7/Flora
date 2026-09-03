@@ -15,7 +15,8 @@ const doctorRoutes = require("./doctor.routes");
 const messageRoutes = require("./message.routes");
 const gynaeAssistantRoutes = require("./gynaeAssistant.routes");
 const medicalReportRoutes = require("./medicalReport.routes");
-
+const doctorVerificationRoutes = require("./doctorVerification.routes");
+const adminVerificationRoutes = require("./adminVerification.routes");
 
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
@@ -33,6 +34,14 @@ router.use("/doctor", doctorRoutes);
 router.use("/messages", messageRoutes);
 router.use("/gynae-assistant", gynaeAssistantRoutes);
 router.use("/medical-reports", medicalReportRoutes);
+router.use(
+  "/doctor-verification",
+  doctorVerificationRoutes
+);
+router.use(
+  "/admin/verification",
+  adminVerificationRoutes
+);
 
 router.get("/health", (req, res) => {
   res.status(200).json({

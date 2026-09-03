@@ -1,5 +1,4 @@
-import { Routes, Route } from "react-router-dom";
-import { Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import LandingPage from "./pages/public/Landing/LandingPage";
 import TermsAndConditions from "./pages/public/TermsAndConditions";
@@ -58,6 +57,10 @@ import DoctorRoute from "./routes/DoctorRoute";
 import DoctorDashboard from "./pages/doctor-portal/DoctorDashboard";
 import ConsultationRequests from "./pages/doctor-portal/ConsultationRequests";
 import ActivePatients from "./pages/doctor-portal/ActivePatients";
+import DoctorChat from "./pages/doctor-portal/DoctorChat";
+import ClosedConsultations from "./pages/doctor-portal/ClosedConsultations";
+
+import DoctorVerification from "./pages/doctor-portal/DoctorVerification";
 
 // ===== MAIN BRANCH IMPORTS =====
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -78,7 +81,6 @@ import PendingConsultation from "./pages/chat/PendingConsultation";
 import RejectedConsultation from "./pages/chat/RejectedConsultation";
 import ChatWithDoctor from "./pages/chat/ChatWithDoctor";
 import ConsultationClosed from "./pages/chat/ConsultationClosed";
-import ClosedConsultations from "./pages/doctor-portal/ClosedConsultations";
 
 function App() {
   return (
@@ -380,7 +382,6 @@ function App() {
       />
 
       {/* ==================== CHAT (FEATURE/CHAT BRANCH) ==================== */}
-      {/* MAIN CHAT PAGE */}
       <Route
         path="/chat"
         element={
@@ -390,7 +391,6 @@ function App() {
         }
       />
 
-      {/* FIND DOCTORS */}
       <Route
         path="/chat/doctors"
         element={
@@ -400,7 +400,6 @@ function App() {
         }
       />
 
-      {/* DOCTOR PROFILE */}
       <Route
         path="/chat/doctors/:id"
         element={
@@ -410,7 +409,6 @@ function App() {
         }
       />
 
-      {/* CONSULTATION REQUEST SENT */}
       <Route
         path="/chat/request-sent"
         element={
@@ -420,7 +418,6 @@ function App() {
         }
       />
 
-      {/* MY CONSULTATIONS */}
       <Route
         path="/chat/my-consultations"
         element={
@@ -430,7 +427,6 @@ function App() {
         }
       />
 
-      {/* PENDING CONSULTATION */}
       <Route
         path="/chat/:id/pending"
         element={
@@ -440,7 +436,6 @@ function App() {
         }
       />
 
-      {/* REJECTED CONSULTATION */}
       <Route
         path="/chat/:id/rejected"
         element={
@@ -450,7 +445,6 @@ function App() {
         }
       />
 
-      {/* CLOSED CONSULTATION */}
       <Route
         path="/chat/:id/closed"
         element={
@@ -460,7 +454,6 @@ function App() {
         }
       />
 
-      {/* ACTIVE CHAT WITH DOCTOR */}
       <Route
         path="/chat/:id"
         element={
@@ -570,14 +563,33 @@ function App() {
           </DoctorRoute>
         }
       />
+
       <Route
-  path="/doctor/closed-consultations"
+        path="/doctor/messages/:id"
+        element={
+          <DoctorRoute> {/* ✅ Added DoctorRoute protection */}
+            <DoctorChat />
+          </DoctorRoute>
+        }
+      />
+
+      <Route
+        path="/doctor/closed-consultations"
+        element={
+          <DoctorRoute>
+            <ClosedConsultations />
+          </DoctorRoute>
+        }
+      />
+      <Route
+  path="/doctor/verification"
   element={
     <DoctorRoute>
-      <ClosedConsultations />
+      <DoctorVerification />
     </DoctorRoute>
   }
 />
+
       {/* ==================== FALLBACK ==================== */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

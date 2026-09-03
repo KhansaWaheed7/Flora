@@ -17,13 +17,14 @@ import {
   BriefcaseMedical,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { register } from "../../../services/auth.service";
+import { registerWithFiles } from "../../../services/auth.service";
 
 import { AuthSplitLayout } from "../../../layouts/AuthLayout";
 import Label from "../../../components/ui/Label";
 import TextField from "../../../components/ui/TextField";
 import PasswordField from "../../../components/ui/PasswordField";
 import Button from "../../../components/ui/Button";
+import DoctorDocumentUpload from "../../../components/auth/DoctorDocumentUpload";
 
 const perks = [
   { icon: Activity, text: "Track your cycle and symptoms" },
@@ -54,6 +55,7 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [documents, setDocuments] = useState([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -61,10 +63,21 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     role: "user",
+
+    // Doctor fields
     specialization: "",
-    licenseNumber: "",
     hospital: "",
     yearsOfExperience: "",
+    pmdcRegistrationNumber: "",
+    registrationType: "",
+    qualifications: [
+      {
+        degree: "",
+        institution: "",
+        completionYear: "",
+      },
+    ],
+
     terms: false,
   });
 
@@ -80,6 +93,10 @@ export default function RegisterPage() {
     if (fieldErrors[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: null }));
     }
+  };
+
+  const handleDocumentsChange = (newDocuments) => {
+    setDocuments(newDocuments);
   };
 
   const validateForm = () => {
@@ -144,17 +161,72 @@ export default function RegisterPage() {
         errors.specialization = "Specialization is required";
         isValid = false;
       }
-      if (!form.licenseNumber.trim()) {
-        errors.licenseNumber = "License number is required";
-        isValid = false;
-      }
+
       if (!form.hospital.trim()) {
-        errors.hospital = "Hospital is required";
+        errors.hospital = "Hospital or clinic is required";
         isValid = false;
       }
-      if (!form.yearsOfExperience || Number(form.yearsOfExperience) < 0) {
+
+      if (form.yearsOfExperience === "") {
         errors.yearsOfExperience = "Years of experience is required";
         isValid = false;
+      } else if (
+        Number(form.yearsOfExperience) < 0 ||
+        !Number.isInteger(Number(form.yearsOfExperience))
+      ) {
+        errors.yearsOfExperience = "Years of experience must be a whole number";
+        isValid = false;
+      }
+
+      if (!form.pmdcRegistrationNumber.trim()) {
+        errors.pmdcRegistrationNumber = "PMDC registration number is required";
+        isValid = false;
+      }
+
+      if (!form.registrationType) {
+        errors.registrationType = "Registration type is required";
+        isValid = false;
+      }
+
+      if (!form.qualifications.length) {
+        errors.qualifications = "At least one medical qualification is required";
+        isValid = false;
+      }
+
+      form.qualifications.forEach((qualification, index) => {
+        if (!qualification.degree.trim()) {
+          errors[`qualification_degree_${index}`] = "Degree is required";
+          isValid = false;
+        }
+
+        if (!qualification.institution.trim()) {
+          errors[`qualification_institution_${index}`] = "Institution is required";
+          isValid = false;
+        }
+
+        if (!qualification.completionYear) {
+          errors[`qualification_year_${index}`] = "Completion year is required";
+          isValid = false;
+        } else if (
+          !Number.isInteger(Number(qualification.completionYear)) ||
+          Number(qualification.completionYear) < 1950 ||
+          Number(qualification.completionYear) > new Date().getFullYear()
+        ) {
+          errors[`qualification_year_${index}`] = "Please enter a valid completion year";
+          isValid = false;
+        }
+      });
+
+      // Validate documents
+      if (documents.length === 0) {
+        errors.documents = "Please upload at least one verification document";
+        isValid = false;
+      } else {
+        const hasInvalidDoc = documents.some(doc => !doc.documentType);
+        if (hasInvalidDoc) {
+          errors.documents = "Please select a document type for each uploaded file";
+          isValid = false;
+        }
       }
     }
 
@@ -189,30 +261,56 @@ export default function RegisterPage() {
     });
 
     try {
-      const response = await register({
-        fullName: form.name.trim(),
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
-        role: form.role,
-        ...(form.role === "doctor" && {
-          specialization: form.specialization.trim(),
-          licenseNumber: form.licenseNumber.trim(),
-          hospital: form.hospital.trim(),
-          yearsOfExperience: Number(form.yearsOfExperience),
-        }),
-      });
+      const formData = new FormData();
+      formData.append("fullName", form.name.trim());
+      formData.append("email", form.email.trim().toLowerCase());
+      formData.append("password", form.password);
+      formData.append("role", form.role);
+      
+      if (form.role === "doctor") {
+        formData.append("specialization", form.specialization.trim());
+        formData.append("hospital", form.hospital.trim());
+        formData.append("yearsOfExperience", Number(form.yearsOfExperience));
+        formData.append("pmdcRegistrationNumber", form.pmdcRegistrationNumber.trim());
+        formData.append("registrationType", form.registrationType);
+        
+        const qualifications = form.qualifications.map((qualification) => ({
+          degree: qualification.degree.trim(),
+          institution: qualification.institution.trim(),
+          completionYear: Number(qualification.completionYear),
+        }));
+        formData.append("qualifications", JSON.stringify(qualifications));
+        
+        // Append documents
+        documents.forEach((doc) => {
+          formData.append("documents", doc.file);
+          formData.append("documentTypes", doc.documentType);
+        });
+      }
 
-      console.log(response);
+      const response = await registerWithFiles(formData);
 
       // Dismiss loading toast
       toast.dismiss("register-loading");
 
-      // Success message with glassmorphic effect
+      const isDoctor = form.role === "doctor";
+
+      // Show success toast with longer duration for doctors
       toast.success(
         (t) => (
           <div className="flex flex-col gap-1">
-            <span className="font-semibold">🎉 Registration Successful!</span>
+            <span className="font-semibold"> Registration Successful!</span>
             <span className="text-sm">Welcome to Flora! You can now log in to your account.</span>
+            {isDoctor && (
+              <>
+                <span className="text-sm font-medium text-amber-600 mt-1">
+                  📋 Your doctor registration has been submitted for admin approval.
+                </span>
+                <span className="text-xs text-gray-500 mt-0.5">
+                  You will be able to login once your account is verified by an admin.
+                </span>
+              </>
+            )}
             {response?.data?.requiresEmailVerification && (
               <span className="text-xs text-gray-600 mt-1">
                 Please check your email to verify your account.
@@ -221,18 +319,23 @@ export default function RegisterPage() {
           </div>
         ),
         { 
-          duration: 5000,
+          duration: isDoctor ? 10000 : 5000, // 10 seconds for doctors, 5 seconds for regular users
           style: {
-            background: 'rgba(220, 252, 231, 0.7)',
+            background: isDoctor 
+              ? 'rgba(251, 191, 36, 0.15)' // Amber tint for doctors
+              : 'rgba(220, 252, 231, 0.7)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(134, 239, 172, 0.4)',
+            border: isDoctor
+              ? '1px solid rgba(251, 191, 36, 0.4)'
+              : '1px solid rgba(134, 239, 172, 0.4)',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(134, 239, 172, 0.15)',
-            color: '#166534',
+            color: isDoctor ? '#92400E' : '#166534',
             borderRadius: '16px',
             padding: '16px 24px',
+            maxWidth: '420px',
           },
-          icon: '',
+          icon: isDoctor ? '📋' : '',
         }
       );
 
@@ -244,16 +347,26 @@ export default function RegisterPage() {
         confirmPassword: "",
         role: "user",
         specialization: "",
-        licenseNumber: "",
         hospital: "",
         yearsOfExperience: "",
+        pmdcRegistrationNumber: "",
+        registrationType: "",
+        qualifications: [
+          {
+            degree: "",
+            institution: "",
+            completionYear: "",
+          },
+        ],
         terms: false,
       });
+      setDocuments([]);
 
-      // Navigate to login after a short delay
+      // Navigate after a longer delay for doctors
+      const navigationDelay = isDoctor ? 4000 : 2000;
       setTimeout(() => {
         navigate("/login");
-      }, 2000);
+      }, navigationDelay);
       
     } catch (error) {
       console.error("Registration error:", error);
@@ -261,7 +374,51 @@ export default function RegisterPage() {
       // Dismiss loading toast
       toast.dismiss("register-loading");
 
-      // Handle field-specific errors from backend
+      // Handle validation errors from Zod
+      if (error.response?.status === 400 && error.response?.data?.errors) {
+        const zodErrors = error.response.data.errors;
+        
+        // Map Zod errors to field errors
+        zodErrors.forEach((err) => {
+          const path = err.path[0];
+          if (path === "fullName") {
+            setFieldErrors((prev) => ({ ...prev, name: err.message }));
+          } else if (path === "email") {
+            setFieldErrors((prev) => ({ ...prev, email: err.message }));
+          } else if (path === "password") {
+            setFieldErrors((prev) => ({ ...prev, password: err.message }));
+          } else if (path === "specialization") {
+            setFieldErrors((prev) => ({ ...prev, specialization: err.message }));
+          } else if (path === "hospital") {
+            setFieldErrors((prev) => ({ ...prev, hospital: err.message }));
+          } else if (path === "yearsOfExperience") {
+            setFieldErrors((prev) => ({ ...prev, yearsOfExperience: err.message }));
+          } else if (path === "pmdcRegistrationNumber") {
+            setFieldErrors((prev) => ({ ...prev, pmdcRegistrationNumber: err.message }));
+          } else if (path === "registrationType") {
+            setFieldErrors((prev) => ({ ...prev, registrationType: err.message }));
+          } else if (path === "qualifications") {
+            setFieldErrors((prev) => ({ ...prev, qualifications: err.message }));
+          } else {
+            toast.error(err.message, {
+              style: {
+                background: 'rgba(254, 226, 226, 0.7)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(252, 165, 165, 0.4)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(252, 165, 165, 0.15)',
+                color: '#991B1B',
+                borderRadius: '16px',
+                padding: '16px 24px',
+              },
+              icon: '❌',
+            });
+          }
+        });
+        return;
+      }
+
+      // Handle other errors
       if (error.response) {
         const status = error.response.status;
         const message = error.response.data?.message || error.response.data?.error || "";
@@ -276,7 +433,6 @@ export default function RegisterPage() {
         } else if (errors.password) {
           setFieldErrors((prev) => ({ ...prev, password: errors.password }));
         } else {
-          // Handle common status codes with glassmorphic error toasts
           if (status === 400) {
             if (message.toLowerCase().includes("email already") || 
                 message.toLowerCase().includes("already exists") ||
@@ -358,7 +514,6 @@ export default function RegisterPage() {
           }
         }
       } else if (error.request) {
-        // Network errors with glassmorphic effect
         if (!navigator.onLine) {
           toast.error("No internet connection. Please check your network.", {
             style: {
@@ -389,7 +544,6 @@ export default function RegisterPage() {
           });
         }
       } else {
-        // Other errors with glassmorphic effect
         toast.error("Registration failed. Please try again.", {
           style: {
             background: 'rgba(254, 226, 226, 0.7)',
@@ -584,11 +738,12 @@ export default function RegisterPage() {
         </div>
 
         {form.role === "doctor" && (
-          <div className="space-y-3 rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] p-3">
-            <p className="text-[11px] font-semibold text-[#8F8C8C]">
+          <div className="space-y-3 rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] p-4">
+            <p className="text-[11px] font-semibold text-[#8F8C8C] mb-2">
               Doctor details (required for approval)
             </p>
 
+            {/* Specialization */}
             <div>
               <Label className="text-xs">Specialization</Label>
               <TextField
@@ -597,6 +752,9 @@ export default function RegisterPage() {
                 placeholder="e.g. Gynecology"
                 value={form.specialization}
                 onChange={handleChange}
+                className={`py-2 text-sm ${
+                  fieldErrors.specialization ? "border-red-500" : ""
+                }`}
                 disabled={isLoading}
               />
               {fieldErrors.specialization && (
@@ -607,32 +765,161 @@ export default function RegisterPage() {
               )}
             </div>
 
+            {/* PMDC Registration Number */}
             <div>
-              <Label className="text-xs">License Number</Label>
+              <Label className="text-xs">PMDC Registration Number</Label>
               <TextField
                 icon={IdCard}
-                name="licenseNumber"
-                placeholder="e.g. GY-12345-LHR"
-                value={form.licenseNumber}
+                name="pmdcRegistrationNumber"
+                placeholder="Enter PMDC registration number"
+                value={form.pmdcRegistrationNumber}
                 onChange={handleChange}
+                className={`py-2 text-sm ${
+                  fieldErrors.pmdcRegistrationNumber ? "border-red-500" : ""
+                }`}
                 disabled={isLoading}
               />
-              {fieldErrors.licenseNumber && (
+              {fieldErrors.pmdcRegistrationNumber && (
                 <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
-                  {fieldErrors.licenseNumber}
+                  {fieldErrors.pmdcRegistrationNumber}
                 </p>
               )}
             </div>
 
+            {/* Registration Type */}
             <div>
-              <Label className="text-xs">Hospital</Label>
+              <Label className="text-xs">Registration Type</Label>
+              <select
+                name="registrationType"
+                value={form.registrationType}
+                onChange={handleChange}
+                className={`w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none transition ${
+                  fieldErrors.registrationType
+                    ? "border-red-500 focus:border-red-500"
+                    : "border-[#F0DCE4] focus:border-[#EB6991]"
+                }`}
+                disabled={isLoading}
+              >
+                <option value="">Select registration type</option>
+                <option value="permanent">Permanent</option>
+                <option value="provisional">Provisional</option>
+                <option value="specialist">Specialist</option>
+              </select>
+              {fieldErrors.registrationType && (
+                <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {fieldErrors.registrationType}
+                </p>
+              )}
+            </div>
+
+            {/* Medical Qualification */}
+            <div>
+              <Label className="text-xs">Medical Qualification</Label>
+              <div className="space-y-2">
+                <TextField
+                  type="text"
+                  placeholder="Degree (e.g. MBBS)"
+                  value={form.qualifications[0].degree}
+                  onChange={(e) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      qualifications: [
+                        {
+                          ...prev.qualifications[0],
+                          degree: e.target.value,
+                        },
+                      ],
+                    }));
+                  }}
+                  className={`py-2 text-sm ${
+                    fieldErrors.qualification_degree_0 ? "border-red-500" : ""
+                  }`}
+                  disabled={isLoading}
+                />
+                {fieldErrors.qualification_degree_0 && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {fieldErrors.qualification_degree_0}
+                  </p>
+                )}
+
+                <TextField
+                  type="text"
+                  placeholder="Institution"
+                  value={form.qualifications[0].institution}
+                  onChange={(e) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      qualifications: [
+                        {
+                          ...prev.qualifications[0],
+                          institution: e.target.value,
+                        },
+                      ],
+                    }));
+                  }}
+                  className={`py-2 text-sm ${
+                    fieldErrors.qualification_institution_0 ? "border-red-500" : ""
+                  }`}
+                  disabled={isLoading}
+                />
+                {fieldErrors.qualification_institution_0 && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {fieldErrors.qualification_institution_0}
+                  </p>
+                )}
+
+                <TextField
+                  type="number"
+                  placeholder="Completion year"
+                  value={form.qualifications[0].completionYear}
+                  onChange={(e) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      qualifications: [
+                        {
+                          ...prev.qualifications[0],
+                          completionYear: e.target.value,
+                        },
+                      ],
+                    }));
+                  }}
+                  className={`py-2 text-sm ${
+                    fieldErrors.qualification_year_0 ? "border-red-500" : ""
+                  }`}
+                  disabled={isLoading}
+                />
+                {fieldErrors.qualification_year_0 && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {fieldErrors.qualification_year_0}
+                  </p>
+                )}
+
+                {fieldErrors.qualifications && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {fieldErrors.qualifications}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Hospital */}
+            <div>
+              <Label className="text-xs">Hospital / Clinic</Label>
               <TextField
                 icon={Building2}
                 name="hospital"
                 placeholder="e.g. Lahore General Hospital"
                 value={form.hospital}
                 onChange={handleChange}
+                className={`py-2 text-sm ${
+                  fieldErrors.hospital ? "border-red-500" : ""
+                }`}
                 disabled={isLoading}
               />
               {fieldErrors.hospital && (
@@ -643,6 +930,7 @@ export default function RegisterPage() {
               )}
             </div>
 
+            {/* Years of Experience */}
             <div>
               <Label className="text-xs">Years of Experience</Label>
               <TextField
@@ -653,6 +941,9 @@ export default function RegisterPage() {
                 placeholder="e.g. 8"
                 value={form.yearsOfExperience}
                 onChange={handleChange}
+                className={`py-2 text-sm ${
+                  fieldErrors.yearsOfExperience ? "border-red-500" : ""
+                }`}
                 disabled={isLoading}
               />
               {fieldErrors.yearsOfExperience && (
@@ -662,6 +953,12 @@ export default function RegisterPage() {
                 </p>
               )}
             </div>
+
+            {/* Document Upload */}
+            <DoctorDocumentUpload
+              onDocumentsChange={handleDocumentsChange}
+              errors={fieldErrors}
+            />
           </div>
         )}
 

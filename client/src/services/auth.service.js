@@ -1,124 +1,55 @@
 import api from "../api/axios";
 
-/*
- Register
-*/
-
-export const register = async (data) => {
-  const response = await api.post("/auth/register", data);
-
+export const register = async (userData) => {
+  const response = await api.post("/auth/register", userData);
   return response.data;
 };
 
-/*
-Login
-*/
+export const registerWithFiles = async (formData) => {
+  const response = await api.post("/auth/register", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
 
 export const login = async (email, password) => {
-  const response = await api.post("/auth/login", {
-    email,
-    password,
-  });
-
+  const response = await api.post("/auth/login", { email, password });
   return response.data;
 };
 
-/*
- Logout
-*/
-
-export const logout = async (token) => {
-  const response = await api.post(
-    "/auth/logout",
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
+export const googleLogin = async (token) => {
+  const response = await api.post("/auth/google-login", { token });
   return response.data;
 };
-
-/*
-Refresh Token
-*/
 
 export const refreshToken = async (refreshToken) => {
-  const response = await api.post("/auth/refresh-token", {
-    refreshToken,
-  });
-
+  const response = await api.post("/auth/refresh-token", { refreshToken });
   return response.data;
 };
-
-/*
-Forgot Password
-*/
 
 export const forgotPassword = async (email) => {
-  const response = await api.post("/auth/forgot-password", {
-    email,
-  });
-
+  const response = await api.post("/auth/forgot-password", { email });
   return response.data;
 };
-
-/*
-Reset Password
-*/
 
 export const resetPassword = async (token, password) => {
-  const response = await api.post(`/auth/reset-password/${token}`, {
-    password,
-  });
-
+  const response = await api.post(`/auth/reset-password/${token}`, { password });
   return response.data;
 };
-
-/*
-Verify Email
-*/
 
 export const verifyEmail = async (token) => {
   const response = await api.get(`/auth/verify-email/${token}`);
-
   return response.data;
 };
-
-/*
-Resend Verification Email
-*/
 
 export const resendVerification = async (email) => {
-  const response = await api.post("/auth/resend-verification", {
-    email,
-  });
-
+  const response = await api.post("/auth/resend-verification", { email });
   return response.data;
 };
-
-/*
-Google Login
-*/
-
-export const googleLogin = async (token) => {
-
-  const response = await api.post("/auth/google", {
-    token,
-  });
-
-  return response.data;
-
-};
-
-/*
- Delete Account
-*/
 
 export const deleteAccount = async () => {
-  const response = await api.delete("/auth/delete-account");
-
+  const response = await api.delete("/auth/me");
   return response.data;
 };

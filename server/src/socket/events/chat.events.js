@@ -3,6 +3,8 @@ const {
   sendMessage,
   markMessagesAsRead,
 } = require("../../services/message.service");
+
+const { MESSAGE_READ, NEW_MESSAGE } = require("../../constants/socketEvents");
 // =========================================
 // Chat Events
 // =========================================
@@ -63,10 +65,7 @@ socket.on(
         message
       );
 
-      io.to(chatId).emit(
-        "new-message",
-        newMessage
-      );
+      io.to(chatId).emit(NEW_MESSAGE, newMessage);
 
     } catch (error) {
 
@@ -77,6 +76,65 @@ socket.on(
 
     }
 
+  }
+);
+
+
+// =========================================
+// Message Delivered
+// =========================================
+
+socket.on(
+  "message-delivered",
+  async ({ messageId }) => {
+    try {
+      const Message = require("../../models/Message");
+
+      const message = await Message.findById(messageId);
+
+      if (!message) {
+        return;
+      }
+
+      const chat = await Chat.findById(message.chat);
+
+if (!chat) {
+  return;
+}
+
+const isParticipant = chat.participants.some(
+  (participant) =>
+    participant.toString() ===
+    socket.user._id.toString()
+);
+
+if (!isParticipant) {
+  return;
+}
+
+if (
+  message.receiver.toString() !==
+  socket.user._id.toString()
+) {
+  return;
+}
+
+      if (!message.isDelivered) {
+        message.isDelivered = true;
+        message.deliveredAt = new Date();
+
+        await message.save();
+      }
+
+      io.to(message.chat.toString()).emit("message-delivered", {
+        messageId: message._id,
+        chatId: message.chat,
+        deliveredAt: message.deliveredAt,
+      });
+
+    } catch (error) {
+      console.error("Message delivery error:", error);
+    }
   }
 );
 
@@ -120,13 +178,10 @@ socket.on(
         socket.user._id
       );
 
-      io.to(chatId).emit(
-        "messages-read",
-        {
-          chatId,
-          userId: socket.user._id,
-        }
-      );
+      io.to(chatId).emit(MESSAGE_READ, {
+  chatId,
+  userId: socket.user._id,
+});
 
     } catch (error) {
 

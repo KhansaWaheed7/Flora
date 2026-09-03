@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminLayout from "../../layouts/AdminLayout";
 import { getDoctors, approveDoctor, rejectDoctor, getPendingDoctors } from "../../services/admin.service";
-import { CheckCircle, XCircle, ArrowLeft, Mail, Stethoscope } from "lucide-react";
+import { CheckCircle, XCircle, ArrowLeft, Mail, Stethoscope, FileText, Calendar, Building2, IdCard } from "lucide-react";
 
 export default function DoctorDetails() {
   const { id } = useParams();
@@ -110,6 +110,15 @@ export default function DoctorDetails() {
             <div>
               <h2 className="text-lg font-semibold text-[#0D0D0D]">{doctor.fullName}</h2>
               <p className="text-sm text-[#8F8C8C]">{doctor.specialization}</p>
+              {doctor.doctorVerification?.status && (
+                <span className={`inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  doctor.doctorVerification.status === 'approved' ? 'bg-green-100 text-green-700' :
+                  doctor.doctorVerification.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                  'bg-amber-100 text-amber-700'
+                }`}>
+                  {doctor.doctorVerification.status.toUpperCase()}
+                </span>
+              )}
             </div>
           </div>
 
@@ -142,10 +151,16 @@ export default function DoctorDetails() {
                     <span className="text-[#0D0D0D] font-medium">{doctor.hospital}</span>
                   </div>
                 )}
-                {doctor.licenseNumber && (
+                {doctor.pmdcRegistrationNumber && (
                   <div className="flex justify-between">
-                    <span className="text-[#8F8C8C]">License Number:</span>
-                    <span className="text-[#0D0D0D] font-medium">{doctor.licenseNumber}</span>
+                    <span className="text-[#8F8C8C]">PMDC Registration:</span>
+                    <span className="text-[#0D0D0D] font-medium">{doctor.pmdcRegistrationNumber}</span>
+                  </div>
+                )}
+                {doctor.registrationType && (
+                  <div className="flex justify-between">
+                    <span className="text-[#8F8C8C]">Registration Type:</span>
+                    <span className="text-[#0D0D0D] font-medium">{doctor.registrationType}</span>
                   </div>
                 )}
                 {doctor.yearsOfExperience && (
@@ -156,6 +171,64 @@ export default function DoctorDetails() {
                 )}
               </div>
             </div>
+
+            {/* Qualifications Section */}
+            {doctor.qualifications?.length > 0 && (
+              <div className="border-b border-[#F0DCE4] pb-4">
+                <h3 className="text-sm font-semibold text-[#0D0D0D] mb-3">Qualifications</h3>
+                <div className="space-y-3">
+                  {doctor.qualifications.map((qual, index) => (
+                    <div key={index} className="bg-[#FEFAFB] p-3 rounded-lg">
+                      <p className="text-sm font-medium text-[#0D0D0D]">{qual.degree}</p>
+                      <p className="text-sm text-[#8F8C8C]">{qual.institution}</p>
+                      {qual.completionYear && (
+                        <p className="text-xs text-[#8F8C8C]">Completed: {qual.completionYear}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Verification Documents Section */}
+            {doctor.doctorVerification?.documents?.length > 0 && (
+              <div className="border-b border-[#F0DCE4] pb-4">
+                <h3 className="text-sm font-semibold text-[#0D0D0D] mb-3">
+                  Verification Documents
+                </h3>
+                <div className="space-y-2">
+                  {doctor.doctorVerification.documents.map((doc, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-[#FEF4F4] rounded-lg hover:bg-[#FDE8EE] transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-4 w-4 text-[#F33B7D]" />
+                        <div>
+                          <p className="text-sm font-medium text-[#0D0D0D]">
+                            {doc.type?.replace('_', ' ').toUpperCase() || 'Document'}
+                          </p>
+                          {doc.uploadedAt && (
+                            <p className="text-xs text-[#8F8C8C] flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-semibold text-[#F33B7D] hover:underline flex items-center gap-1"
+                      >
+                        View Document
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {doctor.bio && (
               <div>
@@ -197,6 +270,7 @@ export default function DoctorDetails() {
               <li>✓ Check specialization</li>
               <li>✓ Review experience</li>
               <li>✓ Validate license</li>
+              <li>✓ Review documents</li>
             </ul>
           </div>
         </div>

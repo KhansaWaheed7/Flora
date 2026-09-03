@@ -13,7 +13,7 @@ export const getDashboardStats = async () => {
 Doctors
 */
 export const getPendingDoctors = async () => {
-  const response = await api.get("/admin/doctors/pending");
+  const response = await api.get("/admin/verification/pending");
   return response.data;
 };
 
@@ -25,12 +25,12 @@ export const getDoctors = async ({ page = 1, limit = 10, search = "" } = {}) => 
 };
 
 export const approveDoctor = async (id) => {
-  const response = await api.put(`/admin/doctors/${id}/approve`);
+  const response = await api.patch(`/admin/verification/doctors/${id}/approve`);
   return response.data;
 };
 
-export const rejectDoctor = async (id) => {
-  const response = await api.put(`/admin/doctors/${id}/reject`);
+export const rejectDoctor = async (id, rejectionReason) => {
+  const response = await api.patch(`/admin/verification/doctors/${id}/reject`, { rejectionReason });
   return response.data;
 };
 

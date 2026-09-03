@@ -6,6 +6,7 @@ const { sendMessageSchema } = require("../validators/message.validator");
 const {
   sendMessage,
   getMessages,
+  markMessagesAsRead,
 } = require("../services/message.service");
 
 // =========================================
@@ -51,4 +52,23 @@ exports.getMessages = asyncHandler(async (req, res) => {
     )
   );
 
+});
+
+// =========================================
+// Mark Messages as Read
+// =========================================
+
+exports.markMessagesAsRead = asyncHandler(async (req, res) => {
+  await markMessagesAsRead(
+    req.params.chatId,
+    req.user.id
+  );
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Messages marked as read successfully.",
+      null
+    )
+  );
 });

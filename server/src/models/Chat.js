@@ -16,6 +16,12 @@ const chatSchema = new mongoose.Schema(
       required: true,
     },
 
+    reason: {
+  type: String,
+  trim: true,
+  maxlength: 500,
+},
+
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

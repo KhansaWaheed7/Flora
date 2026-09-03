@@ -7,6 +7,7 @@ const { protect } = require("../middlewares/auth.middleware");
 const {
   sendMessage,
   getMessages,
+  markMessagesAsRead,
 } = require("../controllers/message.controller");
 
 // =========================================
@@ -27,6 +28,16 @@ router.post(
   "/:chatId",
   protect,
   sendMessage
+);
+
+// =========================================
+// Mark Messages as Read
+// =========================================
+
+router.patch(
+  "/:chatId/read",
+  protect,
+  markMessagesAsRead
 );
 
 module.exports = router;

@@ -1,9 +1,6 @@
 const express = require("express");
-
 const router = express.Router();
-
 const ROLES = require("../constants/roles");
-
 const { protect } = require("../middlewares/auth.middleware");
 const authorize = require("../middlewares/authorize.middleware");
 
@@ -17,8 +14,14 @@ const {
   getPatients,
   updatePatientStatus,
   getAuditLogs
-  
 } = require("../controllers/admin.controller");
+
+const {
+  getPendingDoctors: getPendingVerifications,
+  getDoctorVerificationDetails,
+  approveDoctor: approveVerification,
+  rejectDoctor: rejectVerification,
+} = require("../controllers/adminVerification.controller");
 
 // =========================================
 // Dashboard
@@ -31,6 +34,9 @@ router.get(
   getDashboardStats
 );
 
+// =========================================
+// Patients
+// =========================================
 
 router.get(
   "/patients",
@@ -47,7 +53,7 @@ router.patch(
 );
 
 // =========================================
-// Doctors
+// Doctors - Management
 // =========================================
 
 router.get(
@@ -57,33 +63,53 @@ router.get(
   getDoctors
 );
 
-router.get(
-  "/doctors/pending",
-  protect,
-  authorize(ROLES.ADMIN),
-  getPendingDoctors
-);
-
-router.put(
-  "/doctors/:id/approve",
-  protect,
-  authorize(ROLES.ADMIN),
-  approveDoctor
-);
-
-router.put(
-  "/doctors/:id/reject",
-  protect,
-  authorize(ROLES.ADMIN),
-  rejectDoctor
-);
-
 router.patch(
   "/doctors/:id/status",
   protect,
   authorize(ROLES.ADMIN),
   updateDoctorStatus
 );
+
+// =========================================
+// Doctors - Verification (using adminVerification)
+// =========================================
+
+// Get pending doctors for verification
+router.get(
+  "/doctors/pending",
+  protect,
+  authorize(ROLES.ADMIN),
+  getPendingVerifications
+);
+
+// Get doctor verification details
+router.get(
+  "/doctors/:doctorId/verification",
+  protect,
+  authorize(ROLES.ADMIN),
+  getDoctorVerificationDetails
+);
+
+// Approve doctor
+router.patch(
+  "/doctors/:doctorId/approve",
+  protect,
+  authorize(ROLES.ADMIN),
+  approveVerification
+);
+
+// Reject doctor
+router.patch(
+  "/doctors/:doctorId/reject",
+  protect,
+  authorize(ROLES.ADMIN),
+  rejectVerification
+);
+
+// =========================================
+// Audit Logs
+// =========================================
+
 router.get(
   "/audit-logs",
   protect,

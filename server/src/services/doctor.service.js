@@ -4,6 +4,8 @@ const {
   emitToUser,
 } = require("../socket/services/socketEmitter");
 
+const Message = require("../models/Message");
+
 const SocketEvents = require("../constants/socketEvents");
 // =========================================
 // Dashboard Summary
@@ -90,6 +92,24 @@ const getAssignedPatients = async (doctorId) => {
 };
 
 // =========================================
+// Closed Consultations
+// =========================================
+
+const getClosedConsultations = async (doctorId) => {
+  return await Chat.find({
+    doctor: doctorId,
+    status: "closed",
+  })
+    .populate(
+      "patient",
+      "fullName email age profilePicture"
+    )
+    .sort({
+      closedAt: -1,
+    });
+};
+
+// =========================================
 // Accept Consultation Request
 // =========================================
 
@@ -171,10 +191,47 @@ emitToUser(
 
 };
 
+// =========================================
+// Close Consultation
+// =========================================
+const closeConsultation = async (doctorId, chatId) => {
+  const chat = await Chat.findOne({
+    _id: chatId,
+    doctor: doctorId,
+    status: "active",
+  });
+
+  if (!chat) {
+    throw new ApiError(
+      404,
+      "Active consultation not found."
+    );
+  }
+
+  chat.status = "closed";
+  chat.closedAt = new Date();
+  chat.closedBy = doctorId;
+
+  await chat.save();
+
+  await Message.create({
+  chat: chat._id,
+  sender: doctorId,
+  receiver: chat.patient,
+  message: "Consultation has been closed.",
+  messageType: "system",
+  isRead: false,
+});
+
+  return chat;
+};
+
 module.exports = {
   getDashboard,
   getPendingRequests,
   acceptConsultation,
   rejectConsultation,
   getAssignedPatients,
+  closeConsultation,
+  getClosedConsultations,
 };

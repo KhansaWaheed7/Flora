@@ -13,6 +13,8 @@ const {
   getAssignedPatients,
   acceptConsultation,
   rejectConsultation,
+  closeConsultation,
+  getClosedConsultations,
 } = require("../controllers/doctor.controller");
 
 // =========================================
@@ -47,6 +49,18 @@ router.get(
   authorize(ROLES.DOCTOR),
   getAssignedPatients
 );
+
+
+// =========================================
+// Closed Consultations
+// =========================================
+
+router.get(
+  "/closed",
+  protect,
+  authorize(ROLES.DOCTOR),
+  getClosedConsultations
+);
 // =========================================
 // Accept Consultation
 // =========================================
@@ -69,4 +83,10 @@ router.put(
   rejectConsultation
 );
 
+router.put(
+  "/chat/:id/close",
+  protect,
+  authorize(ROLES.DOCTOR),
+  closeConsultation
+);
 module.exports = router;

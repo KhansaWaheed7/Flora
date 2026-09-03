@@ -19,9 +19,10 @@ exports.createChat = asyncHandler(async (req, res) => {
   const validatedData = createChatSchema.parse(req.body);
 
   const chat = await createChat(
-    req.user.id,
-    validatedData.doctorId
-  );
+  req.user.id,
+  validatedData.doctorId,
+  validatedData.reason
+);
 
   res.status(201).json(
     new ApiResponse(

@@ -10,7 +10,7 @@ const SocketEvents = require("../constants/socketEvents");
 // Create Consultation Request
 // =========================================
 
-const createChat = async (patientId, doctorId) => {
+const createChat = async (patientId, doctorId, reason) => {
 
   if (patientId === doctorId) {
     throw new ApiError(
@@ -65,21 +65,16 @@ if (!doctor.isEmailVerified) {
   }
 
   const chat = await Chat.create({
-
-    participants: [
-      patientId,
-      doctorId,
-    ],
-
-    initiatedBy: patientId,
-
-    patient: patientId,
-
-    doctor: doctorId,
-
-    status: "pending",
-
-  });
+  participants: [
+    patientId,
+    doctorId,
+  ],
+  initiatedBy: patientId,
+  reason,
+  patient: patientId,
+  doctor: doctorId,
+  status: "pending",
+});
 
   await chat.populate(
   "patient",

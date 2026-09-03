@@ -13,14 +13,15 @@ export default function VerifyEmailPage() {
   const { token } = useParams();
   const navigate = useNavigate();
 
-const hasVerified = useRef(false);
+  const hasVerified = useRef(false);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("Verifying your email...");
 
   useEffect(() => {
     if (hasVerified.current) return;
-  hasVerified.current = true;
+    hasVerified.current = true;
+    
     const verify = async () => {
       try {
         const res = await verifyEmail(token);
@@ -29,13 +30,8 @@ const hasVerified = useRef(false);
         setMessage(
           res.message || "Your email has been verified successfully."
         );
-
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 2000);
       } catch (err) {
         setSuccess(false);
-
         setMessage(
           err.response?.data?.message ||
             "Verification link is invalid or has expired."
@@ -46,7 +42,14 @@ const hasVerified = useRef(false);
     };
 
     verify();
-  }, [token, navigate]);
+  }, [token]);
+
+  const handleLoginRedirect = () => {
+    toast.success("Redirecting to login...");
+    setTimeout(() => {
+      navigate("/login");
+    }, 500);
+  };
 
   return (
     <AuthSplitLayout
@@ -79,19 +82,35 @@ const hasVerified = useRef(false);
       </p>
 
       {success && (
-        <p className="mt-4 text-center text-sm font-medium text-[#F33B7D]">
-          Redirecting to Dashboard...
-        </p>
+        <div className="mt-6 text-center">
+          <p className="text-sm text-[#8F8C8C] mb-3">
+            Your email has been successfully verified. You can now log in to your account.
+          </p>
+          <button
+            onClick={handleLoginRedirect}
+            className="rounded-xl bg-[#F33B7D] px-8 py-3 font-medium text-white transition hover:opacity-90 hover:shadow-lg"
+          >
+            Login Now
+          </button>
+        </div>
       )}
 
       {!loading && !success && (
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-3">
           <button
             onClick={() => navigate("/login")}
             className="rounded-xl bg-[#F33B7D] px-6 py-3 font-medium text-white transition hover:opacity-90"
           >
             Back to Login
           </button>
+          <div>
+            <button
+              onClick={() => navigate("/resend-verification")}
+              className="text-sm text-[#F33B7D] hover:underline"
+            >
+              Resend verification email
+            </button>
+          </div>
         </div>
       )}
     </AuthSplitLayout>
