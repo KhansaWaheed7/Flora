@@ -6,10 +6,7 @@ const authorize = require("../middlewares/authorize.middleware");
 
 const {
   getDashboardStats,
-  getPendingDoctors,
   getDoctors,
-  approveDoctor,
-  rejectDoctor,
   updateDoctorStatus,
   getPatients,
   updatePatientStatus,
@@ -17,10 +14,10 @@ const {
 } = require("../controllers/admin.controller");
 
 const {
-  getPendingDoctors: getPendingVerifications,
+  getPendingDoctors,
   getDoctorVerificationDetails,
-  approveDoctor: approveVerification,
-  rejectDoctor: rejectVerification,
+  approveDoctor,
+  rejectDoctor,
 } = require("../controllers/adminVerification.controller");
 
 // =========================================
@@ -74,12 +71,13 @@ router.patch(
 // Doctors - Verification (using adminVerification)
 // =========================================
 
+// IMPORTANT: Put specific routes before generic ones
 // Get pending doctors for verification
 router.get(
   "/doctors/pending",
   protect,
   authorize(ROLES.ADMIN),
-  getPendingVerifications
+  getPendingDoctors
 );
 
 // Get doctor verification details
@@ -95,7 +93,7 @@ router.patch(
   "/doctors/:doctorId/approve",
   protect,
   authorize(ROLES.ADMIN),
-  approveVerification
+  approveDoctor
 );
 
 // Reject doctor
@@ -103,7 +101,7 @@ router.patch(
   "/doctors/:doctorId/reject",
   protect,
   authorize(ROLES.ADMIN),
-  rejectVerification
+  rejectDoctor
 );
 
 // =========================================

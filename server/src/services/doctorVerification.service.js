@@ -79,10 +79,18 @@ const uploadDocument = async (
 
       stream.end(file.buffer);
     });
+
+    console.log("✅ Document uploaded to Cloudinary:", {
+      publicId: result.public_id,
+      url: result.secure_url,
+      resourceType: result.resource_type,
+    });
+
   } catch (error) {
+    console.error("❌ Cloudinary upload error:", error);
     throw new ApiError(
       500,
-      "Failed to upload verification document."
+      "Failed to upload verification document: " + error.message
     );
   }
 
@@ -123,7 +131,12 @@ const uploadDocument = async (
     user.doctorVerification.verifiedBy = null;
 
     await user.save();
+    
+    console.log("✅ Document saved to database for user:", userId);
+
   } catch (error) {
+    console.error("❌ Database save error:", error);
+    
     // Remove newly uploaded Cloudinary file
     try {
       await cloudinary.uploader.destroy(

@@ -3,7 +3,7 @@ const ApiError = require("../utils/ApiError");
 const AuditLog = require("../models/AuditLog");
 
 // =========================================
-// Pending Doctors - FIXED to use doctorVerification.status
+// Pending Doctors
 // =========================================
 
 const getPendingDoctors = async () => {
@@ -57,7 +57,7 @@ const getDoctors = async (
 };
 
 // =========================================
-// Approve Doctor - FIXED to use doctorVerification
+// Approve Doctor
 // =========================================
 
 const approveDoctor = async (doctorId, adminId) => {
@@ -90,7 +90,7 @@ const approveDoctor = async (doctorId, adminId) => {
 };
 
 // =========================================
-// Reject Doctor - FIXED to use doctorVerification
+// Reject Doctor
 // =========================================
 
 const rejectDoctor = async (doctorId, adminId) => {
@@ -122,7 +122,7 @@ const rejectDoctor = async (doctorId, adminId) => {
 };
 
 // =========================================
-// Admin Dashboard Statistics - FIXED
+// Admin Dashboard Statistics
 // =========================================
 
 const getDashboardStats = async () => {

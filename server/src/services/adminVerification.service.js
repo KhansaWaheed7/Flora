@@ -12,7 +12,7 @@ exports.getPendingDoctors = async () => {
     "doctorVerification.status": "pending",
   })
     .select(
-      "fullName email phone specialization hospital yearsOfExperience doctorVerification doctorVerification.documents"
+      "fullName email phone specialization hospital yearsOfExperience doctorVerification"
     )
     .sort({ createdAt: 1 });
 
@@ -28,7 +28,7 @@ exports.getDoctorVerificationDetails = async (doctorId) => {
     _id: doctorId,
     role: "doctor",
   }).select(
-    "fullName email phone age specialization hospital yearsOfExperience doctorVerification doctorVerification.documents"
+    "fullName email phone age specialization hospital yearsOfExperience doctorVerification"
   );
 
   if (!doctor) {

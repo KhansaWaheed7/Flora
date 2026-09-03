@@ -22,72 +22,38 @@ const {
 } = require("../services/auth.service");
 
 exports.register = asyncHandler(async (req, res) => {
-  try {
-    // Get the form data
-    let validatedData;
-    
-    try {
-      // For FormData, we need to parse the data properly
-      const rawData = {
-        fullName: req.body.fullName,
-        email: req.body.email,
-        password: req.body.password,
-        role: req.body.role || "user",
-        phone: req.body.phone || "",
-        age: req.body.age ? Number(req.body.age) : undefined,
-        specialization: req.body.specialization || "",
-        hospital: req.body.hospital || "",
-        yearsOfExperience: req.body.yearsOfExperience !== undefined && req.body.yearsOfExperience !== "" 
-          ? Number(req.body.yearsOfExperience) 
-          : undefined,
-        pmdcRegistrationNumber: req.body.pmdcRegistrationNumber || "",
-        registrationType: req.body.registrationType || undefined,
-        qualifications: req.body.qualifications ? JSON.parse(req.body.qualifications) : [],
-      };
-      
-      validatedData = registerSchema.parse(rawData);
-    } catch (parseError) {
-      console.error("Validation error:", parseError);
-      if (parseError.name === "ZodError") {
-        return res.status(400).json({
-          success: false,
-          message: "Validation error",
-          errors: parseError.errors,
-        });
+  console.log("📝 Registration request received");
+  console.log("Body:", req.body);
+  console.log("Files:", req.files?.length || 0);
+  
+  // Get the form data
+  const validatedData = registerSchema.parse(req.body);
+  
+  // Handle multiple document uploads
+  const files = req.files || [];
+  const documentTypes = req.body.documentTypes || [];
+  
+  console.log(`📎 Processing ${files.length} documents`);
+
+  // Attach document types to the data
+  validatedData.documentTypes = documentTypes;
+
+  const user = await registerUser(validatedData, files);
+
+  res.status(201).json(
+    new ApiResponse(
+      201,
+      "User registered successfully",
+      {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        requiresEmailVerification: !user.isEmailVerified,
+        documentsUploaded: files.length,
       }
-      throw parseError;
-    }
-    
-    // Handle multiple document uploads
-    const files = req.files || [];
-    const documentTypes = Array.isArray(req.body.documentTypes) 
-      ? req.body.documentTypes 
-      : req.body.documentTypes 
-        ? [req.body.documentTypes] 
-        : [];
-    
-    // Attach document types to the data
-    validatedData.documentTypes = documentTypes;
-
-    const user = await registerUser(validatedData, files);
-
-    res.status(201).json(
-      new ApiResponse(
-        201,
-        "User registered successfully",
-        {
-          id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          role: user.role,
-          requiresEmailVerification: !user.isEmailVerified,
-        }
-      )
-    );
-  } catch (error) {
-    console.error("Registration error:", error);
-    throw error;
-  }
+    )
+  );
 });
 
 exports.login = asyncHandler(async (req, res) => {
