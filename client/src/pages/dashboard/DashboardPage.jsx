@@ -749,15 +749,6 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout subtitle="Here's your personalized health overview.">
-      {/* Log Health Data Button */}
-      <div className="mb-6 flex justify-end">
-        <Link to="/cycle-tracker/log">
-          <button className="flex items-center gap-1.5 rounded-full bg-[#FEE4EB] px-4 py-2 text-xs font-semibold text-[#F33B7D] hover:bg-[#FDD5E0] transition-colors">
-            <Plus className="h-3.5 w-3.5" /> Log Health Data
-          </button>
-        </Link>
-      </div>
-
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((stat) => (
