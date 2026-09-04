@@ -35,10 +35,10 @@ const createChat = async (patientId, doctorId, reason) => {
   );
 }
 
-if (doctor.doctorApprovalStatus !== "approved") {
+if (doctor.doctorVerification?.status !== "verified") {
   throw new ApiError(
     400,
-    "Doctor is not approved."
+    "Doctor is not verified."
   );
 }
 
@@ -101,14 +101,10 @@ emitToUser(
 const getAvailableDoctors = async () => {
 
   const doctors = await User.find({
-
-    role: "doctor",
-
-    doctorApprovalStatus: "approved",
-
-    isEmailVerified: true,
-
-  })
+  role: "doctor",
+  "doctorVerification.status": "verified",
+  isEmailVerified: true,
+})
     .select(
       "fullName specialization hospital yearsOfExperience profilePicture"
     )

@@ -41,6 +41,7 @@ export default function DoctorProfile() {
   const [error, setError] = useState("");
   const [requesting, setRequesting] = useState(false);
   const [requestError, setRequestError] = useState("");
+  const [reason, setReason] = useState("");
 
   useEffect(() => {
     if (doctor) return;
@@ -63,11 +64,20 @@ export default function DoctorProfile() {
   }, [id, doctor]);
 
   const handleRequest = async () => {
+    if (!reason.trim()) {
+      setRequestError("Please enter a reason for your consultation.");
+      return;
+    }
+
     setRequesting(true);
     setRequestError("");
+
     try {
-      const chat = await requestConsultation(doctor._id);
-      navigate("/chat/request-sent", { state: { chat, doctor } });
+      const chat = await requestConsultation(doctor._id, reason.trim());
+
+      navigate("/chat/request-sent", {
+        state: { chat, doctor },
+      });
     } catch (err) {
       setRequestError(
         err?.response?.data?.message ||
@@ -123,6 +133,29 @@ export default function DoctorProfile() {
                 {doctor.yearsOfExperience} years of experience
               </p>
             )}
+          </div>
+
+          <div className="mt-5 text-left">
+            <label
+              htmlFor="reason"
+              className="mb-2 block text-sm font-semibold text-[#3D3939]"
+            >
+              Reason for consultation
+            </label>
+
+            <textarea
+              id="reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              maxLength={500}
+              rows={4}
+              placeholder="Briefly describe why you would like to consult this doctor..."
+              className="w-full resize-none rounded-xl border border-[#F0DCE4] bg-white px-4 py-3 text-sm text-[#3D3939] outline-none placeholder:text-[#B8AEB2] focus:border-[#F33B7D]"
+            />
+
+            <div className="mt-1 text-right text-[10px] text-[#B8AEB2]">
+              {reason.length}/500
+            </div>
           </div>
 
           {requestError && (

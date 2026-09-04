@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, MessageCircle, XCircle, CheckCircle2 } from "lucide-react";
+import { Clock, MessageCircle, XCircle, CheckCircle2, Plus } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import { getMyRequests } from "../../services/chat.service";
 
@@ -100,20 +100,29 @@ export default function MyConsultations() {
       subtitle="View and manage your doctor consultations."
     >
       <div className="mx-auto max-w-2xl">
-        <div className="mb-4 flex flex-wrap gap-2">
-          {["all", "pending", "active", "closed", "rejected"].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold capitalize transition ${
-                filter === f
-                  ? "bg-[#F33B7D] text-white"
-                  : "bg-white text-[#8F8C8C] ring-1 ring-black/5"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex flex-wrap gap-2">
+            {["all", "pending", "active", "closed", "rejected"].map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`rounded-full px-4 py-1.5 text-xs font-semibold capitalize transition ${
+                  filter === f
+                    ? "bg-[#F33B7D] text-white"
+                    : "bg-white text-[#8F8C8C] ring-1 ring-black/5"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => navigate("/chat/doctors")}
+            className="flex items-center gap-1.5 rounded-full bg-[#F33B7D] px-4 py-1.5 text-xs font-semibold text-white shadow-[0_10px_24px_-4px_rgba(243,59,125,0.4)] transition hover:-translate-y-0.5"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Find a Doctor
+          </button>
         </div>
 
         {loading && <p className="text-sm text-[#8F8C8C]">Loading...</p>}
