@@ -175,9 +175,98 @@ const handleFileSelect = (e) => {
   // Allow selecting the same file again later
   e.target.value = "";
 };
+
+const isImageAttachment = (message) => {
+  const mimeType = message?.attachment?.mimeType || "";
+  const fileName = message?.attachment?.originalName || "";
+
+  return (
+    mimeType.startsWith("image/") ||
+    /\.(jpg|jpeg|png|webp)$/i.test(fileName)
+  );
+};
+
 const handleOpenAttachment = async (message) => {
+  const newTab = window.open("", "_blank");
+
+  if (!newTab) {
+    setError(
+      "The attachment could not be opened. Please allow pop-ups for this site."
+    );
+    return;
+  }
+
+  newTab.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Opening attachment...</title>
+        <style>
+          body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fffbfc;
+            font-family: Arial, sans-serif;
+          }
+
+          .container {
+            text-align: center;
+            color: #3d3939;
+          }
+
+          .spinner {
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 18px;
+            border: 4px solid #f7d9e5;
+            border-top-color: #f33b7d;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          }
+
+          .title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+          }
+
+          .subtitle {
+            font-size: 12px;
+            color: #8f8c8c;
+          }
+
+          @keyframes spin {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        </style>
+      </head>
+
+      <body>
+        <div class="container">
+          <div class="spinner"></div>
+
+          <div class="title">
+            Opening attachment...
+          </div>
+
+          <div class="subtitle">
+            Please wait while your file is being prepared.
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
+
+  newTab.document.close();
+
   try {
     setOpeningAttachment(message._id);
+    setError("");
 
     const blob = await getChatAttachment(
       id,
@@ -186,14 +275,45 @@ const handleOpenAttachment = async (message) => {
 
     const blobUrl = URL.createObjectURL(blob);
 
-    window.open(blobUrl, "_blank");
+    newTab.location.href = blobUrl;
 
-    // Give the new tab time to load the blob
     setTimeout(() => {
       URL.revokeObjectURL(blobUrl);
     }, 60000);
   } catch (err) {
     console.error("Failed to open attachment:", err);
+
+    newTab.document.body.innerHTML = `
+      <div style="
+        min-height:100vh;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-family:Arial,sans-serif;
+        background:#fffbfc;
+      ">
+        <div style="
+          text-align:center;
+          padding:30px;
+        ">
+          <div style="
+            font-size:16px;
+            font-weight:600;
+            color:#dc2626;
+            margin-bottom:8px;
+          ">
+            Failed to open attachment
+          </div>
+
+          <div style="
+            font-size:13px;
+            color:#8f8c8c;
+          ">
+            Please close this tab and try again.
+          </div>
+        </div>
+      </div>
+    `;
 
     setError(
       err?.response?.data?.message ||
@@ -203,6 +323,7 @@ const handleOpenAttachment = async (message) => {
     setOpeningAttachment(null);
   }
 };
+
   const handleSend = async (e) => {
   e.preventDefault();
 

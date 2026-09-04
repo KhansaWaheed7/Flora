@@ -11,18 +11,53 @@ const SocketEvents = require("../constants/socketEvents");
 // Dashboard Summary
 // =========================================
 
-const getDashboard = async (doctorId) => {
+// =========================================
+// Dashboard Summary
+// =========================================
 
+const getDashboard = async (doctorId) => {
+  // Pending consultation requests
   const pendingRequests = await Chat.countDocuments({
     doctor: doctorId,
     status: "pending",
   });
 
+  // Active patients
   const activePatients = await Chat.countDocuments({
     doctor: doctorId,
     status: "active",
   });
 
+  // Closed consultations
+  const closedConsultations = await Chat.countDocuments({
+    doctor: doctorId,
+    status: "closed",
+  });
+
+  // Start of today
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  // Start of tomorrow
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+
+  // Messages received by doctor today
+  const todaysMessages = await Message.countDocuments({
+    receiver: doctorId,
+    createdAt: {
+      $gte: startOfToday,
+      $lt: startOfTomorrow,
+    },
+  });
+
+  // Unread incoming messages
+  const unreadMessages = await Message.countDocuments({
+    receiver: doctorId,
+    isRead: false,
+  });
+
+  // Recent active patients
   const recentPatients = await Chat.find({
     doctor: doctorId,
     status: "active",
@@ -37,17 +72,14 @@ const getDashboard = async (doctorId) => {
     .limit(5);
 
   return {
-
     pendingRequests,
-
     activePatients,
-
+    closedConsultations,
+    todaysMessages,
+    unreadMessages,
     activeChats: activePatients,
-
     recentPatients,
-
   };
-
 };
 
 // =========================================

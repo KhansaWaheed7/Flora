@@ -35,7 +35,7 @@ function timeAgo(dateStr) {
 
 function StatCard({ label, value, hint }) {
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+    <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 transition-all hover:-translate-y-0.5 hover:shadow-md">
       <p className="text-xs font-medium text-[#8F8C8C]">{label}</p>
       <p className="mt-2 text-2xl font-bold text-[#0D0D0D]">{value}</p>
       {hint && <p className="mt-1 text-[11px] font-medium text-[#F33B7D]">{hint}</p>}
@@ -102,11 +102,19 @@ export default function DoctorDashboard() {
               hint={data?.activePatients ? `${data.activePatients} ongoing` : undefined}
             />
             <StatCard label="Closed Consultations" value={data?.closedConsultations ?? 0} />
-            <StatCard
-              label="Today's Messages"
-              value={data?.todaysMessages ?? 0}
-              hint={data?.todaysMessages ? `${data.todaysMessages} unread` : undefined}
-            />
+            <Link to="/doctor/messages" className="block">
+  <StatCard
+    label="Unread Messages"
+    value={data?.unreadMessages ?? 0}
+    hint={
+      data?.unreadMessages
+        ? `${data.unreadMessages} unread message${
+            data.unreadMessages > 1 ? "s" : ""
+          }`
+        : "No unread messages"
+    }
+  />
+</Link>
           </div>
 
           <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">

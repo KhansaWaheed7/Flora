@@ -1,13 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Send } from "lucide-react";
+import {
+  ArrowLeft,
+  Send,
+  Paperclip,
+  FileText,
+  X,
+  Loader2,
+} from "lucide-react";
 
 import DoctorLayout from "../../layouts/DoctorLayout";
 import { useSocket } from "../../context/SocketContext";
 import { useAuth } from "../../context/AuthContext";
 
 import { getConversations } from "../../services/doctorPortal.service";
-import { getChatMessages } from "../../services/chat.service";
+import {
+  getChatMessages,
+  sendChatAttachment,
+  getChatAttachment,
+} from "../../services/chat.service";
 
 function Avatar({ name, image, size = "h-11 w-11" }) {
   const [imageError, setImageError] = useState(false);
@@ -66,8 +77,6 @@ function formatTime(value) {
   });
 }
 
-
-
 export default function DoctorChat() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -80,6 +89,12 @@ export default function DoctorChat() {
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
   const [otherTyping, setOtherTyping] = useState(false);
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [openingAttachment, setOpeningAttachment] = useState(null);
+
+  const fileInputRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -354,6 +369,163 @@ export default function DoctorChat() {
   }, [messages, otherTyping]);
 
   // =========================================
+  // Attachment Helper Functions
+  // =========================================
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    setSelectedFile(file);
+
+    // Allow selecting the same file again later
+    e.target.value = "";
+  };
+
+  const handleOpenAttachment = async (message) => {
+  // Open tab immediately from the user's click
+  const newTab = window.open("", "_blank");
+
+  if (!newTab) {
+    setError(
+      "The attachment could not be opened. Please allow pop-ups for this site."
+    );
+    return;
+  }
+
+  // Show loading UI immediately in the new tab
+  newTab.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Opening attachment...</title>
+        <style>
+          body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fffbfc;
+            font-family: Arial, sans-serif;
+          }
+
+          .container {
+            text-align: center;
+            color: #3d3939;
+          }
+
+          .spinner {
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 18px;
+            border: 4px solid #f7d9e5;
+            border-top-color: #f33b7d;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          }
+
+          .title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+          }
+
+          .subtitle {
+            font-size: 12px;
+            color: #8f8c8c;
+          }
+
+          @keyframes spin {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        </style>
+      </head>
+
+      <body>
+        <div class="container">
+          <div class="spinner"></div>
+          <div class="title">Opening attachment...</div>
+          <div class="subtitle">
+            Please wait while your file is being prepared.
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
+
+  newTab.document.close();
+
+  try {
+    setOpeningAttachment(message._id);
+    setError("");
+
+    const blob = await getChatAttachment(
+      id,
+      message._id
+    );
+
+    const blobUrl = URL.createObjectURL(blob);
+
+    // Replace loading page with the actual file
+    newTab.location.href = blobUrl;
+
+    // Keep blob alive while browser loads it
+    setTimeout(() => {
+      URL.revokeObjectURL(blobUrl);
+    }, 60000);
+  } catch (err) {
+    console.error(
+      "Failed to open attachment:",
+      err
+    );
+
+    // Show error inside the already-open tab
+    newTab.document.body.innerHTML = `
+      <div style="
+        min-height:100vh;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-family:Arial,sans-serif;
+        background:#fffbfc;
+      ">
+        <div style="
+          text-align:center;
+          padding:30px;
+        ">
+          <div style="
+            font-size:16px;
+            font-weight:600;
+            color:#dc2626;
+            margin-bottom:8px;
+          ">
+            Failed to open attachment
+          </div>
+
+          <div style="
+            font-size:13px;
+            color:#8f8c8c;
+          ">
+            Please close this tab and try again.
+          </div>
+        </div>
+      </div>
+    `;
+
+    setError(
+      err?.response?.data?.message ||
+        "Failed to open attachment."
+    );
+  } finally {
+    setOpeningAttachment(null);
+  }
+};
+
+  // =========================================
   // Typing
   // =========================================
 
@@ -383,8 +555,59 @@ export default function DoctorChat() {
   // Send Message
   // =========================================
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
+
+    if (uploading) return;
+
+    // =========================================
+    // Attachment message
+    // =========================================
+
+    if (selectedFile) {
+      try {
+        setUploading(true);
+        setError("");
+
+        const newMessage = await sendChatAttachment(
+          id,
+          selectedFile,
+          draft.trim()
+        );
+
+        setMessages((prev) => [
+          ...prev,
+          newMessage,
+        ]);
+
+        setSelectedFile(null);
+        setDraft("");
+
+        if (socket) {
+          socket.emit("stop-typing", {
+            chatId: id,
+          });
+        }
+      } catch (err) {
+        console.error(
+          "Attachment upload failed:",
+          err
+        );
+
+        setError(
+          err?.response?.data?.message ||
+            "Failed to upload attachment."
+        );
+      } finally {
+        setUploading(false);
+      }
+
+      return;
+    }
+
+    // =========================================
+    // Normal text message
+    // =========================================
 
     if (!draft.trim() || !socket || !connected) {
       return;
@@ -538,9 +761,72 @@ export default function DoctorChat() {
             : "rounded-bl-md bg-[#FFF1F6] text-[#3D3939] border border-[#F7D9E5]"
         }`}
       >
-        <p className="whitespace-pre-wrap break-words text-sm">
-          {message.message}
-        </p>
+        {message.attachment && (
+          <button
+            type="button"
+            onClick={() =>
+              handleOpenAttachment(message)
+            }
+            disabled={
+              openingAttachment === message._id
+            }
+            className={`mb-1 flex w-full items-center gap-2 rounded-xl p-2 text-left transition ${
+              isMine
+                ? "bg-white/10 hover:bg-white/20"
+                : "bg-white hover:bg-[#FFF8FA]"
+            } ${
+              openingAttachment === message._id
+                ? "cursor-wait opacity-70"
+                : ""
+            }`}
+          >
+            {openingAttachment === message._id ? (
+              <Loader2 className="h-5 w-5 flex-shrink-0 animate-spin text-[#F33B7D]" />
+            ) : (
+              <FileText
+                className={`h-5 w-5 flex-shrink-0 ${
+                  isMine
+                    ? "text-white"
+                    : "text-[#F33B7D]"
+                }`}
+              />
+            )}
+
+            <div className="min-w-0 flex-1">
+              <p
+                className={`truncate text-xs font-medium ${
+                  isMine
+                    ? "text-white"
+                    : "text-[#3D3939]"
+                }`}
+              >
+                {openingAttachment === message._id
+                  ? "Opening..."
+                  : message.attachment.originalName}
+              </p>
+
+              <p
+                className={`text-[10px] ${
+                  isMine
+                    ? "text-white/70"
+                    : "text-[#B8AEB2]"
+                }`}
+              >
+                {message.attachment.size
+                  ? `${(
+                      message.attachment.size / 1024
+                    ).toFixed(1)} KB`
+                  : "Attachment"}
+              </p>
+            </div>
+          </button>
+        )}
+
+        {message.message && (
+          <p className="whitespace-pre-wrap break-words text-sm">
+            {message.message}
+          </p>
+        )}
 
         <div
           className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
@@ -586,32 +872,88 @@ export default function DoctorChat() {
 
         <form
           onSubmit={handleSend}
-          className="flex items-center gap-3 border-t border-[#F0DCE4] bg-white p-4"
+          className="relative flex items-center gap-3 border-t border-[#F0DCE4] bg-white p-4"
         >
+          {/* Selected File Preview */}
+          {selectedFile && (
+            <div className="absolute bottom-full left-0 right-0 border-t border-[#F0DCE4] bg-white px-4 py-2">
+              <div className="flex items-center gap-2 rounded-xl bg-[#FFF1F6] px-3 py-2">
+                <FileText className="h-4 w-4 flex-shrink-0 text-[#F33B7D]" />
 
+                <span className="min-w-0 flex-1 truncate text-xs text-[#3D3939]">
+                  {selectedFile.name}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedFile(null)
+                  }
+                  disabled={uploading}
+                  className="text-[#8F8C8C] hover:text-[#F33B7D] disabled:opacity-40"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Attachment Button */}
+          <button
+            type="button"
+            onClick={() =>
+              fileInputRef.current?.click()
+            }
+            disabled={
+              uploading || !connected
+            }
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-[#8F8C8C] transition hover:bg-[#FFF1F6] hover:text-[#F33B7D] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.txt,.doc,.docx,.jpg,.jpeg,.png,.webp,.mp3,.wav,.ogg"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+
+          {/* Message Input */}
           <input
             value={draft}
             onChange={handleDraftChange}
             placeholder={
-              connected
+              uploading
+                ? "Uploading attachment..."
+                : connected
                 ? "Type your message..."
                 : "Connecting..."
             }
-            disabled={!connected}
+            disabled={
+              !connected || uploading
+            }
             className="flex-1 rounded-full border border-[#F0DCE4] bg-[#FFFAFB] px-4 py-3 text-sm text-[#3D3939] outline-none transition focus:border-[#F33B7D] disabled:cursor-not-allowed disabled:opacity-60"
           />
 
+          {/* Send Button */}
           <button
             type="submit"
             disabled={
-              !draft.trim() ||
-              !connected
+              (!draft.trim() && !selectedFile) ||
+              !connected ||
+              uploading
             }
             className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[#F33B7D] text-white shadow-[0_8px_18px_-5px_rgba(243,59,125,0.5)] transition hover:bg-[#E72E70] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Send className="h-4 w-4" />
+            {uploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </button>
-
         </form>
 
       </div>

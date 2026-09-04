@@ -74,13 +74,17 @@ import MedicalReportDetailsPage from "./pages/medical-reports/MedicalReportDetai
 
 // ===== FEATURE/CHAT IMPORTS =====
 import FindDoctor from "./pages/chat/FindDoctor";
-import DoctorProfile from "./pages/chat/DoctorProfile";
+
 import ConsultationRequestConfirmation from "./pages/chat/ConsultationRequestConfirmation";
 import MyConsultations from "./pages/chat/MyConsultations";
 import PendingConsultation from "./pages/chat/PendingConsultation";
 import RejectedConsultation from "./pages/chat/RejectedConsultation";
 import ChatWithDoctor from "./pages/chat/ChatWithDoctor";
 import ConsultationClosed from "./pages/chat/ConsultationClosed";
+import DoctorMessages from "./pages/doctor-portal/DoctorMessages";
+import DoctorSchedule from "./pages/doctor-portal/DoctorSchedule";
+import DoctorProfile from "./pages/doctor-portal/DoctorProfile";
+import DoctorSettings from "./pages/doctor-portal/DoctorSettings";
 
 function App() {
   return (
@@ -567,7 +571,7 @@ function App() {
       <Route
         path="/doctor/messages/:id"
         element={
-          <DoctorRoute> {/* ✅ Added DoctorRoute protection */}
+          <DoctorRoute> 
             <DoctorChat />
           </DoctorRoute>
         }
@@ -586,6 +590,42 @@ function App() {
   element={
     <DoctorRoute>
       <DoctorVerification />
+    </DoctorRoute>
+  }
+/>
+
+<Route
+  path="/doctor/messages"
+  element={
+    <DoctorRoute>
+      <DoctorMessages />
+    </DoctorRoute>
+  }
+/>
+
+<Route
+  path="/doctor/schedule"
+  element={
+    <DoctorRoute>
+      <DoctorSchedule />
+    </DoctorRoute>
+  }
+/>
+
+<Route
+  path="/doctor/profile"
+  element={
+    <DoctorRoute>
+      <DoctorProfile />
+    </DoctorRoute>
+  }
+/>
+
+<Route
+  path="/doctor/settings"
+  element={
+    <DoctorRoute>
+      <DoctorSettings />
     </DoctorRoute>
   }
 />
