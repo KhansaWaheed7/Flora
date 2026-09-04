@@ -27,8 +27,8 @@ function NavItem({ icon: Icon, label, path, active, badge, onClick }) {
       <span className="flex-1">{label}</span>
       {badge != null && badge > 0 && (
         <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-            active ? "bg-white/25 text-white" : "bg-[#FEE4EB] text-[#F33B7D]"
+          className={`flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white ${
+            active ? "bg-white/25" : "bg-[#F33B7D]"
           }`}
         >
           {badge}
@@ -91,7 +91,9 @@ export default function DoctorSidebar({
       >
         <div className="flex flex-col px-4 py-6 border-b border-[#F0DCE4] flex-shrink-0">
           <Logo />
-          <span className="mt-1 text-[11px] font-medium text-[#8F8C8C]">Doctor Portal</span>
+          <span className="mt-1 inline-block rounded-full bg-[#F33B7D] px-2.5 py-0.5 text-[10px] font-semibold text-white w-fit">
+            Doctor Portal
+          </span>
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">

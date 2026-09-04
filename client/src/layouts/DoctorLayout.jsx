@@ -26,12 +26,15 @@ export default function DoctorLayout({
       try {
         const data = await getDoctorDashboard();
         if (!cancelled) {
-          setCounts((prev) => ({
-            ...prev,
-            pendingRequests: data.pendingRequests,
-            activePatients: data.activePatients,
-            closedConsultations: data.closedConsultations,
-          }));
+        setCounts((prev) => ({
+  ...prev,
+  pendingRequests: data.pendingRequests,
+  activePatients: data.activePatients,
+  closedConsultations: data.closedConsultations,
+  unreadMessages: data.unreadMessages,
+  notificationCount:
+    (data.pendingRequests || 0) + (data.unreadMessages || 0),
+}));
         }
       } catch {
         // Badges are non-critical - fail silently, sidebar just omits them.
@@ -56,14 +59,15 @@ export default function DoctorLayout({
 
       <main className="flex-1 p-5 sm:p-7">
         <DoctorHeader
-          title={title}
-          subtitle={subtitle}
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-          user={user}
-          showSearch={showSearch}
-          onSearchChange={onSearchChange}
-        />
+  title={title}
+  subtitle={subtitle}
+  sidebarOpen={sidebarOpen}
+  setSidebarOpen={setSidebarOpen}
+  user={user}
+  notificationCount={counts.notificationCount}
+  showSearch={showSearch}
+  onSearchChange={onSearchChange}
+/>
 
         {children}
       </main>
