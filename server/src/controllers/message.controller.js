@@ -1,26 +1,25 @@
 const asyncHandler = require("../utils/asyncHandler");
 const ApiResponse = require("../utils/ApiResponse");
-
 const { sendMessageSchema } = require("../validators/message.validator");
 
 const {
   sendMessage,
   getMessages,
+  getMessageAttachment,
   markMessagesAsRead,
 } = require("../services/message.service");
-
 // =========================================
 // Send Message
 // =========================================
 
 exports.sendMessage = asyncHandler(async (req, res) => {
-
   const validatedData = sendMessageSchema.parse(req.body);
 
   const message = await sendMessage(
     req.params.chatId,
     req.user.id,
-    validatedData.message
+    validatedData.message,
+    req.file
   );
 
   res.status(201).json(
@@ -30,7 +29,6 @@ exports.sendMessage = asyncHandler(async (req, res) => {
       message
     )
   );
-
 });
 
 // =========================================
@@ -38,7 +36,6 @@ exports.sendMessage = asyncHandler(async (req, res) => {
 // =========================================
 
 exports.getMessages = asyncHandler(async (req, res) => {
-
   const messages = await getMessages(
     req.params.chatId,
     req.user.id
@@ -51,7 +48,6 @@ exports.getMessages = asyncHandler(async (req, res) => {
       messages
     )
   );
-
 });
 
 // =========================================
@@ -72,3 +68,34 @@ exports.markMessagesAsRead = asyncHandler(async (req, res) => {
     )
   );
 });
+
+// =========================================
+// Get Message Attachment
+// =========================================
+
+exports.getMessageAttachment = asyncHandler(
+  async (req, res) => {
+    const attachment = await getMessageAttachment(
+      req.params.chatId,
+      req.params.messageId,
+      req.user.id
+    );
+
+    res.setHeader(
+      "Content-Type",
+      attachment.mimeType
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${attachment.originalName}"`
+    );
+
+    res.setHeader(
+      "Content-Length",
+      attachment.size
+    );
+
+    res.send(attachment.buffer);
+  }
+);

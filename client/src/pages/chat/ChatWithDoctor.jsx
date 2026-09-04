@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Send, Paperclip } from "lucide-react";
+import { Send, Paperclip, FileText, X, Loader2 } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import { useSocket } from "../../context/SocketContext";
 import { useAuth } from "../../context/AuthContext";
-import { getMyRequests, getChatMessages } from "../../services/chat.service";
+import {
+  getMyRequests,
+  getChatMessages,
+  sendChatAttachment,
+  getChatAttachment,
+} from "../../services/chat.service";
 
 function Avatar({ name, image, size = "h-9 w-9" }) {
   if (image) {
@@ -66,9 +71,14 @@ const currentUserId = getUserId(user);
   const [consultation, setConsultation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+const [uploading, setUploading] = useState(false);
+
+const fileInputRef = useRef(null);
   const [otherTyping, setOtherTyping] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [openingAttachment, setOpeningAttachment] = useState(null);
 
   const bottomRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -155,13 +165,95 @@ const currentUserId = getUserId(user);
     }, 1500);
   };
 
-  const handleSend = (e) => {
-    e.preventDefault();
-    if (!draft.trim() || !socket) return;
-    socket.emit("send-message", { chatId: id, message: draft.trim() });
-    setDraft("");
-    socket.emit("stop-typing", { chatId: id });
-  };
+const handleFileSelect = (e) => {
+  const file = e.target.files?.[0];
+
+  if (!file) return;
+
+  setSelectedFile(file);
+
+  // Allow selecting the same file again later
+  e.target.value = "";
+};
+const handleOpenAttachment = async (message) => {
+  try {
+    setOpeningAttachment(message._id);
+
+    const blob = await getChatAttachment(
+      id,
+      message._id
+    );
+
+    const blobUrl = URL.createObjectURL(blob);
+
+    window.open(blobUrl, "_blank");
+
+    // Give the new tab time to load the blob
+    setTimeout(() => {
+      URL.revokeObjectURL(blobUrl);
+    }, 60000);
+  } catch (err) {
+    console.error("Failed to open attachment:", err);
+
+    setError(
+      err?.response?.data?.message ||
+        "Failed to open attachment."
+    );
+  } finally {
+    setOpeningAttachment(null);
+  }
+};
+  const handleSend = async (e) => {
+  e.preventDefault();
+
+  if (uploading) return;
+
+  // Attachment message
+  if (selectedFile) {
+    try {
+      setUploading(true);
+
+      const newMessage = await sendChatAttachment(
+        id,
+        selectedFile,
+        draft.trim()
+      );
+
+      setMessages((prev) => [...prev, newMessage]);
+
+      setSelectedFile(null);
+      setDraft("");
+
+      if (socket) {
+        socket.emit("stop-typing", { chatId: id });
+      }
+    } catch (err) {
+      console.error("Attachment upload failed:", err);
+      setError(
+        err?.response?.data?.message ||
+          "Failed to upload attachment."
+      );
+    } finally {
+      setUploading(false);
+    }
+
+    return;
+  }
+
+  // Normal text message
+  if (!draft.trim() || !socket) return;
+
+  socket.emit("send-message", {
+    chatId: id,
+    message: draft.trim(),
+  });
+
+  setDraft("");
+
+  socket.emit("stop-typing", {
+    chatId: id,
+  });
+};
 
   if (loading) {
     return (
@@ -220,6 +312,8 @@ const currentUserId = getUserId(user);
   const isMine =
     senderId === currentUserId;
 
+  const isLoadingAttachment = openingAttachment === m._id;
+
   return (
     <div
       key={m._id}
@@ -236,9 +330,54 @@ const currentUserId = getUserId(user);
             : "bg-[#FFF1F6] text-[#3D3939] border border-[#F7D9E5]"
         }`}
       >
-        <p className="whitespace-pre-wrap break-words">
-          {m.message}
-        </p>
+        {m.attachment && (
+  <button
+    type="button"
+    onClick={() => handleOpenAttachment(m)}
+    disabled={isLoadingAttachment}
+    className={`mb-1 flex w-full items-center gap-2 rounded-xl p-2 text-left transition ${
+      isMine
+        ? "bg-white/10 hover:bg-white/20"
+        : "bg-white hover:bg-[#FFF8FA]"
+    } ${isLoadingAttachment ? "cursor-wait opacity-70" : ""}`}
+  >
+    {isLoadingAttachment ? (
+      <Loader2 className="h-5 w-5 flex-shrink-0 animate-spin text-[#F33B7D]" />
+    ) : (
+      <FileText
+        className={`h-5 w-5 flex-shrink-0 ${
+          isMine ? "text-white" : "text-[#F33B7D]"
+        }`}
+      />
+    )}
+
+    <div className="min-w-0 flex-1">
+      <p
+        className={`truncate text-xs font-medium ${
+          isMine ? "text-white" : "text-[#3D3939]"
+        }`}
+      >
+        {isLoadingAttachment ? "Opening..." : m.attachment.originalName}
+      </p>
+
+      <p
+        className={`text-[10px] ${
+          isMine ? "text-white/70" : "text-[#B8AEB2]"
+        }`}
+      >
+        {m.attachment.size
+          ? `${(m.attachment.size / 1024).toFixed(1)} KB`
+          : "Attachment"}
+      </p>
+    </div>
+  </button>
+)}
+
+{m.message && (
+  <p className="whitespace-pre-wrap break-words">
+    {m.message}
+  </p>
+)}
 
         <p
           className={`mt-1 text-[10px] ${
@@ -263,14 +402,42 @@ const currentUserId = getUserId(user);
         ) : (
           <form
             onSubmit={handleSend}
-            className="flex items-center gap-2 border-t border-[#F7DCE4] p-3"
+            className="relative flex items-center gap-2 border-t border-[#F7DCE4] p-3"
           >
+            {selectedFile && (
+              <div className="absolute bottom-full left-0 right-0 border-t border-[#F7DCE4] bg-white px-3 py-2">
+                <div className="flex items-center gap-2 rounded-xl bg-[#FFF1F6] px-3 py-2">
+                  <FileText className="h-4 w-4 flex-shrink-0 text-[#F33B7D]" />
+                  <span className="min-w-0 flex-1 truncate text-xs text-[#3D3939]">
+                    {selectedFile.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedFile(null)}
+                    className="text-[#8F8C8C] hover:text-[#F33B7D]"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button
               type="button"
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[#8F8C8C] hover:bg-[#FEF4F4]"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[#8F8C8C] hover:bg-[#FEF4F4] disabled:opacity-40"
             >
               <Paperclip className="h-4 w-4" />
             </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.txt,.doc,.docx,.jpg,.jpeg,.png,.webp,.mp3,.wav,.ogg"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
             <input
               value={draft}
               onChange={handleDraftChange}

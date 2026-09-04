@@ -52,3 +52,46 @@ export const sendChatMessage = async (chatId, message) => {
   const response = await api.post(`/messages/${chatId}`, { message });
   return response.data.data;
 };
+
+/*
+POST /messages/:chatId - send a file attachment
+
+Body: multipart/form-data
+Fields:
+- file: selected attachment
+- message: optional text/caption
+*/
+
+export const sendChatAttachment = async (
+  chatId,
+  file,
+  message = ""
+) => {
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  if (message.trim()) {
+    formData.append("message", message.trim());
+  }
+
+  const response = await api.post(
+    `/messages/${chatId}`,
+    formData
+  );
+
+  return response.data.data;
+};
+export const getChatAttachment = async (
+  chatId,
+  messageId
+) => {
+  const response = await api.get(
+    `/messages/${chatId}/${messageId}/attachment`,
+    {
+      responseType: "blob",
+    }
+  );
+
+  return response.data;
+};

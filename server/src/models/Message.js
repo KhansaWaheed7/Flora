@@ -34,12 +34,29 @@ const messageSchema = new mongoose.Schema(
     },
 
     attachment: {
-      url: String,
-      publicId: String,
-      originalName: String,
-      size: Number,
-      mimeType: String,
-    },
+  encryptedData: {
+    type: Buffer,
+  },
+  encryptionIV: {
+    type: String,
+  },
+  encryptionAuthTag: {
+    type: String,
+  },
+  fileHash: {
+    type: String,
+  },
+  originalName: {
+    type: String,
+    trim: true,
+  },
+  size: {
+    type: Number,
+  },
+  mimeType: {
+    type: String,
+  },
+},
 
     isDelivered: {
   type: Boolean,
