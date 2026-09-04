@@ -52,6 +52,7 @@ import {
   Tooltip,
 } from "recharts";
 import { getCycleDashboard, getPrediction, getCycles } from "../../services/cycle.service";
+import { getConversations } from "../../services/chat.service";
 import { getAssessmentHistory } from "../../services/pcos.service";
 import { getPregnancyDashboard, trimesterLabel } from "../../services/pregnancy.service";
 
@@ -90,13 +91,14 @@ const statsConfig = [
     icon: Baby,
   },
   {
-    label: "Unread Messages",
-    value: "3",
-    unit: "",
-    sub: "From Doctor",
-    color: "#3B82F6",
-    icon: MessageCircle,
-  },
+  label: "Unread Messages",
+  key: "unreadMessages",
+  value: 0,
+  unit: "",
+  sub: "From Doctor",
+  color: "#3B82F6",
+  icon: MessageCircle,
+},
 ];
 
 // Keep static insights
@@ -333,6 +335,7 @@ export default function DashboardPage() {
 
   const [dashboardData, setDashboardData] = useState(null);
   const [predictionData, setPredictionData] = useState(null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const [cyclesData, setCyclesData] = useState([]);
   const [pcosAssessments, setPcosAssessments] = useState([]);
   const [pregnancyData, setPregnancyData] = useState(null);
@@ -349,13 +352,21 @@ export default function DashboardPage() {
 
     const loadData = async () => {
       try {
-        // Load all data in parallel
-        const [dashboardRes, predictionRes, cyclesRes, pcosRes, pregnancyRes] = await Promise.all([
+        // Load all data in parallel - ADDED conversationsRes
+        const [
+          dashboardRes,
+          predictionRes,
+          cyclesRes,
+          pcosRes,
+          pregnancyRes,
+          conversationsRes,
+        ] = await Promise.all([
           getCycleDashboard().catch(() => ({ data: null })),
           getPrediction().catch(() => ({ data: null })),
           getCycles().catch(() => ({ data: [] })),
           getAssessmentHistory().catch(() => []),
           getPregnancyDashboard().catch(() => ({ data: null })),
+          getConversations().catch(() => []),
         ]);
 
         const dashboard = dashboardRes.data || dashboardRes || null;
@@ -364,11 +375,22 @@ export default function DashboardPage() {
         const pcos = Array.isArray(pcosRes) ? pcosRes : [];
         const pregnancy = pregnancyRes?.pregnancy ? pregnancyRes : null;
 
+        // Process conversations for unread count
+        const conversations = Array.isArray(conversationsRes)
+          ? conversationsRes
+          : [];
+
+        const totalUnread = conversations.reduce(
+          (total, chat) => total + (chat?.unreadCount || 0),
+          0
+        );
+
         setDashboardData(dashboard);
         setPredictionData(prediction);
         setCyclesData(Array.isArray(cycles) ? cycles : []);
         setPcosAssessments(pcos);
         setPregnancyData(pregnancy);
+        setUnreadMessages(totalUnread);
         
         // Check if we have any cycle data
         const hasData = (Array.isArray(cycles) && cycles.length > 0) || 
@@ -400,6 +422,10 @@ export default function DashboardPage() {
   // Compute dynamic stats
   const getStats = () => {
     const stats = [...statsConfig];
+
+    // Update Unread Messages
+    stats[4].value = unreadMessages;
+    stats[4].sub = unreadMessages === 1 ? "Unread Message" : "Unread Messages";
 
     // Update Pregnancy stat
     if (pregnancyData?.pregnancy) {

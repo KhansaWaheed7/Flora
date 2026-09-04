@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, MessageCircle, XCircle, CheckCircle2, Plus } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
-import { getMyRequests } from "../../services/chat.service";
+import {
+  getMyRequests,
+  getConversations,
+} from "../../services/chat.service";
 
 function Avatar({ name, image }) {
   if (image) {
@@ -71,21 +74,34 @@ function formatDateTime(value) {
 export default function MyConsultations() {
   const navigate = useNavigate();
   const [consultations, setConsultations] = useState([]);
+  const [unreadCounts, setUnreadCounts] = useState({});
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const load = async () => {
-      try {
-        const list = await getMyRequests();
-        setConsultations(list || []);
-      } catch (err) {
-        setError("Could not load your consultations.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  try {
+    const [list, conversations] = await Promise.all([
+      getMyRequests(),
+      getConversations(),
+    ]);
+
+    setConsultations(list || []);
+
+    const counts = {};
+
+    (conversations || []).forEach((chat) => {
+      counts[chat._id] = chat.unreadCount || 0;
+    });
+
+    setUnreadCounts(counts);
+  } catch (err) {
+    setError("Could not load your consultations.");
+  } finally {
+    setLoading(false);
+  }
+};
     load();
   }, []);
 
@@ -165,11 +181,20 @@ export default function MyConsultations() {
                     {formatDateTime(c.createdAt)}
                   </p>
                 </div>
-                <span
-                  className={`flex flex-shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold ${meta.bg} ${meta.color}`}
-                >
-                  <Icon className="h-3 w-3" /> {meta.label}
-                </span>
+                <div className="flex flex-shrink-0 items-center gap-2">
+  {unreadCounts[c._id] > 0 && (
+    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#F33B7D] px-1.5 text-[10px] font-bold text-white">
+      {unreadCounts[c._id] > 99 ? "99+" : unreadCounts[c._id]}
+    </span>
+  )}
+
+  <span
+    className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold ${meta.bg} ${meta.color}`}
+  >
+    <Icon className="h-3 w-3" />
+    {meta.label}
+  </span>
+</div>
               </button>
             );
           })}

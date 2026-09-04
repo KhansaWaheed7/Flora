@@ -17,24 +17,12 @@ import {
   ChevronDown,
   Dumbbell,
 } from "lucide-react";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
+import { getConversations } from "../../services/chat.service";
 import Logo from "../../components/common/Logo"
 
-const navItems = [
-  { icon: Home, label: "Dashboard", path: "/dashboard" },
-  { icon: Repeat, label: "Cycle Tracker", path: "/cycle-tracker" },
-  { icon: Stethoscope, label: "PCOS Screening", path: "/pcos-detection" },
-  { icon: Baby, label: "Pregnancy", path: "/pregnancy" },
-  { icon: MessageCircle, label: "Chat", badge: 3, path: "/chat" },
-  { icon: HeartHandshake, label: "Gynae Assistant", path: "/gynae-assistant" },
-  { icon: Apple, label: "Diet & Nutrition", path: "/diet-nutrition" },
-  { icon: Dumbbell, label: "Exercise", path: "/exercise" },
-  { icon: FileText, label: "Medical Reports", path: "/medical-reports" },
-  { icon: BookOpen, label: "Education", path: "/education" },
-  { icon: Bell, label: "Notifications", badge: 2, path: "/notifications" },
-  { icon: User, label: "Profile", path: "/profile" },
-  { icon: Settings, label: "Settings", path: "/settings" },
-];
+// Remove the navItems from here - it will be defined inside the component
 
 function NavItem({ icon: Icon, label, active, badge, path, onClick }) {
   return (
@@ -52,17 +40,20 @@ function NavItem({ icon: Icon, label, active, badge, path, onClick }) {
     >
       <Icon className={`h-5 w-5 flex-shrink-0 ${active ? "text-white" : "text-[#8F8C8C] group-hover:text-[#F33B7D]"}`} />
       <span className="flex-1">{label}</span>
-      {badge && badge > 0 && (
-        <span className={`
-          flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold
-          ${active 
-            ? "bg-white/20 text-white" 
-            : "bg-[#F33B7D] text-white"
-          }
-        `}>
-          {badge}
-        </span>
-      )}
+      {Number(badge) > 0 && (
+  <span
+    className={`
+      flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold
+      ${
+        active
+          ? "bg-white/20 text-white"
+          : "bg-[#F33B7D] text-white"
+      }
+    `}
+  >
+    {badge > 99 ? "99+" : badge}
+  </span>
+)}
     </Link>
   );
 }
@@ -73,6 +64,59 @@ export default function Sidebar({
     user = { name: "Sarah Khan" }
 }) {
   const location = useLocation();
+  
+  // 3. Add unread count state
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  // 3. Fetch unread chat count
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchUnreadChats = async () => {
+      try {
+        const conversations = await getConversations();
+
+        const totalUnread = conversations.reduce(
+          (total, chat) => total + (chat?.unreadCount || 0),
+          0
+        );
+
+        if (!cancelled) {
+          setUnreadChatCount(totalUnread);
+        }
+      } catch (error) {
+        console.error("Failed to fetch unread chat count:", error);
+      }
+    };
+
+    fetchUnreadChats();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 4. Define navItems inside the component with the unreadChatCount
+  const navItems = [
+    { icon: Home, label: "Dashboard", path: "/dashboard" },
+    { icon: Repeat, label: "Cycle Tracker", path: "/cycle-tracker" },
+    { icon: Stethoscope, label: "PCOS Screening", path: "/pcos-detection" },
+    { icon: Baby, label: "Pregnancy", path: "/pregnancy" },
+    {
+      icon: MessageCircle,
+      label: "Chat",
+      badge: unreadChatCount,
+      path: "/chat",
+    },
+    { icon: HeartHandshake, label: "Gynae Assistant", path: "/gynae-assistant" },
+    { icon: Apple, label: "Diet & Nutrition", path: "/diet-nutrition" },
+    { icon: Dumbbell, label: "Exercise", path: "/exercise" },
+    { icon: FileText, label: "Medical Reports", path: "/medical-reports" },
+    { icon: BookOpen, label: "Education", path: "/education" },
+    { icon: Bell, label: "Notifications", path: "/notifications" },
+    { icon: User, label: "Profile", path: "/profile" },
+    { icon: Settings, label: "Settings", path: "/settings" },
+  ];
 
   // Check if a path is active
   const isActive = (path) => {
@@ -127,9 +171,13 @@ export default function Sidebar({
             <p className="mt-1 text-xs text-white/85">
               Get expert advice for your health concerns
             </p>
-            <button className="mt-3 w-full rounded-full bg-white px-4 py-2 text-xs font-semibold text-[#F33B7D] hover:bg-[#FEF4F4] transition-colors">
-              Start Chat
-            </button>
+            <Link
+  to="/chat"
+  onClick={() => setSidebarOpen(false)}
+  className="mt-3 block w-full rounded-full bg-white px-4 py-2 text-center text-xs font-semibold text-[#F33B7D] hover:bg-[#FEF4F4] transition-colors"
+>
+  Start Chat
+</Link>
           </div>
         </div>
 
