@@ -11,6 +11,7 @@ const {
   updatePatientStatus,
   updateDoctorStatus,
   getAuditLogs,
+  suspendDoctor,
 } = require("../services/admin.service");
 
 // =========================================
@@ -253,4 +254,32 @@ exports.getAuditLogs = asyncHandler(async (req, res) => {
     )
   );
 
+});
+// =========================================
+// Suspend Doctor
+// =========================================
+
+exports.suspendDoctor = asyncHandler(async (req, res) => {
+  const { doctorId } = req.params;
+  const { reason } = req.body;
+
+  if (!reason?.trim()) {
+    throw new ApiError(400, "Suspension reason is required.");
+  }
+
+  const doctor = await suspendDoctor(
+    doctorId,
+    req.user._id,
+    reason
+  );
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Doctor suspended successfully.",
+      {
+        doctor,
+      }
+    )
+  );
 });

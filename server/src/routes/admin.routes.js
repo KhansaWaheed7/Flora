@@ -18,6 +18,7 @@ const {
   getDoctorVerificationDetails,
   approveDoctor,
   rejectDoctor,
+  suspendDoctor, 
 } = require("../controllers/adminVerification.controller");
 
 // =========================================
@@ -102,6 +103,14 @@ router.patch(
   protect,
   authorize(ROLES.ADMIN),
   rejectDoctor
+);
+
+// Suspend doctor
+router.patch(
+  "/doctors/:doctorId/suspend",
+  protect,
+  authorize(ROLES.ADMIN),
+  suspendDoctor
 );
 
 // =========================================

@@ -7,8 +7,10 @@ const {
   getDoctorVerificationDetails,
   approveDoctor,
   rejectDoctor,
+  suspendDoctor,
   deleteDoctorDocument,
 } = require("../services/adminVerification.service");
+
 
 // =========================================
 // Get Pending Doctors
@@ -112,7 +114,32 @@ exports.rejectDoctor = asyncHandler(
     );
   }
 );
+// =========================================
+// Suspend Doctor
+// =========================================
 
+exports.suspendDoctor = asyncHandler(
+  async (req, res) => {
+    const { doctorId } = req.params;
+    const { reason } = req.body;
+
+    const doctor = await suspendDoctor(
+      doctorId,
+      req.user._id,
+      reason
+    );
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        "Doctor suspended successfully.",
+        {
+          doctor,
+        }
+      )
+    );
+  }
+);
 // =========================================
 // Delete Document
 // =========================================

@@ -1,7 +1,8 @@
 const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const cloudinary = require("../config/cloudinary");
-
+const { sendDoctorVerificationEmail } =
+  require("../services/email.service");
 // =========================================
 // Get Pending Doctor Verifications
 // =========================================
@@ -64,6 +65,11 @@ exports.approveDoctor = async (doctorId, adminId) => {
 
   await doctor.save();
 
+  // Send approval email (don't await, let it run async)
+  sendDoctorVerificationEmail(doctor, "verified").catch(err => {
+    console.error("Failed to send approval email:", err);
+  });
+
   return doctor;
 };
 
@@ -100,6 +106,42 @@ exports.rejectDoctor = async (doctorId, adminId, rejectionReason) => {
   doctor.accountStatus = "suspended";
 
   await doctor.save();
+
+  // Send rejection email (don't await, let it run async)
+  sendDoctorVerificationEmail(doctor, "rejected", rejectionReason).catch(err => {
+    console.error("Failed to send rejection email:", err);
+  });
+
+  return doctor;
+};
+
+// =========================================
+// Suspend Doctor (Add this)
+// =========================================
+
+exports.suspendDoctor = async (doctorId, adminId, reason) => {
+  const doctor = await User.findById(doctorId);
+
+  if (!doctor) {
+    throw new ApiError(404, "Doctor not found.");
+  }
+
+  if (doctor.role !== "doctor") {
+    throw new ApiError(400, "User is not a doctor.");
+  }
+
+  // Update verification status
+  doctor.doctorVerification.status = "suspended";
+  doctor.doctorVerification.rejectionReason = reason || "Account suspended";
+  doctor.doctorVerification.verifiedAt = new Date();
+  doctor.doctorVerification.verifiedBy = adminId;
+  
+  await doctor.save();
+
+  // Send suspension email
+  sendDoctorVerificationEmail(doctor, "suspended", reason).catch(err => {
+    console.error("Failed to send suspension email:", err);
+  });
 
   return doctor;
 };

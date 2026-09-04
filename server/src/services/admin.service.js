@@ -272,6 +272,40 @@ const getAuditLogs = async (page = 1, limit = 20) => {
   };
 };
 
+// =========================================
+// Suspend Doctor
+// =========================================
+
+const suspendDoctor = async (doctorId, adminId, reason = "") => {
+  const doctor = await User.findById(doctorId);
+
+  if (!doctor || doctor.role !== "doctor") {
+    throw new ApiError(404, "Doctor not found.");
+  }
+
+  if (doctor.accountStatus === "suspended") {
+    throw new ApiError(400, "Doctor is already suspended.");
+  }
+
+  // Update account status
+  doctor.accountStatus = "suspended";
+  
+  // If you want to store the rejection reason in the existing field
+  // (this is the same field used for verification rejection)
+  doctor.doctorVerification.rejectionReason = reason || "Account suspended by admin";
+  
+  await doctor.save();
+
+  await AuditLog.create({
+    admin: adminId,
+    action: "SUSPEND_DOCTOR",
+    targetUser: doctor._id,
+    details: `Doctor account suspended. Reason: ${reason || "No reason provided"}`,
+  });
+
+  return doctor;
+};
+
 module.exports = {
   getDashboardStats,
   getPendingDoctors,
@@ -282,4 +316,5 @@ module.exports = {
   updatePatientStatus,
   updateDoctorStatus,
   getAuditLogs,
+  suspendDoctor,
 };

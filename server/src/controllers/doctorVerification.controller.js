@@ -6,6 +6,7 @@ const {
   uploadDocument,
 } = require("../services/doctorVerification.service");
 
+
 exports.uploadDoctorDocument = asyncHandler(
   async (req, res) => {
     const { documentType } = req.body;
