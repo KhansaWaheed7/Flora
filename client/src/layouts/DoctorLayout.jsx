@@ -59,6 +59,7 @@ export default function DoctorLayout({
             ...prev,
             pendingRequests: data.pendingRequests,
             closedConsultations: data.closedConsultations,
+            activePatients: data.activePatients,
             unreadMessages: data.unreadMessages,
             notificationCount:
               (data.pendingRequests || 0) +
