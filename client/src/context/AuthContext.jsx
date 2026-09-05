@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 
 import * as authService from "../services/auth.service";
@@ -7,23 +8,26 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+  const storedUser = localStorage.getItem("user");
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+  if (storedUser) {
+    setUser(JSON.parse(storedUser));
+  }
 
-    setLoading(false);
-  }, []);
+  setLoading(false);
+}, []);
 
   const login = async (email, password) => {
     const response = await authService.login(email, password);
 
-    const { accessToken, refreshToken, user } = response.data;
+    const {
+      accessToken,
+      refreshToken,
+      user,
+    } = response.data;
 
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", refreshToken);
@@ -34,34 +38,33 @@ export function AuthProvider({ children }) {
     return response;
   };
 
-
   const googleLogin = async (data) => {
+    const {
+      accessToken,
+      refreshToken,
+      user,
+    } = data;
 
-  const {
-    accessToken,
-    refreshToken,
-    user,
-  } = data;
+    localStorage.setItem(
+      "accessToken",
+      accessToken
+    );
 
-  localStorage.setItem(
-    "accessToken",
-    accessToken
-  );
+    localStorage.setItem(
+      "refreshToken",
+      refreshToken
+    );
 
-  localStorage.setItem(
-    "refreshToken",
-    refreshToken
-  );
+    localStorage.setItem(
+      "user",
+      JSON.stringify(user)
+    );
 
-  localStorage.setItem(
-    "user",
-    JSON.stringify(user)
-  );
+    setUser(user);
 
-  setUser(user);
+    return user;
+  };
 
-  return user;
-};
   const register = async (data) => {
     return await authService.register(data);
   };
@@ -71,9 +74,9 @@ export function AuthProvider({ children }) {
       const response = await profileService.getProfile();
 
       const latestUser = {
-    ...response.data.data.user,
-    ...response.data.data.profile,
-};
+        ...response.data.data.user,
+        ...response.data.data.profile,
+      };
 
       localStorage.setItem(
         "user",
@@ -84,7 +87,7 @@ export function AuthProvider({ children }) {
 
       return latestUser;
     } catch (error) {
-      console.error(error);
+      console.error("Failed to refresh user:", error);
     }
   };
 

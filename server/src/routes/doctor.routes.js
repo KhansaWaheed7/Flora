@@ -16,8 +16,13 @@ const {
   getClosedConsultations,
   getDoctorProfile,
   updateDoctorProfile,
+  uploadDoctorAvatar,
+  removeDoctorAvatar,
 } = require("../controllers/doctor.controller");
 
+const {
+  handleAvatarUpload,
+} = require("../middlewares/upload.middleware");
 
 // =========================================
 // Doctor Profile
@@ -36,6 +41,26 @@ router.patch(
   authorize(ROLES.DOCTOR),
   updateDoctorProfile
 );
+
+// =========================================
+// Doctor Profile Picture
+// =========================================
+
+router.post(
+  "/profile/avatar",
+  protect,
+  authorize(ROLES.DOCTOR),
+  handleAvatarUpload,
+  uploadDoctorAvatar
+);
+
+router.delete(
+  "/profile/avatar",
+  protect,
+  authorize(ROLES.DOCTOR),
+  removeDoctorAvatar
+);
+
 // =========================================
 // Dashboard
 // =========================================

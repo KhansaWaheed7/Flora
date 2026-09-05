@@ -81,3 +81,24 @@ export const updateDoctorProfile = async (data) => {
   const response = await api.patch("/doctor/profile", data);
   return response.data;
 };
+
+// =========================================
+// Doctor Profile Picture
+// =========================================
+
+export const uploadDoctorAvatar = async (formData) => {
+  const response = await api.post(
+    "/doctor/profile/avatar",
+    formData
+  );
+
+  return response.data;
+};
+
+export const removeDoctorAvatar = async () => {
+  const response = await api.delete(
+    "/doctor/profile/avatar"
+  );
+
+  return response.data;
+};

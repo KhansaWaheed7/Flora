@@ -5,7 +5,11 @@ import Avatar from "../../components/common/Avatar";
 import {
   getDoctorProfile,
   updateDoctorProfile,
+  uploadDoctorAvatar,
+  removeDoctorAvatar,
 } from "../../services/doctorPortal.service";
+import { useAuth } from "../../context/AuthContext";
+
 import {
   ArrowLeft,
   Camera,
@@ -45,10 +49,15 @@ function Field({ label, ...props }) {
 // =========================================
 
 export default function DoctorEditProfile() {
+  const { refreshUser } = useAuth();
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState("");
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -109,6 +118,140 @@ export default function DoctorEditProfile() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    try {
+      const file = e.target.files?.[0];
+
+      if (!file) return;
+
+      // Frontend validation
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        setAvatarMessage(
+          "Please select a JPG, PNG, or WEBP image."
+        );
+
+        e.target.value = "";
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        setAvatarMessage(
+          "Profile picture must not exceed 5 MB."
+        );
+
+        e.target.value = "";
+        return;
+      }
+
+      setAvatarLoading(true);
+      setIsUploading(true);
+      setAvatarMessage("");
+
+      const data = new FormData();
+
+      data.append("avatar", file);
+
+      console.log(
+        "Uploading doctor avatar:",
+        file.name,
+        file.type,
+        file.size
+      );
+
+      const res = await uploadDoctorAvatar(data);
+
+      console.log(
+        "Doctor avatar upload response:",
+        res
+      );
+
+      const avatarUrl =
+        res?.data?.avatar ||
+        res?.data ||
+        "";
+
+      setFormData((prev) => ({
+        ...prev,
+        profilePicture: avatarUrl,
+      }));
+
+      setAvatarMessage(
+        "Profile picture uploaded successfully!"
+      );
+
+      await fetchProfile();
+      
+      // Refresh user context after avatar upload
+      await refreshUser();
+
+      // Reset file input so same image can be selected again
+      e.target.value = "";
+    } catch (err) {
+      console.error(
+        "Doctor avatar upload error:",
+        err.response?.data || err.message || err
+      );
+
+      setAvatarMessage(
+        err.response?.data?.message ||
+          "Failed to upload profile picture. Please try again."
+      );
+    } finally {
+      setAvatarLoading(false);
+      setIsUploading(false);
+
+      setTimeout(() => {
+        setAvatarMessage("");
+      }, 3000);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    try {
+      setAvatarLoading(true);
+      setIsUploading(false);
+      setAvatarMessage("");
+
+      await removeDoctorAvatar();
+
+      setFormData((prev) => ({
+        ...prev,
+        profilePicture: "",
+      }));
+
+      setAvatarMessage(
+        "Profile picture removed successfully!"
+      );
+
+      await fetchProfile();
+      
+      // Refresh user context after avatar removal
+      await refreshUser();
+    } catch (err) {
+      console.error(
+        "Doctor avatar removal error:",
+        err
+      );
+
+      setAvatarMessage(
+        err.response?.data?.message ||
+          "Failed to remove profile picture."
+      );
+    } finally {
+      setAvatarLoading(false);
+
+      setTimeout(() => {
+        setAvatarMessage("");
+      }, 3000);
     }
   };
 
@@ -208,6 +351,9 @@ export default function DoctorEditProfile() {
 
       // Refresh data from backend
       await fetchProfile();
+      
+      // Refresh user context after profile update
+      await refreshUser();
 
       setTimeout(() => {
         setSaved(false);
@@ -303,371 +449,403 @@ export default function DoctorEditProfile() {
       )}
 
       <form onSubmit={handleSave}>
-        {/* =========================================
-            Top Profile Card
-        ========================================= */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+          {/* =========================================
+              Profile Picture Section
+          ========================================= */}
 
-        <div className="mb-4 rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            {/* Avatar */}
-            <div className="relative">
-              <Avatar
-                name={formData.fullName || "Doctor"}
-                image={formData.profilePicture}
-                size="h-24 w-24 text-xl"
-              />
-
-              <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#F33B7D] text-white shadow-[0_4px_10px_rgba(243,59,125,0.4)]">
-                <Camera className="h-4 w-4" />
-              </div>
-            </div>
-
-            {/* Doctor info */}
-            <div>
-              <h2 className="font-display text-lg font-semibold text-[#0D0D0D]">
-                {formData.fullName || "Doctor"}
+          <div className="lg:col-span-1">
+            <div className="flex flex-col items-center rounded-2xl bg-white p-5 text-center shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <h2 className="mb-4 self-start font-display text-base font-semibold text-[#0D0D0D]">
+                Profile Picture
               </h2>
 
-              <p className="mt-1 text-sm text-[#F33B7D]">
-                {formData.specialization || "Specialization not added"}
-              </p>
-
-              <p className="mt-1 text-sm text-[#8F8C8C]">
-                {formData.email}
-              </p>
-
-              <p className="text-sm text-[#8F8C8C]">
-                {formData.phone || "Phone not added"}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 rounded-xl bg-[#FFF7F9] px-4 py-3">
-            <div className="flex items-start gap-3">
-              <Camera className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#F33B7D]" />
-
-              <div>
-                <p className="text-xs font-semibold text-[#3D3939]">
-                  Profile picture
-                </p>
-
-                <p className="mt-0.5 text-[11px] text-[#9E9E9E]">
-                  Profile picture upload can be connected when the
-                  doctor avatar upload endpoint is added.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* =========================================
-            Main Grid
-        ========================================= */}
-
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          {/* =====================================
-              Personal Information
-          ===================================== */}
-
-          <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 lg:col-span-2">
-            <div className="mb-5 flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
-                <User className="h-4 w-4" />
-              </span>
-
-              <div>
-                <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
-                  Personal Information
-                </h2>
-
-                <p className="text-xs text-[#B8AEB2]">
-                  Your basic account information
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <Field
-                  label="Full Name"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="Enter your full name"
-                  required
+              <div className="relative">
+                <Avatar
+                  name={formData.fullName || "Doctor"}
+                  image={formData.profilePicture}
+                  size="h-24 w-24 text-xl"
                 />
+
+                <label
+                  htmlFor="doctor-avatar"
+                  className={`absolute -bottom-1 -right-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-[#F33B7D] text-white shadow-[0_4px_10px_rgba(243,59,125,0.4)] transition hover:scale-105 ${
+                    avatarLoading
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }`}
+                  title="Change profile picture"
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                </label>
               </div>
 
-              <Field
-                label="Email Address"
-                name="email"
-                value={formData.email}
-                readOnly
-              />
+              {avatarMessage && (
+                <div
+                  className={`mt-4 text-sm font-medium ${
+                    avatarMessage.includes("successfully")
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {avatarMessage}
+                </div>
+              )}
 
-              <Field
-                label="Phone Number"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter phone number"
-              />
-            </div>
-          </div>
-
-          {/* =====================================
-              Verification Status
-          ===================================== */}
-
-          <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
-                <ShieldCheck className="h-4 w-4" />
-              </span>
-
-              <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
-                Verification
-              </h2>
-            </div>
-
-            <div className="rounded-xl bg-[#FEF4F4] p-4">
-              <p className="text-[10px] font-medium uppercase tracking-wide text-[#B8AEB2]">
-                Account Status
+              <p className="mt-4 text-[10px] text-[#B8AEB2]">
+                JPG, PNG or WEBP. Max size 5MB.
               </p>
 
-              <div className="mt-2 flex items-center gap-2">
-                <BadgeCheck className="h-5 w-5 text-green-500" />
+              <input
+                type="file"
+                id="doctor-avatar"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+                onChange={handleAvatarUpload}
+                disabled={avatarLoading}
+              />
 
-                <span className="text-sm font-semibold capitalize text-[#0D0D0D]">
-                  Verified
-                </span>
-              </div>
+              <label
+                htmlFor="doctor-avatar"
+                className={`mt-4 w-full cursor-pointer rounded-full px-4 py-2.5 text-center text-xs font-semibold text-white shadow-[0_8px_16px_-4px_rgba(243,59,125,0.4)] transition hover:-translate-y-0.5 ${
+                  avatarLoading && isUploading
+                    ? "cursor-not-allowed bg-gray-400"
+                    : "bg-[#F33B7D]"
+                }`}
+              >
+                {avatarLoading && isUploading
+                  ? "Uploading..."
+                  : "Change Photo"}
+              </label>
 
-              <p className="mt-2 text-[11px] leading-5 text-[#8F8C8C]">
-                Your professional verification details are managed
-                through the verification process.
-              </p>
+              {formData.profilePicture && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  disabled={avatarLoading}
+                  className={`mt-2 w-full rounded-full border border-[#F0DCE4] bg-white px-4 py-2.5 text-xs font-semibold text-[#F33B7D] transition ${
+                    avatarLoading && !isUploading
+                      ? "cursor-not-allowed opacity-50"
+                      : "hover:bg-[#FFF5F8]"
+                  }`}
+                >
+                  {avatarLoading && !isUploading
+                    ? "Removing..."
+                    : "Remove Photo"}
+                </button>
+              )}
             </div>
           </div>
 
-          {/* =====================================
-              Professional Information
-          ===================================== */}
+          {/* =========================================
+              Main Content (Right Side)
+          ========================================= */}
 
-          <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 lg:col-span-3">
-            <div className="mb-5 flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
-                <Stethoscope className="h-4 w-4" />
-              </span>
+          <div className="lg:col-span-3 space-y-4">
+            {/* =====================================
+                Personal Information
+            ===================================== */}
 
-              <div>
-                <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
-                  Professional Information
-                </h2>
-
-                <p className="text-xs text-[#B8AEB2]">
-                  Information patients can use to understand your
-                  professional background
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <Field
-                label="Specialization"
-                name="specialization"
-                value={formData.specialization}
-                onChange={handleChange}
-                placeholder="e.g. Gynaecology"
-                required
-              />
-
-              <Field
-                label="Hospital / Clinic"
-                name="hospital"
-                value={formData.hospital}
-                onChange={handleChange}
-                placeholder="Enter hospital or clinic"
-              />
-
-              <Field
-                label="Years of Experience"
-                name="yearsOfExperience"
-                type="number"
-                min="0"
-                value={formData.yearsOfExperience}
-                onChange={handleChange}
-                placeholder="e.g. 5"
-              />
-            </div>
-
-            {/* Information cards */}
-            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] p-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#F33B7D]">
-                  <Stethoscope className="h-4 w-4" />
-                </span>
-
-                <div>
-                  <p className="text-xs font-semibold text-[#0D0D0D]">
-                    Specialization
-                  </p>
-                  <p className="text-[10px] text-[#B8AEB2]">
-                    Your medical specialty
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] p-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#F33B7D]">
-                  <Building2 className="h-4 w-4" />
-                </span>
-
-                <div>
-                  <p className="text-xs font-semibold text-[#0D0D0D]">
-                    Hospital
-                  </p>
-                  <p className="text-[10px] text-[#B8AEB2]">
-                    Your workplace
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] p-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#F33B7D]">
-                  <BriefcaseMedical className="h-4 w-4" />
-                </span>
-
-                <div>
-                  <p className="text-xs font-semibold text-[#0D0D0D]">
-                    Experience
-                  </p>
-                  <p className="text-[10px] text-[#B8AEB2]">
-                    Years of practice
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* =====================================
-              Qualifications
-          ===================================== */}
-
-          <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 lg:col-span-3">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+            <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <div className="mb-5 flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
-                  <GraduationCap className="h-4 w-4" />
+                  <User className="h-4 w-4" />
                 </span>
 
                 <div>
                   <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
-                    Qualifications
+                    Personal Information
                   </h2>
 
                   <p className="text-xs text-[#B8AEB2]">
-                    Add your academic and professional qualifications
+                    Your basic account information
                   </p>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={addQualification}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#FEE4EB] px-3.5 py-2 text-xs font-semibold text-[#F33B7D] transition hover:bg-[#FCE4EB]"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add Qualification
-              </button>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <Field
+                    label="Full Name"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    placeholder="Enter your full name"
+                    required
+                  />
+                </div>
+
+                <Field
+                  label="Email Address"
+                  name="email"
+                  value={formData.email}
+                  readOnly
+                />
+
+                <Field
+                  label="Phone Number"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="Enter phone number"
+                />
+              </div>
             </div>
 
-            {qualifications.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#F0DCE4] bg-[#FFF9FA] px-5 py-8 text-center">
-                <GraduationCap className="mx-auto h-7 w-7 text-[#F33B7D]" />
+            {/* =====================================
+                Verification Status
+            ===================================== */}
 
-                <p className="mt-2 text-sm font-medium text-[#3D3939]">
-                  No qualifications added
+            <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
+                  <ShieldCheck className="h-4 w-4" />
+                </span>
+
+                <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
+                  Verification
+                </h2>
+              </div>
+
+              <div className="rounded-xl bg-[#FEF4F4] p-4">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-[#B8AEB2]">
+                  Account Status
                 </p>
 
-                <p className="mt-1 text-xs text-[#B8AEB2]">
-                  Add your degrees and institutions to strengthen your
-                  professional profile.
+                <div className="mt-2 flex items-center gap-2">
+                  <BadgeCheck className="h-5 w-5 text-green-500" />
+
+                  <span className="text-sm font-semibold capitalize text-[#0D0D0D]">
+                    Verified
+                  </span>
+                </div>
+
+                <p className="mt-2 text-[11px] leading-5 text-[#8F8C8C]">
+                  Your professional verification details are managed
+                  through the verification process.
                 </p>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {qualifications.map((qualification, index) => (
-                  <div
-                    key={index}
-                    className="rounded-xl bg-[#FEF4F4] p-4"
-                  >
-                    <div className="mb-3 flex items-center justify-between">
-                      <p className="text-xs font-semibold text-[#3D3939]">
-                        Qualification {index + 1}
-                      </p>
+            </div>
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          removeQualification(index)
-                        }
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[#F33B7D] transition hover:bg-white"
-                        title="Remove qualification"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
+            {/* =====================================
+                Professional Information
+            ===================================== */}
 
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                      <Field
-                        label="Degree"
-                        value={qualification.degree || ""}
-                        onChange={(e) =>
-                          handleQualificationChange(
-                            index,
-                            "degree",
-                            e.target.value
-                          )
-                        }
-                        placeholder="e.g. MBBS"
-                      />
+            <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <div className="mb-5 flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
+                  <Stethoscope className="h-4 w-4" />
+                </span>
 
-                      <Field
-                        label="Institution"
-                        value={qualification.institution || ""}
-                        onChange={(e) =>
-                          handleQualificationChange(
-                            index,
-                            "institution",
-                            e.target.value
-                          )
-                        }
-                        placeholder="e.g. Aga Khan University"
-                      />
+                <div>
+                  <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
+                    Professional Information
+                  </h2>
 
-                      <Field
-                        label="Completion Year"
-                        type="number"
-                        min="1900"
-                        max={new Date().getFullYear()}
-                        value={
-                          qualification.completionYear || ""
-                        }
-                        onChange={(e) =>
-                          handleQualificationChange(
-                            index,
-                            "completionYear",
-                            e.target.value
-                          )
-                        }
-                        placeholder="e.g. 2022"
-                      />
-                    </div>
+                  <p className="text-xs text-[#B8AEB2]">
+                    Information patients can use to understand your
+                    professional background
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <Field
+                  label="Specialization"
+                  name="specialization"
+                  value={formData.specialization}
+                  onChange={handleChange}
+                  placeholder="e.g. Gynaecology"
+                  required
+                />
+
+                <Field
+                  label="Hospital / Clinic"
+                  name="hospital"
+                  value={formData.hospital}
+                  onChange={handleChange}
+                  placeholder="Enter hospital or clinic"
+                />
+
+                <Field
+                  label="Years of Experience"
+                  name="yearsOfExperience"
+                  type="number"
+                  min="0"
+                  value={formData.yearsOfExperience}
+                  onChange={handleChange}
+                  placeholder="e.g. 5"
+                />
+              </div>
+
+              {/* Information cards */}
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] p-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#F33B7D]">
+                    <Stethoscope className="h-4 w-4" />
+                  </span>
+
+                  <div>
+                    <p className="text-xs font-semibold text-[#0D0D0D]">
+                      Specialization
+                    </p>
+                    <p className="text-[10px] text-[#B8AEB2]">
+                      Your medical specialty
+                    </p>
                   </div>
-                ))}
+                </div>
+
+                <div className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] p-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#F33B7D]">
+                    <Building2 className="h-4 w-4" />
+                  </span>
+
+                  <div>
+                    <p className="text-xs font-semibold text-[#0D0D0D]">
+                      Hospital
+                    </p>
+                    <p className="text-[10px] text-[#B8AEB2]">
+                      Your workplace
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] p-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#F33B7D]">
+                    <BriefcaseMedical className="h-4 w-4" />
+                  </span>
+
+                  <div>
+                    <p className="text-xs font-semibold text-[#0D0D0D]">
+                      Experience
+                    </p>
+                    <p className="text-[10px] text-[#B8AEB2]">
+                      Years of practice
+                    </p>
+                  </div>
+                </div>
               </div>
-            )}
+            </div>
+
+            {/* =====================================
+                Qualifications
+            ===================================== */}
+
+            <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
+                    <GraduationCap className="h-4 w-4" />
+                  </span>
+
+                  <div>
+                    <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
+                      Qualifications
+                    </h2>
+
+                    <p className="text-xs text-[#B8AEB2]">
+                      Add your academic and professional qualifications
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={addQualification}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#FEE4EB] px-3.5 py-2 text-xs font-semibold text-[#F33B7D] transition hover:bg-[#FCE4EB]"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Qualification
+                </button>
+              </div>
+
+              {qualifications.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-[#F0DCE4] bg-[#FFF9FA] px-5 py-8 text-center">
+                  <GraduationCap className="mx-auto h-7 w-7 text-[#F33B7D]" />
+
+                  <p className="mt-2 text-sm font-medium text-[#3D3939]">
+                    No qualifications added
+                  </p>
+
+                  <p className="mt-1 text-xs text-[#B8AEB2]">
+                    Add your degrees and institutions to strengthen your
+                    professional profile.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {qualifications.map((qualification, index) => (
+                    <div
+                      key={index}
+                      className="rounded-xl bg-[#FEF4F4] p-4"
+                    >
+                      <div className="mb-3 flex items-center justify-between">
+                        <p className="text-xs font-semibold text-[#3D3939]">
+                          Qualification {index + 1}
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            removeQualification(index)
+                          }
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#F33B7D] transition hover:bg-white"
+                          title="Remove qualification"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <Field
+                          label="Degree"
+                          value={qualification.degree || ""}
+                          onChange={(e) =>
+                            handleQualificationChange(
+                              index,
+                              "degree",
+                              e.target.value
+                            )
+                          }
+                          placeholder="e.g. MBBS"
+                        />
+
+                        <Field
+                          label="Institution"
+                          value={qualification.institution || ""}
+                          onChange={(e) =>
+                            handleQualificationChange(
+                              index,
+                              "institution",
+                              e.target.value
+                            )
+                          }
+                          placeholder="e.g. Aga Khan University"
+                        />
+
+                        <Field
+                          label="Completion Year"
+                          type="number"
+                          min="1900"
+                          max={new Date().getFullYear()}
+                          value={
+                            qualification.completionYear || ""
+                          }
+                          onChange={(e) =>
+                            handleQualificationChange(
+                              index,
+                              "completionYear",
+                              e.target.value
+                            )
+                          }
+                          placeholder="e.g. 2022"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

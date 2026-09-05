@@ -11,6 +11,8 @@ const {
   getClosedConsultations,
   getDoctorProfile,
   updateDoctorProfile,
+  uploadDoctorAvatar,
+  removeDoctorAvatar,
 } = require("../services/doctor.service");
 
 // Dashboard
@@ -109,6 +111,45 @@ exports.updateDoctorProfile = asyncHandler(async (req, res) => {
       200,
       "Doctor profile updated successfully.",
       profile
+    )
+  );
+});
+
+// =========================================
+// Upload Doctor Profile Picture
+// =========================================
+
+exports.uploadDoctorAvatar = asyncHandler(async (req, res) => {
+  const avatar = await uploadDoctorAvatar(
+    req.user.id,
+    req.file
+  );
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Doctor profile picture uploaded successfully.",
+      {
+        avatar,
+      }
+    )
+  );
+});
+
+// =========================================
+// Remove Doctor Profile Picture
+// =========================================
+
+exports.removeDoctorAvatar = asyncHandler(async (req, res) => {
+  const avatar = await removeDoctorAvatar(req.user.id);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Doctor profile picture removed successfully.",
+      {
+        avatar,
+      }
     )
   );
 });

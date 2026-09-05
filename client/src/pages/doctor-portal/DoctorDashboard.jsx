@@ -74,7 +74,7 @@ export default function DoctorDashboard() {
 
   return (
     <DoctorLayout
-      title={`Welcome , Dr. ${user?.fullName || ""} `}
+      title={`Welcome , ${user?.fullName || ""} `}
       subtitle="Here's what's happening today."
       showSearch
     >

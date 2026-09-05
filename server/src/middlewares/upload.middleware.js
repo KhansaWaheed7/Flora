@@ -2,7 +2,6 @@ const multer = require("multer");
 
 const storage = multer.memoryStorage();
 
-// Create multer instance
 const upload = multer({
   storage,
   limits: {
@@ -28,7 +27,10 @@ const upload = multer({
   },
 });
 
-// Middleware for single file upload
+// =========================================
+// Document Upload
+// =========================================
+
 const handleSingleUpload = (req, res, next) => {
   upload.single("document")(req, res, (error) => {
     if (error instanceof multer.MulterError) {
@@ -56,6 +58,37 @@ const handleSingleUpload = (req, res, next) => {
   });
 };
 
-// Export the multer instance and middleware
+// =========================================
+// Avatar Upload
+// =========================================
+
+const handleAvatarUpload = (req, res, next) => {
+  upload.single("avatar")(req, res, (error) => {
+    if (error instanceof multer.MulterError) {
+      if (error.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({
+          success: false,
+          message: "Profile picture must not exceed 5 MB.",
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    next();
+  });
+};
+
 module.exports = upload;
 module.exports.handleSingleUpload = handleSingleUpload;
+module.exports.handleAvatarUpload = handleAvatarUpload;

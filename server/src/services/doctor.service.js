@@ -1,6 +1,8 @@
 const Chat = require("../models/Chat");
 const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
+const cloudinary = require("../config/cloudinary");
+const streamifier = require("streamifier");
 const {
   emitToUser,
 } = require("../socket/services/socketEmitter");
@@ -385,6 +387,145 @@ const updateDoctorProfile = async (doctorId, data) => {
   };
 };
 
+// =========================================
+// Upload Doctor Profile Picture
+// =========================================
+
+const uploadDoctorAvatar = async (doctorId, file) => {
+  if (!file) {
+    throw new ApiError(400, "No image file provided.");
+  }
+
+  const doctor = await User.findOne({
+    _id: doctorId,
+    role: "doctor",
+  });
+
+  if (!doctor) {
+    throw new ApiError(404, "Doctor profile not found.");
+  }
+
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "flora/doctors/profile",
+          resource_type: "image",
+        },
+        (error, result) => {
+          if (error) {
+            console.error(
+              "Cloudinary doctor avatar upload error:",
+              error
+            );
+
+            return reject(error);
+          }
+
+          resolve(result);
+        }
+      );
+
+      streamifier
+        .createReadStream(file.buffer)
+        .pipe(stream);
+    });
+
+    console.log(
+      "Doctor profile picture uploaded:",
+      result.secure_url
+    );
+
+    // If doctor already has an old Cloudinary image,
+    // delete it before saving the new one.
+    if (doctor.profilePicture) {
+      try {
+        const urlParts = doctor.profilePicture.split("/upload/");
+
+        if (urlParts.length === 2) {
+          let publicId = urlParts[1];
+
+          // Remove version: v123456789/
+          publicId = publicId.replace(/^v\d+\//, "");
+
+          // Remove extension
+          publicId = publicId.replace(/\.[^/.]+$/, "");
+
+          await cloudinary.uploader.destroy(publicId);
+        }
+      } catch (deleteError) {
+        console.error(
+          "Failed to delete old doctor profile picture:",
+          deleteError
+        );
+      }
+    }
+
+    doctor.profilePicture = result.secure_url;
+
+    await doctor.save();
+
+    return doctor.profilePicture;
+  } catch (error) {
+    console.error(
+      "Doctor avatar upload failed:",
+      error
+    );
+
+    throw new ApiError(
+      500,
+      error.message || "Failed to upload profile picture."
+    );
+  }
+};
+
+// =========================================
+// Remove Doctor Profile Picture
+// =========================================
+
+const removeDoctorAvatar = async (doctorId) => {
+  const doctor = await User.findOne({
+    _id: doctorId,
+    role: "doctor",
+  });
+
+  if (!doctor) {
+    throw new ApiError(404, "Doctor profile not found.");
+  }
+
+  // Nothing to remove
+  if (!doctor.profilePicture) {
+    return "";
+  }
+
+  try {
+    const urlParts = doctor.profilePicture.split("/upload/");
+
+    if (urlParts.length === 2) {
+      let publicId = urlParts[1];
+
+      // Remove version: v123456789/
+      publicId = publicId.replace(/^v\d+\//, "");
+
+      // Remove extension
+      publicId = publicId.replace(/\.[^/.]+$/, "");
+
+      await cloudinary.uploader.destroy(publicId);
+    }
+  } catch (error) {
+    console.error(
+      "Failed to delete doctor profile picture from Cloudinary:",
+      error
+    );
+  }
+
+  doctor.profilePicture = "";
+
+  await doctor.save();
+
+  return "";
+};
+
 module.exports = {
   getDashboard,
   getPendingRequests,
@@ -393,7 +534,8 @@ module.exports = {
   getAssignedPatients,
   closeConsultation,
   getClosedConsultations,
-
   getDoctorProfile,
   updateDoctorProfile,
+  uploadDoctorAvatar,
+  removeDoctorAvatar,
 };
