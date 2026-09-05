@@ -10,19 +10,18 @@ const {
   getConversations,
 } = require("../services/chat.service");
 
-
+// =========================================
 // Create Consultation Request
-
+// =========================================
 
 exports.createChat = asyncHandler(async (req, res) => {
-
   const validatedData = createChatSchema.parse(req.body);
 
   const chat = await createChat(
-  req.user.id,
-  validatedData.doctorId,
-  validatedData.reason
-);
+    req.user.id,
+    validatedData.doctorId,
+    validatedData.reason
+  );
 
   res.status(201).json(
     new ApiResponse(
@@ -31,14 +30,14 @@ exports.createChat = asyncHandler(async (req, res) => {
       chat
     )
   );
-
 });
 
+// =========================================
 // Get Available Doctors
+// =========================================
 
 exports.getAvailableDoctors = asyncHandler(async (req, res) => {
-
-  const doctors = await getAvailableDoctors();
+  const doctors = await getAvailableDoctors(req.user.id);
 
   res.status(200).json(
     new ApiResponse(
@@ -47,17 +46,14 @@ exports.getAvailableDoctors = asyncHandler(async (req, res) => {
       doctors
     )
   );
-
 });
 
-
+// =========================================
 // Get Conversations
+// =========================================
 
 exports.getConversations = asyncHandler(async (req, res) => {
-
-  const conversations = await getConversations(
-    req.user.id
-  );
+  const conversations = await getConversations(req.user.id);
 
   res.status(200).json(
     new ApiResponse(
@@ -66,18 +62,14 @@ exports.getConversations = asyncHandler(async (req, res) => {
       conversations
     )
   );
-
 });
 
-
+// =========================================
 // Get My Consultation Requests
-
+// =========================================
 
 exports.getMyRequests = asyncHandler(async (req, res) => {
-
-  const requests = await getMyRequests(
-    req.user.id
-  );
+  const requests = await getMyRequests(req.user.id);
 
   res.status(200).json(
     new ApiResponse(
@@ -86,5 +78,4 @@ exports.getMyRequests = asyncHandler(async (req, res) => {
       requests
     )
   );
-
 });

@@ -1,17 +1,15 @@
 const Chat = require("../models/Chat");
 const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
-const {
-  emitToUser,
-} = require("../socket/services/socketEmitter");
 
+const { emitToUser } = require("../socket/services/socketEmitter");
 const SocketEvents = require("../constants/socketEvents");
+
 // =========================================
 // Create Consultation Request
 // =========================================
 
 const createChat = async (patientId, doctorId, reason) => {
-
   if (patientId === doctorId) {
     throw new ApiError(
       400,
@@ -29,25 +27,25 @@ const createChat = async (patientId, doctorId, reason) => {
   }
 
   if (doctor.role !== "doctor") {
-  throw new ApiError(
-    400,
-    "Selected user is not a doctor."
-  );
-}
+    throw new ApiError(
+      400,
+      "Selected user is not a doctor."
+    );
+  }
 
-if (doctor.doctorVerification?.status !== "verified") {
-  throw new ApiError(
-    400,
-    "Doctor is not verified."
-  );
-}
+  if (doctor.doctorVerification?.status !== "verified") {
+    throw new ApiError(
+      400,
+      "Doctor is not verified."
+    );
+  }
 
-if (!doctor.isEmailVerified) {
-  throw new ApiError(
-    400,
-    "Doctor account is not verified."
-  );
-}
+  if (!doctor.isEmailVerified) {
+    throw new ApiError(
+      400,
+      "Doctor account is not verified."
+    );
+  }
 
   const existingChat = await Chat.findOne({
     patient: patientId,
@@ -65,31 +63,31 @@ if (!doctor.isEmailVerified) {
   }
 
   const chat = await Chat.create({
-  participants: [
-    patientId,
-    doctorId,
-  ],
-  initiatedBy: patientId,
-  reason,
-  patient: patientId,
-  doctor: doctorId,
-  status: "pending",
-});
+    participants: [
+      patientId,
+      doctorId,
+    ],
+    initiatedBy: patientId,
+    reason,
+    patient: patientId,
+    doctor: doctorId,
+    status: "pending",
+  });
 
   await chat.populate(
-  "patient",
-  "fullName profilePicture"
-);
+    "patient",
+    "fullName profilePicture"
+  );
 
-emitToUser(
-  doctorId,
-  SocketEvents.NEW_CONSULTATION_REQUEST,
-  {
-    chatId: chat._id,
-    patient: chat.patient,
-    createdAt: chat.createdAt,
-  }
-);
+  emitToUser(
+    doctorId,
+    SocketEvents.NEW_CONSULTATION_REQUEST,
+    {
+      chatId: chat._id,
+      patient: chat.patient,
+      createdAt: chat.createdAt,
+    }
+  );
 
   return chat;
 };
@@ -98,22 +96,53 @@ emitToUser(
 // Get Available Doctors
 // =========================================
 
-const getAvailableDoctors = async () => {
-
+const getAvailableDoctors = async (patientId) => {
   const doctors = await User.find({
-  role: "doctor",
-  "doctorVerification.status": "verified",
-  isEmailVerified: true,
-})
+    role: "doctor",
+    "doctorVerification.status": "verified",
+    isEmailVerified: true,
+  })
     .select(
-      "fullName specialization hospital yearsOfExperience profilePicture"
+      "fullName specialization hospital yearsOfExperience profilePicture city consultationFee qualifications areasOfExpertise languages bio doctorVerification"
     )
     .sort({
       fullName: 1,
-    });
+    })
+    .lean();
 
-  return doctors;
+  // -----------------------------------------
+  // Find active chats for this patient
+  // -----------------------------------------
 
+  const activeChats = await Chat.find({
+    patient: patientId,
+    status: "active",
+  })
+    .select("doctor")
+    .lean();
+
+  const activeDoctorIds = new Set(
+    activeChats.map((chat) =>
+      chat.doctor.toString()
+    )
+  );
+
+  // -----------------------------------------
+  // Add hasActiveChat to every doctor
+  // -----------------------------------------
+
+  const doctorsWithChatStatus = doctors.map((doctor) => ({
+    ...doctor,
+
+    hasActiveChat: activeDoctorIds.has(
+      doctor._id.toString()
+    ),
+
+    verificationStatus:
+      doctor.doctorVerification?.status || null,
+  }));
+
+  return doctorsWithChatStatus;
 };
 
 // =========================================
@@ -121,7 +150,6 @@ const getAvailableDoctors = async () => {
 // =========================================
 
 const getMyRequests = async (patientId) => {
-
   const chats = await Chat.find({
     patient: patientId,
   })
@@ -134,7 +162,6 @@ const getMyRequests = async (patientId) => {
     });
 
   return chats;
-
 };
 
 // =========================================
@@ -142,15 +169,11 @@ const getMyRequests = async (patientId) => {
 // =========================================
 
 const getConversations = async (userId) => {
-
   const chats = await Chat.find({
-
     participants: userId,
-
     status: {
       $in: ["active", "pending"],
     },
-
   })
     .populate(
       "patient",
@@ -174,47 +197,37 @@ const getConversations = async (userId) => {
     });
 
   const conversations = chats.map((chat) => {
+    const isPatient =
+      chat.patient._id.toString() === userId.toString();
 
-  const isPatient =
-    chat.patient._id.toString() === userId.toString();
+    const otherParticipant = isPatient
+      ? chat.doctor
+      : chat.patient;
 
-  const otherParticipant = isPatient
-    ? chat.doctor
-    : chat.patient;
+    return {
+      _id: chat._id,
+      status: chat.status,
+      createdAt: chat.createdAt,
+      updatedAt: chat.updatedAt,
+      lastMessageAt: chat.lastMessageAt,
+      otherParticipant,
 
-  return {
+      lastMessage: chat.lastMessage
+        ? {
+            _id: chat.lastMessage._id,
+            message: chat.lastMessage.message,
+            sender: chat.lastMessage.sender,
+            createdAt: chat.lastMessage.createdAt,
+          }
+        : null,
 
-    _id: chat._id,
+      unreadCount: isPatient
+        ? chat.unreadCounts.patient
+        : chat.unreadCounts.doctor,
+    };
+  });
 
-    status: chat.status,
-
-    createdAt: chat.createdAt,
-
-    updatedAt: chat.updatedAt,
-
-    lastMessageAt: chat.lastMessageAt,
-
-    otherParticipant,
-
-    lastMessage: chat.lastMessage
-      ? {
-          _id: chat.lastMessage._id,
-          message: chat.lastMessage.message,
-          sender: chat.lastMessage.sender,
-          createdAt: chat.lastMessage.createdAt,
-        }
-      : null,
-
-    unreadCount: isPatient
-      ? chat.unreadCounts.patient
-      : chat.unreadCounts.doctor,
-
-  };
-
-});
-
-return conversations;
-
+  return conversations;
 };
 
 module.exports = {

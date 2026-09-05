@@ -47,6 +47,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import DoctorApproval from "./pages/admin/DoctorApproval";
 import DoctorDetails from "./pages/admin/DoctorDetails";
 import UsersManagement from "./pages/admin/UsersManagement";
+import DoctorManagement from "./pages/admin/DoctorManagement";
 import ChatMonitoring from "./pages/admin/ChatMonitoring";
 import Consultations from "./pages/admin/Consultations";
 import Notifications from "./pages/admin/Notifications";
@@ -84,6 +85,7 @@ import ConsultationClosed from "./pages/chat/ConsultationClosed";
 import DoctorMessages from "./pages/doctor-portal/DoctorMessages";
 import DoctorSchedule from "./pages/doctor-portal/DoctorSchedule";
 import DoctorProfile from "./pages/doctor-portal/DoctorProfile";
+import PatientDoctorProfile from "./pages/chat/DoctorProfile";
 import DoctorProfileDetails from "./pages/doctor-portal/DoctorProfileDetails";
 import DoctorEditProfile from "./pages/doctor-portal/DoctorEditProfile";
 import DoctorSettings from "./pages/doctor-portal/DoctorSettings";
@@ -407,13 +409,13 @@ function App() {
       />
 
       <Route
-        path="/chat/doctors/:id"
-        element={
-          <ProtectedRoute>
-            <DoctorProfile />
-          </ProtectedRoute>
-        }
-      />
+  path="/chat/doctors/:id"
+  element={
+    <ProtectedRoute>
+      <PatientDoctorProfile />
+    </ProtectedRoute>
+  }
+/>
 
       <Route
         path="/chat/request-sent"
@@ -488,6 +490,8 @@ function App() {
         }
       />
 
+      
+
       <Route
         path="/admin/doctor-details/:id"
         element={
@@ -496,6 +500,15 @@ function App() {
           </AdminRoute>
         }
       />
+
+      <Route
+  path="/admin/doctors"
+  element={
+    <AdminRoute>
+      <DoctorManagement />
+    </AdminRoute>
+  }
+/>
 
       <Route
         path="/admin/users"

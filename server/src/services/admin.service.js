@@ -14,23 +14,46 @@ const getPendingDoctors = async () => {
 };
 
 // =========================================
-// All Doctors — Search + Pagination
+// Verified Doctors — Search + Pagination
 // =========================================
-
 const getDoctors = async (
   page = 1,
   limit = 10,
   search = ""
 ) => {
   const skip = (page - 1) * limit;
-  const filter = { role: "doctor" };
+
+  const filter = {
+    role: "doctor",
+    "doctorVerification.status": "verified",
+  };
 
   if (search.trim()) {
     filter.$or = [
-      { fullName: { $regex: search.trim(), $options: "i" } },
-      { email: { $regex: search.trim(), $options: "i" } },
-      { specialization: { $regex: search.trim(), $options: "i" } },
-      { hospital: { $regex: search.trim(), $options: "i" } },
+      {
+        fullName: {
+          $regex: search.trim(),
+          $options: "i",
+        },
+      },
+      {
+        email: {
+          $regex: search.trim(),
+          $options: "i",
+        },
+      },
+      {
+        specialization: {
+          $regex: search.trim(),
+          $options: "i",
+        },
+      },
+      {
+        hospital: {
+          $regex: search.trim(),
+          $options: "i",
+        },
+      },
     ];
   }
 
@@ -40,6 +63,7 @@ const getDoctors = async (
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
+
     User.countDocuments(filter),
   ]);
 
@@ -132,13 +156,27 @@ const getDashboardStats = async () => {
     pendingDoctors,
     suspendedAccounts,
   ] = await Promise.all([
-    User.countDocuments({ role: "user" }),
-    User.countDocuments({ role: "doctor" }),
+    // Only email-verified patients
+    User.countDocuments({
+      role: "user",
+      isEmailVerified: true,
+    }),
+
+    // Only admin-approved / verified doctors
+    User.countDocuments({
+      role: "doctor",
+      "doctorVerification.status": "verified",
+    }),
+
+    // Doctors waiting for admin approval
     User.countDocuments({
       role: "doctor",
       "doctorVerification.status": "pending",
     }),
-    User.countDocuments({ accountStatus: "suspended" }),
+
+    User.countDocuments({
+      accountStatus: "suspended",
+    }),
   ]);
 
   return {
