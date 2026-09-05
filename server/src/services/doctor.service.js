@@ -1,4 +1,5 @@
 const Chat = require("../models/Chat");
+const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const {
   emitToUser,
@@ -258,6 +259,132 @@ const closeConsultation = async (doctorId, chatId) => {
   return chat;
 };
 
+// =========================================
+// Get Doctor Profile
+// =========================================
+
+const getDoctorProfile = async (doctorId) => {
+  const doctor = await User.findOne({
+    _id: doctorId,
+    role: "doctor",
+  }).select(
+    "fullName email phone age profilePicture specialization hospital yearsOfExperience bio areasOfExpertise languages city consultationFee doctorVerification"
+  );
+
+  if (!doctor) {
+    throw new ApiError(404, "Doctor profile not found.");
+  }
+
+  return {
+    _id: doctor._id,
+    fullName: doctor.fullName,
+    email: doctor.email,
+    phone: doctor.phone,
+    profilePicture: doctor.profilePicture,
+
+    specialization: doctor.specialization,
+    hospital: doctor.hospital,
+    yearsOfExperience: doctor.yearsOfExperience,
+
+    qualifications: doctor.doctorVerification?.qualifications || [],
+
+    bio: doctor.bio,
+    areasOfExpertise: doctor.areasOfExpertise || [],
+    languages: doctor.languages || [],
+    city: doctor.city,
+    consultationFee: doctor.consultationFee,
+
+    verificationStatus: doctor.doctorVerification?.status || "pending",
+  };
+};
+
+// =========================================
+// Update Doctor Profile
+// =========================================
+
+const updateDoctorProfile = async (doctorId, data) => {
+  const doctor = await User.findOne({
+    _id: doctorId,
+    role: "doctor",
+  });
+
+  if (!doctor) {
+    throw new ApiError(404, "Doctor profile not found.");
+  }
+
+  // -----------------------------------------
+  // Basic Profile
+  // -----------------------------------------
+
+  if (data.fullName !== undefined) {
+    doctor.fullName = data.fullName;
+  }
+
+  if (data.phone !== undefined) {
+    doctor.phone = data.phone;
+  }
+
+  if (data.profilePicture !== undefined) {
+    doctor.profilePicture = data.profilePicture;
+  }
+
+  // -----------------------------------------
+  // Professional Profile
+  // -----------------------------------------
+
+  if (data.hospital !== undefined) {
+    doctor.hospital = data.hospital;
+  }
+
+  if (data.yearsOfExperience !== undefined) {
+    doctor.yearsOfExperience = data.yearsOfExperience;
+  }
+
+  if (data.bio !== undefined) {
+    doctor.bio = data.bio;
+  }
+
+  if (data.areasOfExpertise !== undefined) {
+    doctor.areasOfExpertise = data.areasOfExpertise;
+  }
+
+  if (data.languages !== undefined) {
+    doctor.languages = data.languages;
+  }
+
+  if (data.city !== undefined) {
+    doctor.city = data.city;
+  }
+
+  if (data.consultationFee !== undefined) {
+    doctor.consultationFee = data.consultationFee;
+  }
+
+  await doctor.save();
+
+  return {
+    _id: doctor._id,
+    fullName: doctor.fullName,
+    email: doctor.email,
+    phone: doctor.phone,
+    profilePicture: doctor.profilePicture,
+
+    specialization: doctor.specialization,
+    hospital: doctor.hospital,
+    yearsOfExperience: doctor.yearsOfExperience,
+
+    qualifications: doctor.doctorVerification?.qualifications || [],
+
+    bio: doctor.bio,
+    areasOfExpertise: doctor.areasOfExpertise || [],
+    languages: doctor.languages || [],
+    city: doctor.city,
+    consultationFee: doctor.consultationFee,
+
+    verificationStatus: doctor.doctorVerification?.status || "pending",
+  };
+};
+
 module.exports = {
   getDashboard,
   getPendingRequests,
@@ -266,4 +393,7 @@ module.exports = {
   getAssignedPatients,
   closeConsultation,
   getClosedConsultations,
+
+  getDoctorProfile,
+  updateDoctorProfile,
 };

@@ -6,7 +6,6 @@ const { protect } = require("../middlewares/auth.middleware");
 const authorize = require("../middlewares/authorize.middleware");
 
 const ROLES = require("../constants/roles");
-
 const {
   getDashboard,
   getPendingRequests,
@@ -15,8 +14,28 @@ const {
   rejectConsultation,
   closeConsultation,
   getClosedConsultations,
+  getDoctorProfile,
+  updateDoctorProfile,
 } = require("../controllers/doctor.controller");
 
+
+// =========================================
+// Doctor Profile
+// =========================================
+
+router.get(
+  "/profile",
+  protect,
+  authorize(ROLES.DOCTOR),
+  getDoctorProfile
+);
+
+router.patch(
+  "/profile",
+  protect,
+  authorize(ROLES.DOCTOR),
+  updateDoctorProfile
+);
 // =========================================
 // Dashboard
 // =========================================

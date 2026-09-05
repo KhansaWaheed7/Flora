@@ -29,7 +29,6 @@ export default function DoctorLayout({
         setCounts((prev) => ({
   ...prev,
   pendingRequests: data.pendingRequests,
-  activePatients: data.activePatients,
   closedConsultations: data.closedConsultations,
   unreadMessages: data.unreadMessages,
   notificationCount:

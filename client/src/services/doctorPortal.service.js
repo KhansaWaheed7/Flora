@@ -70,3 +70,14 @@ export const getConversations = async () => {
   const response = await api.get("/chat/conversations");
   return response.data.data;
 };
+
+
+export const getDoctorProfile = async () => {
+  const response = await api.get("/doctor/profile");
+  return response.data;
+};
+
+export const updateDoctorProfile = async (data) => {
+  const response = await api.patch("/doctor/profile", data);
+  return response.data;
+};

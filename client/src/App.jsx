@@ -84,6 +84,8 @@ import ConsultationClosed from "./pages/chat/ConsultationClosed";
 import DoctorMessages from "./pages/doctor-portal/DoctorMessages";
 import DoctorSchedule from "./pages/doctor-portal/DoctorSchedule";
 import DoctorProfile from "./pages/doctor-portal/DoctorProfile";
+import DoctorProfileDetails from "./pages/doctor-portal/DoctorProfileDetails";
+import DoctorEditProfile from "./pages/doctor-portal/DoctorEditProfile";
 import DoctorSettings from "./pages/doctor-portal/DoctorSettings";
 
 function App() {
@@ -619,6 +621,23 @@ function App() {
       <DoctorProfile />
     </DoctorRoute>
   }
+/>
+<Route
+  path="/doctor/profile/details"
+  element={
+    <DoctorRoute>
+      <DoctorProfileDetails />
+    </DoctorRoute>
+  }
+/>
+<Route
+  path="/doctor/profile/edit"
+  element={
+    <DoctorRoute>
+      <DoctorEditProfile />
+    </DoctorRoute>
+  }
+  
 />
 
 <Route

@@ -240,10 +240,47 @@ const userSchema = new mongoose.Schema(
     // Profile
     // =========================================
 
-    profilePicture: {
-      type: String,
-      default: "",
-    },
+    // =========================================
+// Profile
+// =========================================
+
+profilePicture: {
+  type: String,
+  default: "",
+},
+
+// =========================================
+// Doctor Public Profile
+// =========================================
+
+bio: {
+  type: String,
+  default: "",
+  trim: true,
+  maxlength: 1000,
+},
+
+areasOfExpertise: {
+  type: [String],
+  default: [],
+},
+
+languages: {
+  type: [String],
+  default: [],
+},
+
+city: {
+  type: String,
+  default: "",
+  trim: true,
+},
+
+consultationFee: {
+  type: Number,
+  min: 0,
+  default: null,
+},
   },
   {
     timestamps: true,

@@ -9,6 +9,8 @@ const {
   getAssignedPatients,
   closeConsultation,
   getClosedConsultations,
+  getDoctorProfile,
+  updateDoctorProfile,
 } = require("../services/doctor.service");
 
 // Dashboard
@@ -73,6 +75,40 @@ exports.getClosedConsultations = asyncHandler(async (req, res) => {
       200,
       "Closed consultations fetched successfully.",
       consultations
+    )
+  );
+});
+// =========================================
+// Doctor Profile
+// =========================================
+
+exports.getDoctorProfile = asyncHandler(async (req, res) => {
+  const profile = await getDoctorProfile(req.user.id);
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Doctor profile fetched successfully.",
+      profile
+    )
+  );
+});
+
+// =========================================
+// Update Doctor Profile
+// =========================================
+
+exports.updateDoctorProfile = asyncHandler(async (req, res) => {
+  const profile = await updateDoctorProfile(
+    req.user.id,
+    req.body
+  );
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      "Doctor profile updated successfully.",
+      profile
     )
   );
 });
