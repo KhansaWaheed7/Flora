@@ -1,14 +1,18 @@
 import { Navigate } from "react-router-dom";
-import { isAuthenticated, getCurrentUser } from "../utils/auth";
+import { useAuth } from "../context/AuthContext";
 
 export default function DoctorRoute({ children }) {
-  if (!isAuthenticated()) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  const user = getCurrentUser();
-
-  if (user?.role !== "doctor") {
+  if (user.role !== "doctor") {
     return <Navigate to="/dashboard" replace />;
   }
 
