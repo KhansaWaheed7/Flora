@@ -404,7 +404,7 @@ const handleOpenAttachment = async (message) => {
           <Avatar name={doctor?.fullName} image={doctor?.profilePicture} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-[#0D0D0D]">
-              Dr. {doctor?.fullName}
+               {doctor?.fullName}
             </p>
             <p className="text-xs text-[#8F8C8C]">
               {otherTyping ? "Typing..." : doctor?.specialization}

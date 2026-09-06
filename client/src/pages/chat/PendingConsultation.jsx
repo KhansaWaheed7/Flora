@@ -101,7 +101,7 @@ export default function PendingConsultation() {
           <div className="mt-6 flex flex-col items-center gap-2 rounded-xl bg-[#FEF4F4] p-4">
             <Avatar name={doctor?.fullName} image={doctor?.profilePicture} />
             <p className="text-sm font-semibold text-[#0D0D0D]">
-              Dr. {doctor?.fullName}
+              {doctor?.fullName}
             </p>
             <p className="text-xs text-[#8F8C8C]">
               {doctor?.specialization || "General Physician"}

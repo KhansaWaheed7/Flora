@@ -41,7 +41,7 @@ function NavItem({ icon: Icon, label, path, active, badge, onClick }) {
 export default function DoctorSidebar({
   sidebarOpen,
   setSidebarOpen,
-  user = { fullName: "Doctor" },
+  user = { fullName: "Doctor", email: "" },
   counts = {},
 }) {
   const location = useLocation();
@@ -77,6 +77,34 @@ export default function DoctorSidebar({
     { icon: User, label: "Profile", path: "/doctor/profile" },
     { icon: Settings, label: "Settings", path: "/doctor/settings" },
   ];
+
+  const handleContactAdmin = () => {
+    const to = "flora.app.project@gmail.com";
+    const subject = "Support Request from Doctor";
+    const body = 
+      `Hello Admin,\n\n` +
+      `I am writing to request assistance. Please find my details below:\n\n` +
+      `Doctor Name: ${user?.fullName || "Doctor"}\n` +
+      `Email: ${user?.email || "Not provided"}\n` +
+      `Issue: \n\n` +
+      `Please describe your issue here.\n\n` +
+      `Thank you for your support.\n\n` +
+      `Best regards,\n${user?.fullName || "Doctor"}`;
+
+    // Method 1: Open Gmail compose in new tab (for Gmail users)
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // Method 2: Fallback - Open default email client
+    const mailtoUrl = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    // Try to open Gmail first, if it fails, use mailto
+    const gmailWindow = window.open(gmailUrl, '_blank');
+    
+    // If Gmail couldn't be opened (popup blocked), use mailto as fallback
+    if (!gmailWindow || gmailWindow.closed || typeof gmailWindow.closed === 'undefined') {
+      window.location.href = mailtoUrl;
+    }
+  };
 
   return (
     <>
@@ -118,12 +146,12 @@ export default function DoctorSidebar({
             <p className="mt-0.5 text-[11px] text-[#8F8C8C]">
               We're here to support you.
             </p>
-            <Link
-              to="/doctor/support"
+            <button
+              onClick={handleContactAdmin}
               className="mt-3 inline-block w-full rounded-lg bg-[#F33B7D] px-3 py-2 text-xs font-semibold text-white hover:bg-[#d92b6b] transition-colors"
             >
               Contact Admin
-            </Link>
+            </button>
           </div>
         </div>
       </aside>

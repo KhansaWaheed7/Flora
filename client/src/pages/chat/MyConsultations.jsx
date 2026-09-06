@@ -172,7 +172,7 @@ export default function MyConsultations() {
                 <Avatar name={c.doctor?.fullName} image={c.doctor?.profilePicture} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-[#0D0D0D]">
-                    Dr. {c.doctor?.fullName}
+                    {c.doctor?.fullName}
                   </p>
                   <p className="truncate text-xs text-[#8F8C8C]">
                     {c.doctor?.specialization || "General Physician"}
