@@ -3,6 +3,7 @@ const ApiError = require("../utils/ApiError");
 const PregnancyWeek = require("../models/PregnancyWeek");
 const generatePregnancyReminders = require("../utils/generatePregnancyReminders");
 const PregnancyReminder = require("../models/PregnancyReminder");
+const { createNotification } = require("./notification.service");
 
 const {
   calculateDueDate,
@@ -62,6 +63,15 @@ if (daysDifference > 294) {
 });
 await generatePregnancyReminders(pregnancy._id);
 
+await createNotification({
+  userId,
+  type: "pregnancy",
+  title: "Pregnancy tracking started",
+  message: "Your pregnancy profile and weekly reminders are ready.",
+  link: "/pregnancy",
+  uniqueKey: `pregnancy-created-${pregnancy._id}`,
+  metadata: { pregnancyId: pregnancy._id },
+});
 
 return pregnancy;
 };
@@ -223,6 +233,16 @@ const endPregnancy = async (userId) => {
   pregnancy.isActive = false;
 
   await pregnancy.save();
+
+  await createNotification({
+    userId,
+    type: "pregnancy",
+    title: "Pregnancy tracking ended",
+    message: "Your active pregnancy tracker has been closed.",
+    link: "/pregnancy",
+    uniqueKey: `pregnancy-ended-${pregnancy._id}-${pregnancy.updatedAt?.getTime() || Date.now()}`,
+    metadata: { pregnancyId: pregnancy._id },
+  });
 
   return pregnancy;
 };

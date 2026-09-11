@@ -55,6 +55,7 @@ import { getCycleDashboard, getPrediction, getCycles } from "../../services/cycl
 import { getConversations } from "../../services/chat.service";
 import { getAssessmentHistory } from "../../services/pcos.service";
 import { getPregnancyDashboard, trimesterLabel } from "../../services/pregnancy.service";
+import { getNotifications } from "../../services/notification.service";
 
 // Keep static stats structure but we'll update values dynamically
 const statsConfig = [
@@ -91,14 +92,14 @@ const statsConfig = [
     icon: Baby,
   },
   {
-  label: "Unread Messages",
-  key: "unreadMessages",
-  value: 0,
-  unit: "",
-  sub: "From Doctor",
-  color: "#3B82F6",
-  icon: MessageCircle,
-},
+    label: "Unread Messages",
+    key: "unreadMessages",
+    value: 0,
+    unit: "",
+    sub: "From Doctor",
+    color: "#3B82F6",
+    icon: MessageCircle,
+  },
 ];
 
 // Keep static insights
@@ -195,71 +196,80 @@ const reminders = [
 
 // Enhanced Quick Actions with matching background colors
 const quickActions = [
-  { 
-    icon: Calendar, 
-    label: "Log Period", 
+  {
+    icon: Calendar,
+    label: "Log Period",
     path: "/cycle-tracker/log",
     description: "Track your cycle",
     iconColor: "#F33B7D",
-    bgColor: "#FEE4EB"
+    bgColor: "#FEE4EB",
   },
-  { 
-    icon: ShieldCheck, 
-    label: "PCOS Assessment", 
+  {
+    icon: ShieldCheck,
+    label: "PCOS Assessment",
     path: "/pcos-detection",
     description: "Check your risk",
     iconColor: "#F33B7D",
-    bgColor: "#FEE4EB"
+    bgColor: "#FEE4EB",
   },
-  { 
-    icon: Upload, 
-    label: "Upload Report", 
+  {
+    icon: Upload,
+    label: "Upload Report",
     path: "#",
     description: "Analyze health data",
     iconColor: "#F33B7D",
-    bgColor: "#FEE4EB"
+    bgColor: "#FEE4EB",
   },
-  { 
-    icon: MessageCircle, 
-    label: "Talk to Doctor", 
+  {
+    icon: MessageCircle,
+    label: "Talk to Doctor",
     path: "#",
     description: "Get expert advice",
     iconColor: "#F33B7D",
-    bgColor: "#FEE4EB"
+    bgColor: "#FEE4EB",
   },
-  { 
-    icon: Bot, 
-    label: "Gynae Assistant", 
+  {
+    icon: Bot,
+    label: "Gynae Assistant",
     path: "#",
     description: "AI health guidance",
     iconColor: "#F33B7D",
-    bgColor: "#FEE4EB"
+    bgColor: "#FEE4EB",
   },
-  { 
-    icon: BookOpen, 
-    label: "Health Education", 
+  {
+    icon: BookOpen,
+    label: "Health Education",
     path: "#",
     description: "Learn more",
     iconColor: "#F33B7D",
-    bgColor: "#FEE4EB"
+    bgColor: "#FEE4EB",
   },
-  { 
-    icon: Apple, 
-    label: "Diet & Nutrition", 
+  {
+    icon: Apple,
+    label: "Diet & Nutrition",
     path: "#",
     description: "Healthy eating guide",
     iconColor: "#F33B7D",
-    bgColor: "#FEE4EB"
+    bgColor: "#FEE4EB",
   },
-  { 
-    icon: Dumbbell, 
-    label: "Exercise", 
+  {
+    icon: Dumbbell,
+    label: "Exercise",
     path: "#",
     description: "Stay active & fit",
     iconColor: "#F33B7D",
-    bgColor: "#FEE4EB"
+    bgColor: "#FEE4EB",
   },
 ];
+
+// Normalizes notification responses so we handle both plain arrays
+// and wrapped payloads ({ data: [] } or { notifications: [] }) consistently.
+const normalizeNotifications = (res) => {
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res?.notifications)) return res.notifications;
+  return [];
+};
 
 function Sparkline({ color }) {
   const data = Array.from({ length: 8 }, (_, i) => ({
@@ -336,6 +346,7 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
   const [predictionData, setPredictionData] = useState(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [latestNotifications, setLatestNotifications] = useState([]);
   const [cyclesData, setCyclesData] = useState([]);
   const [pcosAssessments, setPcosAssessments] = useState([]);
   const [pregnancyData, setPregnancyData] = useState(null);
@@ -352,7 +363,7 @@ export default function DashboardPage() {
 
     const loadData = async () => {
       try {
-        // Load all data in parallel - ADDED conversationsRes
+        // Load all data in parallel
         const [
           dashboardRes,
           predictionRes,
@@ -360,6 +371,7 @@ export default function DashboardPage() {
           pcosRes,
           pregnancyRes,
           conversationsRes,
+          notificationsRes,
         ] = await Promise.all([
           getCycleDashboard().catch(() => ({ data: null })),
           getPrediction().catch(() => ({ data: null })),
@@ -367,6 +379,7 @@ export default function DashboardPage() {
           getAssessmentHistory().catch(() => []),
           getPregnancyDashboard().catch(() => ({ data: null })),
           getConversations().catch(() => []),
+          getNotifications({ limit: 6 }).catch(() => []),
         ]);
 
         const dashboard = dashboardRes.data || dashboardRes || null;
@@ -391,10 +404,13 @@ export default function DashboardPage() {
         setPcosAssessments(pcos);
         setPregnancyData(pregnancy);
         setUnreadMessages(totalUnread);
-        
+        // Populate the dashboard notifications panel on first load
+        setLatestNotifications(normalizeNotifications(notificationsRes));
+
         // Check if we have any cycle data
-        const hasData = (Array.isArray(cycles) && cycles.length > 0) || 
-                       (dashboard && (dashboard.latestCycle || dashboard.prediction));
+        const hasData =
+          (Array.isArray(cycles) && cycles.length > 0) ||
+          (dashboard && (dashboard.latestCycle || dashboard.prediction));
         setHasCycleData(hasData);
       } catch (err) {
         setError("Could not load data");
@@ -406,6 +422,24 @@ export default function DashboardPage() {
 
     loadData();
   }, [user?.role]);
+
+  // Keep the dashboard notification panel fresh without a full page refresh.
+  useEffect(() => {
+    if (!user?._id || user?.role === "admin") return;
+
+    const refreshNotifications = async () => {
+      try {
+        const res = await getNotifications({ limit: 6 });
+        // Use the same normalizer so wrapped payloads don't get dropped
+        setLatestNotifications(normalizeNotifications(res));
+      } catch (err) {
+        console.error("Could not refresh dashboard notifications:", err);
+      }
+    };
+
+    const interval = setInterval(refreshNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [user?._id, user?.role]);
 
   // Get latest PCOS assessment
   const getLatestPCOS = () => {
@@ -430,15 +464,16 @@ export default function DashboardPage() {
     // Update Pregnancy stat
     if (pregnancyData?.pregnancy) {
       const { currentWeek, trimester } = pregnancyData.pregnancy;
-      const weeksRemaining = pregnancyData.weeksRemaining;
-      
+
       // Format the pregnancy display
       const weeksDisplay = currentWeek ? `${currentWeek} Weeks` : "No Data";
-      const trimesterDisplay = trimester ? trimesterLabel[trimester] || "Unknown" : "No Data";
-      
+      const trimesterDisplay = trimester
+        ? trimesterLabel[trimester] || "Unknown"
+        : "No Data";
+
       stats[3].value = weeksDisplay;
       stats[3].sub = trimesterDisplay;
-      
+
       // Update color based on trimester
       if (trimester === 1) stats[3].color = "#22C55E";
       else if (trimester === 2) stats[3].color = "#F59E0B";
@@ -461,7 +496,8 @@ export default function DashboardPage() {
       // Update Next Period
       if (predictionData?.nextPeriod) {
         const daysUntil = Math.ceil(
-          (new Date(predictionData.nextPeriod) - Date.now()) / (1000 * 60 * 60 * 24)
+          (new Date(predictionData.nextPeriod) - Date.now()) /
+            (1000 * 60 * 60 * 24)
         );
         stats[0].value = daysUntil > 0 ? daysUntil : 0;
         stats[0].sub = daysUntil > 0 ? "Days Left" : "Due Today";
@@ -507,26 +543,32 @@ export default function DashboardPage() {
   const getCyclePieData = () => {
     if (!hasCycleData) {
       // Show empty state with greyed out pie
-      return [
-        { name: "No Data", value: 1, color: "#E5E7EB" },
-      ];
+      return [{ name: "No Data", value: 1, color: "#E5E7EB" }];
     }
 
-    const cycleDay = dashboardData?.prediction?.currentPhase?.cycleDay || 
-                    predictionData?.currentPhase?.cycleDay || 1;
-    const cycleLength = dashboardData?.prediction?.averageCycleLength || 
-                       predictionData?.averageCycleLength || 28;
+    const cycleDay =
+      dashboardData?.prediction?.currentPhase?.cycleDay ||
+      predictionData?.currentPhase?.cycleDay ||
+      1;
+    const cycleLength =
+      dashboardData?.prediction?.averageCycleLength ||
+      predictionData?.averageCycleLength ||
+      28;
 
     return [
       { name: "Current Day", value: cycleDay, color: "#F33B7D" },
-      { name: "Remaining", value: Math.max(0, cycleLength - cycleDay), color: "#FBCFE8" },
+      {
+        name: "Remaining",
+        value: Math.max(0, cycleLength - cycleDay),
+        color: "#FBCFE8",
+      },
     ];
   };
 
   // Get period length from user data
   const getPeriodLength = () => {
     if (!hasCycleData) return 5; // Default if no data
-    
+
     // Try to get from prediction
     if (predictionData?.periodLength) {
       return predictionData.periodLength;
@@ -534,7 +576,7 @@ export default function DashboardPage() {
     if (dashboardData?.prediction?.periodLength) {
       return dashboardData.prediction.periodLength;
     }
-    
+
     // Try to get from latest cycle
     if (cyclesData.length > 0) {
       const latestCycle = cyclesData[cyclesData.length - 1];
@@ -542,14 +584,14 @@ export default function DashboardPage() {
         return latestCycle.periodLength;
       }
     }
-    
+
     return 5; // Default if not found
   };
 
   // Get ovulation day - calculate it properly from cycle data
   const getOvulationDay = () => {
     if (!hasCycleData) return null;
-    
+
     // If we have a prediction with ovulation date, use it
     if (predictionData?.ovulation) {
       const ovDate = new Date(predictionData.ovulation);
@@ -566,21 +608,21 @@ export default function DashboardPage() {
         return day;
       }
     }
-    
+
     // Calculate from cycle length - ovulation typically occurs 14 days before period
-    const cycleLength = dashboardData?.prediction?.averageCycleLength || 
-                       predictionData?.averageCycleLength || 28;
-    
+    const cycleLength =
+      dashboardData?.prediction?.averageCycleLength ||
+      predictionData?.averageCycleLength ||
+      28;
+
     // Standard calculation: ovulation day = cycle length - 14
-    // For a 28-day cycle, this gives day 14
-    // For a 30-day cycle, this gives day 16
     const calculatedOvulation = cycleLength - 14;
-    
+
     // Ensure it's within a reasonable range (day 10-20 for most women)
     if (calculatedOvulation >= 10 && calculatedOvulation <= 20) {
       return calculatedOvulation;
     }
-    
+
     // Default to day 14 for a standard 28-day cycle
     return 14;
   };
@@ -591,22 +633,27 @@ export default function DashboardPage() {
       return null;
     }
 
-    let phase = dashboardData?.prediction?.currentPhase?.phase || 
-                predictionData?.currentPhase?.phase;
-    
+    let phase =
+      dashboardData?.prediction?.currentPhase?.phase ||
+      predictionData?.currentPhase?.phase;
+
     if (!phase) return null;
-    
+
     // Ensure "Phase" is appended if not already present
     const phaseLower = phase.toLowerCase();
-    if (phaseLower === "menstrual" || phaseLower === "follicular" || 
-        phaseLower === "luteal" || phaseLower === "ovulation") {
+    if (
+      phaseLower === "menstrual" ||
+      phaseLower === "follicular" ||
+      phaseLower === "luteal" ||
+      phaseLower === "ovulation"
+    ) {
       // For ovulation, it's already a phase name without needing "Phase"
       if (phaseLower === "ovulation") {
         return "Ovulation";
       }
       return `${phase} Phase`;
     }
-    
+
     return phase;
   };
 
@@ -616,9 +663,10 @@ export default function DashboardPage() {
       return "Start logging your periods to get personalized health insights.";
     }
 
-    const insights = dashboardData?.prediction?.health?.insights || 
-                    predictionData?.health?.insights || 
-                    ["Log your next period to keep predictions accurate."];
+    const insights =
+      dashboardData?.prediction?.health?.insights ||
+      predictionData?.health?.insights ||
+      ["Log your next period to keep predictions accurate."];
     return insights[0] || "Log your next period to keep predictions accurate.";
   };
 
@@ -630,7 +678,7 @@ export default function DashboardPage() {
 
     // Sort cycles by periodStart date (oldest to newest)
     const sortedCycles = [...cyclesData]
-      .filter(c => c.periodStart)
+      .filter((c) => c.periodStart)
       .sort((a, b) => new Date(a.periodStart) - new Date(b.periodStart));
 
     // Take the last 6 cycles or all if less than 6
@@ -639,12 +687,12 @@ export default function DashboardPage() {
     // Transform cycle data for the chart
     return lastSixCycles.map((cycle) => {
       const startDate = new Date(cycle.periodStart);
-      const month = startDate.toLocaleDateString('en-US', { month: 'short' });
-      
+      const month = startDate.toLocaleDateString("en-US", { month: "short" });
+
       // Calculate ovulation day from cycle length
       const cycleLength = cycle.cycleLength || 28;
       const ovulationDay = cycleLength - 14; // Typical ovulation calculation
-      
+
       return {
         month: month,
         period: cycle.periodLength || 5,
@@ -660,8 +708,10 @@ export default function DashboardPage() {
   const periodLength = getPeriodLength();
   const insight = getInsight();
   const cycleHistoryData = getCycleHistoryData();
-  const cycleLength = dashboardData?.prediction?.averageCycleLength || 
-                     predictionData?.averageCycleLength || 28;
+  const cycleLength =
+    dashboardData?.prediction?.averageCycleLength ||
+    predictionData?.averageCycleLength ||
+    28;
   const currentPhase = getCurrentPhase();
   const latestPCOS = getLatestPCOS();
 
@@ -669,31 +719,11 @@ export default function DashboardPage() {
   const getCyclePhases = () => {
     if (!hasCycleData || !ovulationDay) {
       return [
-        { 
-          label: "Menstrual Phase", 
-          days: "Log to track", 
-          color: "#D1D5DB"
-        },
-        { 
-          label: "Follicular Phase", 
-          days: "Log to track", 
-          color: "#D1D5DB"
-        },
-        { 
-          label: "Fertile Window", 
-          days: "Log to track", 
-          color: "#D1D5DB"
-        },
-        { 
-          label: "Ovulation", 
-          days: "Log to track", 
-          color: "#D1D5DB"
-        },
-        { 
-          label: "Luteal Phase", 
-          days: "Log to track", 
-          color: "#D1D5DB"
-        },
+        { label: "Menstrual Phase", days: "Log to track", color: "#D1D5DB" },
+        { label: "Follicular Phase", days: "Log to track", color: "#D1D5DB" },
+        { label: "Fertile Window", days: "Log to track", color: "#D1D5DB" },
+        { label: "Ovulation", days: "Log to track", color: "#D1D5DB" },
+        { label: "Luteal Phase", days: "Log to track", color: "#D1D5DB" },
       ];
     }
 
@@ -707,30 +737,26 @@ export default function DashboardPage() {
     const lutealEnd = cycleLength;
 
     return [
-      { 
-        label: "Menstrual Phase", 
-        days: `Day ${periodStart} - ${periodEnd}`, 
-        color: "#F33B7D"
+      {
+        label: "Menstrual Phase",
+        days: `Day ${periodStart} - ${periodEnd}`,
+        color: "#F33B7D",
       },
-      { 
-        label: "Follicular Phase", 
-        days: `Day ${follicularStart} - ${follicularEnd}`, 
-        color: "#FBCFE8"
+      {
+        label: "Follicular Phase",
+        days: `Day ${follicularStart} - ${follicularEnd}`,
+        color: "#FBCFE8",
       },
-      { 
-        label: "Fertile Window", 
-        days: `Day ${fertileStart} - ${fertileEnd}`, 
-        color: "#A855F7"
+      {
+        label: "Fertile Window",
+        days: `Day ${fertileStart} - ${fertileEnd}`,
+        color: "#A855F7",
       },
-      { 
-        label: "Ovulation", 
-        days: `Day ${ovulationDay}`, 
-        color: "#22C55E"
-      },
-      { 
-        label: "Luteal Phase", 
-        days: `Day ${lutealStart} - ${lutealEnd}`, 
-        color: "#D1D5DB"
+      { label: "Ovulation", days: `Day ${ovulationDay}`, color: "#22C55E" },
+      {
+        label: "Luteal Phase",
+        days: `Day ${lutealStart} - ${lutealEnd}`,
+        color: "#D1D5DB",
       },
     ];
   };
@@ -764,7 +790,10 @@ export default function DashboardPage() {
             <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
               Cycle Overview
             </h2>
-            <Link to="/cycle-tracker/history?view=calendar" className="text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors">
+            <Link
+              to="/cycle-tracker/history?view=calendar"
+              className="text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors"
+            >
               View Calendar
             </Link>
           </div>
@@ -790,8 +819,11 @@ export default function DashboardPage() {
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <p className="text-xs text-[#8F8C8C]">Day</p>
               <p className="font-display text-2xl font-semibold text-[#0D0D0D]">
-                {hasCycleData ? (dashboardData?.prediction?.currentPhase?.cycleDay || 
-                 predictionData?.currentPhase?.cycleDay || "-") : "-"}
+                {hasCycleData
+                  ? dashboardData?.prediction?.currentPhase?.cycleDay ||
+                    predictionData?.currentPhase?.cycleDay ||
+                    "-"
+                  : "-"}
               </p>
               <p className="text-xs text-[#8F8C8C]">
                 {hasCycleData ? `of ${cycleLength}` : "No data"}
@@ -801,9 +833,15 @@ export default function DashboardPage() {
 
           <div className="mt-4 space-y-1.5">
             {cyclePhases.map(({ label, days, color }) => (
-              <div key={label} className="flex items-center justify-between text-xs">
+              <div
+                key={label}
+                className="flex items-center justify-between text-xs"
+              >
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: color }}
+                  />
                   <span className="text-[#3D3939]">{label}</span>
                 </div>
                 <span className="text-[#B8AEB2]">{days}</span>
@@ -813,9 +851,7 @@ export default function DashboardPage() {
 
           {hasCycleData && currentPhase && (
             <div className="mt-4 rounded-xl bg-[#FEE4EB] p-3 text-center">
-              <p className="text-sm font-bold text-[#F33B7D]">
-                {currentPhase}
-              </p>
+              <p className="text-sm font-bold text-[#F33B7D]">{currentPhase}</p>
             </div>
           )}
 
@@ -848,7 +884,9 @@ export default function DashboardPage() {
                   <Icon className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[#0D0D0D]">{title}</p>
+                  <p className="text-sm font-semibold text-[#0D0D0D]">
+                    {title}
+                  </p>
                   <p className="truncate text-xs text-[#8F8C8C]">{detail}</p>
                 </div>
                 <span
@@ -865,46 +903,56 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Upcoming Reminders + Tip */}
+        {/* Latest Notifications + Tip */}
         <div className="flex flex-col gap-4">
           <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
-                Upcoming Reminders
+                Latest Notifications
               </h2>
-              <button className="text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors">
+              <Link
+                to="/notifications"
+                className="text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b]"
+              >
                 View All
-              </button>
+              </Link>
             </div>
+
             <div className="space-y-3">
-              {reminders.map(({ title, time, tag, tagColor }) => (
-                <div key={title} className="flex items-center gap-3">
-                  <span
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
-                    style={{ backgroundColor: `${tagColor}1A`, color: tagColor }}
+              {latestNotifications.length > 0 ? (
+                latestNotifications.slice(0, 5).map((notification) => (
+                  <Link
+                    key={notification._id}
+                    to={notification.link || "/notifications"}
+                    className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-[#FEF4F4]"
                   >
-                    <CalendarClock className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#0D0D0D]">{title}</p>
-                    <p className="truncate text-xs text-[#8F8C8C]">{time}</p>
-                  </div>
-                  <span
-                    className="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                    style={{ backgroundColor: `${tagColor}1A`, color: tagColor }}
-                  >
-                    {tag}
-                  </span>
+                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
+                      <Bell className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[#0D0D0D]">
+                        {notification.title}
+                      </p>
+                      <p className="truncate text-xs text-[#8F8C8C]">
+                        {notification.message}
+                      </p>
+                    </div>
+                    {!notification.read && (
+                      <span className="h-2 w-2 flex-shrink-0 rounded-full bg-[#F33B7D]" />
+                    )}
+                  </Link>
+                ))
+              ) : (
+                <div className="py-5 text-center text-xs text-[#8F8C8C]">
+                  No notifications yet.
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
           <div className="relative flex-1 overflow-hidden rounded-2xl bg-[#F33B7D] p-4 text-white shadow-[0_10px_24px_-4px_rgba(243,59,125,0.4)]">
             <p className="text-sm font-semibold">Tip of the Day</p>
-            <p className="mt-1 max-w-[70%] text-xs text-white/85">
-              {insight}
-            </p>
+            <p className="mt-1 max-w-[70%] text-xs text-white/85">{insight}</p>
           </div>
         </div>
       </div>
@@ -917,51 +965,63 @@ export default function DashboardPage() {
             <h2 className="font-display text-lg font-semibold text-[#0D0D0D]">
               Quick Actions
             </h2>
-            <p className="text-sm text-[#8F8C8C]">Manage your health with one tap</p>
+            <p className="text-sm text-[#8F8C8C]">
+              Manage your health with one tap
+            </p>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {quickActions.map(({ icon: Icon, label, path, description, iconColor, bgColor }, index) => (
-              <Link
-                key={label}
-                to={path}
-                className="group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
-                style={{ backgroundColor: bgColor }}
-                onMouseEnter={() => setHoveredAction(index)}
-                onMouseLeave={() => setHoveredAction(null)}
-              >
-                <div className="relative flex flex-col items-start gap-2.5">
-                  {/* Icon - background turns dark pink on hover */}
-                  <div 
-                    className="flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-300 shadow-sm"
-                    style={{ 
-                      backgroundColor: hoveredAction === index ? '#F33B7D' : bgColor
-                    }}
-                  >
-                    <Icon 
-                      className="h-6 w-6 transition-all duration-300" 
-                      style={{ 
-                        color: hoveredAction === index ? '#FFFFFF' : iconColor,
-                        strokeWidth: 1.5 
-                      }} 
-                    />
+            {quickActions.map(
+              (
+                { icon: Icon, label, path, description, iconColor, bgColor },
+                index
+              ) => (
+                <Link
+                  key={label}
+                  to={path}
+                  className="group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+                  style={{ backgroundColor: bgColor }}
+                  onMouseEnter={() => setHoveredAction(index)}
+                  onMouseLeave={() => setHoveredAction(null)}
+                >
+                  <div className="relative flex flex-col items-start gap-2.5">
+                    {/* Icon - background turns dark pink on hover */}
+                    <div
+                      className="flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-300 shadow-sm"
+                      style={{
+                        backgroundColor:
+                          hoveredAction === index ? "#F33B7D" : bgColor,
+                      }}
+                    >
+                      <Icon
+                        className="h-6 w-6 transition-all duration-300"
+                        style={{
+                          color:
+                            hoveredAction === index ? "#FFFFFF" : iconColor,
+                          strokeWidth: 1.5,
+                        }}
+                      />
+                    </div>
+
+                    {/* Content */}
+                    <div className="w-full">
+                      <p className="text-sm font-semibold text-[#0D0D0D] group-hover:text-[#F33B7D] transition-colors">
+                        {label}
+                      </p>
+                      <p className="text-xs text-[#8F8C8C]">{description}</p>
+                    </div>
+
+                    {/* Arrow indicator on hover */}
+                    <div className="absolute right-3 top-3 opacity-0 transition-all duration-300 group-hover:opacity-100">
+                      <ChevronRight
+                        className="h-4 w-4"
+                        style={{ color: iconColor }}
+                      />
+                    </div>
                   </div>
-                  
-                  {/* Content */}
-                  <div className="w-full">
-                    <p className="text-sm font-semibold text-[#0D0D0D] group-hover:text-[#F33B7D] transition-colors">
-                      {label}
-                    </p>
-                    <p className="text-xs text-[#8F8C8C]">{description}</p>
-                  </div>
-                  
-                  {/* Arrow indicator on hover */}
-                  <div className="absolute right-3 top-3 opacity-0 transition-all duration-300 group-hover:opacity-100">
-                    <ChevronRight className="h-4 w-4" style={{ color: iconColor }} />
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              )
+            )}
           </div>
         </div>
 
@@ -972,34 +1032,40 @@ export default function DashboardPage() {
               <h2 className="font-display text-lg font-semibold text-[#0D0D0D]">
                 Recent Activity
               </h2>
-              <p className="text-sm text-[#8F8C8C]">Your latest health updates</p>
+              <p className="text-sm text-[#8F8C8C]">
+                Your latest health updates
+              </p>
             </div>
             <button className="text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors">
               View All
             </button>
           </div>
-          
+
           <div className="space-y-4">
-            {recentActivity.slice(0, 4).map(({ icon: Icon, color, title, detail, time }) => (
-              <div 
-                key={title} 
-                className="group flex items-center gap-4 rounded-xl p-3 transition-all duration-300 hover:bg-[#FEF4F4] cursor-pointer"
-              >
+            {recentActivity
+              .slice(0, 4)
+              .map(({ icon: Icon, color, title, detail, time }) => (
                 <div
-                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110"
-                  style={{ backgroundColor: `${color}1A`, color }}
+                  key={title}
+                  className="group flex items-center gap-4 rounded-xl p-3 transition-all duration-300 hover:bg-[#FEF4F4] cursor-pointer"
                 >
-                  <Icon className="h-5 w-5" />
+                  <div
+                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110"
+                    style={{ backgroundColor: `${color}1A`, color }}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[#0D0D0D]">
+                      {title}
+                    </p>
+                    <p className="truncate text-xs text-[#8F8C8C]">{detail}</p>
+                  </div>
+                  <span className="flex-shrink-0 text-[10px] text-[#B8AEB2] group-hover:text-[#8F8C8C] transition-colors">
+                    {time}
+                  </span>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[#0D0D0D]">{title}</p>
-                  <p className="truncate text-xs text-[#8F8C8C]">{detail}</p>
-                </div>
-                <span className="flex-shrink-0 text-[10px] text-[#B8AEB2] group-hover:text-[#8F8C8C] transition-colors">
-                  {time}
-                </span>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </div>
@@ -1009,24 +1075,31 @@ export default function DashboardPage() {
         <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 lg:col-span-2">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
-              Cycle History <span className="font-normal text-[#8F8C8C]">(Last {Math.min(cycleHistoryData.length, 6)} Cycles)</span>
+              Cycle History{" "}
+              <span className="font-normal text-[#8F8C8C]">
+                (Last {Math.min(cycleHistoryData.length, 6)} Cycles)
+              </span>
             </h2>
             <div className="flex items-center gap-3 text-[10px] text-[#8F8C8C]">
               <span className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-[#F33B7D]" /> Period Days
+                <span className="h-2 w-2 rounded-full bg-[#F33B7D]" /> Period
+                Days
               </span>
               <span className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-[#A855F7]" /> Cycle Length
+                <span className="h-2 w-2 rounded-full bg-[#A855F7]" /> Cycle
+                Length
               </span>
               <span className="flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-[#22C55E]" /> Ovulation Day
+                <span className="h-2 w-2 rounded-full bg-[#22C55E]" /> Ovulation
+                Day
               </span>
             </div>
           </div>
 
           {cycleHistoryData.length === 0 ? (
             <div className="flex h-48 items-center justify-center text-sm text-[#8F8C8C]">
-              No cycle data available yet. Start logging your cycles to see your history.
+              No cycle data available yet. Start logging your cycles to see your
+              history.
             </div>
           ) : (
             <div className="h-48">
@@ -1045,8 +1118,18 @@ export default function DashboardPage() {
                     tickLine={false}
                   />
                   <Tooltip />
-                  <Bar dataKey="period" fill="#F33B7D" radius={[3, 3, 0, 0]} barSize={8} />
-                  <Bar dataKey="cycle" fill="#A855F7" radius={[3, 3, 0, 0]} barSize={8} />
+                  <Bar
+                    dataKey="period"
+                    fill="#F33B7D"
+                    radius={[3, 3, 0, 0]}
+                    barSize={8}
+                  />
+                  <Bar
+                    dataKey="cycle"
+                    fill="#A855F7"
+                    radius={[3, 3, 0, 0]}
+                    barSize={8}
+                  />
                   <Line
                     type="monotone"
                     dataKey="ovulation"
@@ -1058,8 +1141,11 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </div>
           )}
-          
-          <Link to="/cycle-tracker/history" className="mt-3 block w-full text-center text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors">
+
+          <Link
+            to="/cycle-tracker/history"
+            className="mt-3 block w-full text-center text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors"
+          >
             View Full History →
           </Link>
         </div>

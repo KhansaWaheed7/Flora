@@ -10,104 +10,84 @@ import {
   Search,
   Menu,
   X,
+  Calendar,
+  MessageCircle,
+  FileText,
+  ClipboardList,
+  BellRing,
+  Info,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import {
+  getNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from "../../services/notification.service";
 
-// Service functions for header
+// Notifications are loaded from the Flora notification API.
 const headerService = {
-  getNotifications: async () => {
-    // Replace with actual API call
-    // const response = await fetch('/api/notifications');
-    // return response.json();
-    return null;
-  },
-  markNotificationAsRead: async (notificationId) => {
-    // const response = await fetch(`/api/notifications/${notificationId}/read`, {
-    //   method: 'PUT',
-    // });
-    // return response.json();
-    console.log('Marking notification as read:', notificationId);
-    return { success: true };
-  },
-  markAllNotificationsAsRead: async () => {
-    // const response = await fetch('/api/notifications/read-all', {
-    //   method: 'PUT',
-    // });
-    // return response.json();
-    console.log('Marking all notifications as read');
-    return { success: true };
-  },
-  search: async (query) => {
-    // const response = await fetch(`/api/search?q=${query}`);
-    // return response.json();
-    console.log('Searching for:', query);
-    return [];
-  },
-  getUserProfile: async () => {
-    // const response = await fetch('/api/user/profile');
-    // return response.json();
-    return null;
-  },
-  logout: async () => {
-    // const response = await fetch('/api/auth/logout', {
-    //   method: 'POST',
-    // });
-    // return response.json();
-    return { success: true };
-  }
+  getNotifications: () => getNotifications({ limit: 50 }),
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
 };
 
+// Map notification types -> { icon component, accent color }
+// Keeps the dropdown consistent with the rest of the Flora design system.
+function getNotificationMeta(type) {
+  switch (type) {
+    case "reminder":
+      return { Icon: BellRing, color: "#F33B7D" };
+    case "appointment":
+      return { Icon: Calendar, color: "#F59E0B" };
+    case "message":
+      return { Icon: MessageCircle, color: "#3B82F6" };
+    case "report":
+      return { Icon: FileText, color: "#A855F7" };
+    case "assessment":
+      return { Icon: ClipboardList, color: "#22C55E" };
+    default:
+      return { Icon: Info, color: "#8F8C8C" };
+  }
+}
 
 // Notification Item Component
 function NotificationItem({ notification, onRead }) {
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'reminder':
-        return '🔔';
-      case 'appointment':
-        return '📅';
-      case 'message':
-        return '💬';
-      case 'report':
-        return '📊';
-      default:
-        return '📌';
-    }
-  };
-
-  const getNotificationColor = (type) => {
-    switch (type) {
-      case 'reminder':
-        return '#F33B7D';
-      case 'appointment':
-        return '#F59E0B';
-      case 'message':
-        return '#3B82F6';
-      case 'report':
-        return '#A855F7';
-      default:
-        return '#8F8C8C';
-    }
-  };
+  const { Icon, color } = getNotificationMeta(notification.type);
 
   return (
-    <div 
-      className={`rounded-xl px-3 py-2 hover:bg-[#FEF4F4] cursor-pointer ${!notification.read ? 'bg-[#FEF4F4]' : ''}`}
-      onClick={() => onRead(notification.id)}
+    <button
+      type="button"
+      className={`w-full text-left rounded-xl px-3 py-2 transition-colors hover:bg-[#FEF4F4] ${
+        !notification.read ? "bg-[#FEF4F4]" : ""
+      }`}
+      onClick={() => onRead(notification._id)}
     >
-      <div className="flex items-start gap-2">
-        <span className="text-base">{getNotificationIcon(notification.type)}</span>
+      <div className="flex items-start gap-3">
+        <span
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full"
+          style={{ backgroundColor: `${color}1A`, color }}
+        >
+          <Icon className="h-4 w-4" strokeWidth={1.75} />
+        </span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[#0D0D0D]">{notification.title}</p>
-          <p className="text-xs text-[#8F8C8C] truncate">{notification.message}</p>
-          <p className="text-[10px] text-[#B8AEB2] mt-0.5">{notification.time}</p>
+          <p className="text-sm font-medium text-[#0D0D0D] truncate">
+            {notification.title}
+          </p>
+          <p className="text-xs text-[#8F8C8C] line-clamp-2">
+            {notification.message}
+          </p>
+          <p className="mt-0.5 text-[10px] text-[#B8AEB2]">
+            {notification.createdAt
+              ? new Date(notification.createdAt).toLocaleString()
+              : ""}
+          </p>
         </div>
         {!notification.read && (
-          <span className="h-2 w-2 rounded-full bg-[#EB6991] flex-shrink-0 mt-1.5" />
+          <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-[#EB6991]" />
         )}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -130,10 +110,12 @@ function SearchResults({ results, onSelect }) {
           className="w-full text-left px-3 py-2 hover:bg-[#FEF4F4] transition-colors"
         >
           <div className="flex items-center gap-3">
-            <span className="text-sm">{result.icon || '📄'}</span>
+            <span className="text-sm">{result.icon || "📄"}</span>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-[#0D0D0D]">{result.title}</p>
-              <p className="text-xs text-[#8F8C8C] truncate">{result.description}</p>
+              <p className="text-xs text-[#8F8C8C] truncate">
+                {result.description}
+              </p>
             </div>
           </div>
         </button>
@@ -155,9 +137,8 @@ export default function Header({
   user,
 }) {
   const navigate = useNavigate();
-  
-  const [notifications, setNotifications] = useState([]);
 
+  const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -166,93 +147,72 @@ export default function Header({
   const searchInputRef = useRef(null);
   const searchContainerRef = useRef(null);
 
-  // Fetch notifications on mount
+  // Fetch notifications on mount (and poll every 30s)
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const data = await headerService.getNotifications();
-        if (data) {
-          setNotifications(data);
-          setUnreadCount(data.filter(n => !n.read).length);
-        } else {
-          // Fallback default notifications
-          setNotifications(getDefaultNotifications());
-          setUnreadCount(3);
-        }
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.notifications)
+          ? data.notifications
+          : [];
+        setNotifications(list);
+        setUnreadCount(list.filter((n) => !n.read).length);
       } catch (error) {
-        console.error('Error fetching notifications:', error);
-        setNotifications(getDefaultNotifications());
-        setUnreadCount(3);
+        console.error("Error fetching notifications:", error);
+        setNotifications([]);
+        setUnreadCount(0);
       }
     };
 
     fetchNotifications();
-  }, []);
+
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [user?._id]);
 
   // Handle click outside search
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target)
+      ) {
         setShowSearchResults(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Default notifications for fallback
-  const getDefaultNotifications = () => [
-    {
-      id: '1',
-      title: "Take Prenatal Vitamins",
-      message: "Don't forget to take your daily vitamins",
-      time: "Today, 8:00 AM",
-      read: false,
-      type: "reminder"
-    },
-    {
-      id: '2',
-      title: "Doctor's Appointment",
-      message: "You have an appointment with Dr. Ayesha tomorrow",
-      time: "Tomorrow, 10:00 AM",
-      read: false,
-      type: "appointment"
-    },
-    {
-      id: '3',
-      title: "New Message",
-      message: "Dr. Ayesha responded to your question",
-      time: "Yesterday, 4:30 PM",
-      read: false,
-      type: "message"
-    },
-  ];
-
   const handleLogout = () => {
-  logout();
-  navigate("/login");
-};
+    logout();
+    navigate("/login");
+  };
 
   const handleNotificationRead = async (notificationId) => {
     try {
       await headerService.markNotificationAsRead(notificationId);
-      setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === notificationId ? { ...n, read: true } : n))
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error("Error marking notification as read:", error);
     }
   };
 
   const handleMarkAllRead = async () => {
     try {
       await headerService.markAllNotificationsAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      console.error("Error marking all notifications as read:", error);
     }
   };
 
@@ -273,13 +233,18 @@ export default function Header({
       } else {
         // Demo search results if API not available
         const demoResults = [
-          { id: '1', title: `Results for "${query}"`, description: 'View all matching items', icon: '🔍' }
+          {
+            id: "1",
+            title: `Results for "${query}"`,
+            description: "View all matching items",
+            icon: "🔍",
+          },
         ];
         setSearchResults(demoResults);
         setShowSearchResults(true);
       }
     } catch (error) {
-      console.error('Error searching:', error);
+      console.error("Error searching:", error);
       setSearchResults([]);
     } finally {
       setLoading(false);
@@ -292,7 +257,6 @@ export default function Header({
     if (onSearch) {
       onSearch(result);
     }
-    // Navigate to result if it has a path
     if (result.path) {
       navigate(result.path);
     }
@@ -327,10 +291,12 @@ export default function Header({
             placeholder="Search anything..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            onFocus={() => searchQuery.length >= 2 && setShowSearchResults(true)}
+            onFocus={() =>
+              searchQuery.length >= 2 && setShowSearchResults(true)
+            }
             className="w-56 rounded-xl border border-[#F0DCE4] bg-white py-2 pl-9 pr-3 text-sm outline-none placeholder:text-[#B8AEB2] focus:border-[#F33B7D]"
           />
-          
+
           {/* Search Results Dropdown */}
           {showSearchResults && (
             <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 z-30 overflow-hidden">
@@ -339,7 +305,10 @@ export default function Header({
                   <div className="animate-spin h-5 w-5 border-b-2 border-[#F33B7D] rounded-full"></div>
                 </div>
               ) : (
-                <SearchResults results={searchResults} onSelect={handleSearchSelect} />
+                <SearchResults
+                  results={searchResults}
+                  onSelect={handleSearchSelect}
+                />
               )}
             </div>
           )}
@@ -370,7 +339,7 @@ export default function Header({
                     Notifications
                   </p>
                   {unreadCount > 0 && (
-                    <button 
+                    <button
                       onClick={handleMarkAllRead}
                       className="text-xs text-[#F33B7D] hover:underline"
                     >
@@ -381,9 +350,9 @@ export default function Header({
                 <div className="max-h-[300px] overflow-y-auto">
                   {notifications.length > 0 ? (
                     notifications.map((notification) => (
-                      <NotificationItem 
-                        key={notification.id} 
-                        notification={notification} 
+                      <NotificationItem
+                        key={notification._id}
+                        notification={notification}
                         onRead={handleNotificationRead}
                       />
                     ))
@@ -394,8 +363,8 @@ export default function Header({
                   )}
                 </div>
                 <div className="px-3 py-2 border-t border-[#F0DCE4]">
-                  <Link 
-                    to="/notifications" 
+                  <Link
+                    to="/notifications"
                     className="block text-center text-xs font-semibold text-[#F33B7D]"
                     onClick={() => setNotifOpen(false)}
                   >
@@ -416,52 +385,52 @@ export default function Header({
             }}
             className="flex items-center gap-2"
           >
-           <Avatar
-  name={user?.fullName || user?.name || "User"}
-  image={user?.avatar}
-/>
+            <Avatar
+              name={user?.fullName || user?.name || "User"}
+              image={user?.avatar}
+            />
             <span className="hidden text-sm font-medium text-[#0D0D0D] sm:inline">
-  {user?.fullName || user?.name || "User"}
-</span>
+              {user?.fullName || user?.name || "User"}
+            </span>
           </button>
 
           {profileOpen && (
             <div className="absolute right-0 top-12 w-56 rounded-2xl bg-white p-2 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] ring-1 ring-black/5">
               <div className="px-3 py-2 border-b border-[#F0DCE4]">
                 <p className="text-sm font-semibold text-[#0D0D0D]">
-  {user?.fullName || "User"}
-</p>
+                  {user?.fullName || "User"}
+                </p>
                 <p className="text-xs text-[#8F8C8C]">
                   {user?.email || "user@example.com"}
                 </p>
               </div>
-              
+
               <Link
                 to="/profile"
                 className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-[#3D3939] hover:bg-[#FEF4F4] transition-colors"
                 onClick={() => setProfileOpen(false)}
               >
-                <User className="h-4 w-4" /> 
+                <User className="h-4 w-4" />
                 Profile
               </Link>
-              
+
               <Link
                 to="/settings"
                 className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-[#3D3939] hover:bg-[#FEF4F4] transition-colors"
                 onClick={() => setProfileOpen(false)}
               >
-                <Settings className="h-4 w-4" /> 
+                <Settings className="h-4 w-4" />
                 Settings
               </Link>
-              
+
               <div className="border-t border-[#F0DCE4] mt-1 pt-1">
                 <button
-  onClick={handleLogout}
-  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-[#F33B7D] hover:bg-[#FEF4F4]"
->
-  <LogOut className="h-4 w-4" />
-  Logout
-</button>
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-[#F33B7D] hover:bg-[#FEF4F4]"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
               </div>
             </div>
           )}

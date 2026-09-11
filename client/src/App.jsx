@@ -15,6 +15,7 @@ import ProfilePage from "./pages/profile/ProfilePage";
 import ProfileDetailsPage from "./pages/profile/ProfileDetailsPage";
 import EditProfilePage from "./pages/profile/EditProfilePage";
 import SettingsPage from "./pages/settings/SettingsPage";
+import NotificationsPage from "./pages/notifications/NotificationsPage";
 
 import CycleTrackerDashboard from "./pages/cycle-tracker/CycleTrackerDashboard";
 import LogPeriod from "./pages/cycle-tracker/LogPeriod";
@@ -148,7 +149,16 @@ function App() {
         }
       />
 
-      {/* ==================== CYCLE TRACKER ==================== */}
+      <Route
+    path="/notifications"
+    element={
+      <ProtectedRoute>
+        <NotificationsPage />
+      </ProtectedRoute>
+    }
+  />
+
+  {/* ==================== CYCLE TRACKER ==================== */}
       <Route
         path="/cycle-tracker"
         element={

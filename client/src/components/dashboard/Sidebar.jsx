@@ -20,9 +20,8 @@ import {
 
 import { useState, useEffect } from "react";
 import { getConversations } from "../../services/chat.service";
-import Logo from "../../components/common/Logo"
-
-// Remove the navItems from here - it will be defined inside the component
+import { getNotifications } from "../../services/notification.service";
+import Logo from "../../components/common/Logo";
 
 function NavItem({ icon: Icon, label, active, badge, path, onClick }) {
   return (
@@ -32,43 +31,46 @@ function NavItem({ icon: Icon, label, active, badge, path, onClick }) {
       className={`
         flex items-center gap-3 rounded-xl px-3 py-2.5 
         text-sm font-medium transition-all duration-200
-        ${active 
-          ? "bg-[#F33B7D] text-white shadow-lg shadow-[#F33B7D]/30" 
-          : "text-[#4A4A4A] hover:bg-[#FCE4EB] hover:text-[#F33B7D]"
+        ${
+          active
+            ? "bg-[#F33B7D] text-white shadow-lg shadow-[#F33B7D]/30"
+            : "text-[#4A4A4A] hover:bg-[#FCE4EB] hover:text-[#F33B7D]"
         }
       `}
     >
-      <Icon className={`h-5 w-5 flex-shrink-0 ${active ? "text-white" : "text-[#8F8C8C] group-hover:text-[#F33B7D]"}`} />
+      <Icon
+        className={`h-5 w-5 flex-shrink-0 ${
+          active ? "text-white" : "text-[#8F8C8C] group-hover:text-[#F33B7D]"
+        }`}
+      />
       <span className="flex-1">{label}</span>
       {Number(badge) > 0 && (
-  <span
-    className={`
-      flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold
-      ${
-        active
-          ? "bg-white/20 text-white"
-          : "bg-[#F33B7D] text-white"
-      }
-    `}
-  >
-    {badge > 99 ? "99+" : badge}
-  </span>
-)}
+        <span
+          className={`
+            flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold
+            ${active ? "bg-white/20 text-white" : "bg-[#F33B7D] text-white"}
+          `}
+        >
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
     </Link>
   );
 }
 
 export default function Sidebar({
-    sidebarOpen,
-    setSidebarOpen,
-    user = { name: "Sarah Khan" }
+  sidebarOpen,
+  setSidebarOpen,
+  user = { name: "Sarah Khan" },
 }) {
   const location = useLocation();
-  
-  // 3. Add unread count state
-  const [unreadChatCount, setUnreadChatCount] = useState(0);
 
-  // 3. Fetch unread chat count
+  // Unread chat count
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  // Unread notifications count
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
+  // Fetch unread chat count
   useEffect(() => {
     let cancelled = false;
 
@@ -96,7 +98,42 @@ export default function Sidebar({
     };
   }, []);
 
-  // 4. Define navItems inside the component with the unreadChatCount
+  // Fetch unread notifications count (mirrors the header bell behaviour)
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchUnreadNotifications = async () => {
+      try {
+        const res = await getNotifications({ limit: 50 });
+        const list = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.notifications)
+          ? res.notifications
+          : [];
+
+        const totalUnread = list.filter((n) => !n.read).length;
+
+        if (!cancelled) {
+          setUnreadNotifCount(totalUnread);
+        }
+      } catch (error) {
+        console.error("Failed to fetch unread notification count:", error);
+      }
+    };
+
+    fetchUnreadNotifications();
+
+    // Poll every 30s so the badge stays fresh without a refresh
+    const interval = setInterval(fetchUnreadNotifications, 30000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: Repeat, label: "Cycle Tracker", path: "/cycle-tracker" },
@@ -113,15 +150,20 @@ export default function Sidebar({
     { icon: Dumbbell, label: "Exercise", path: "/exercise" },
     { icon: FileText, label: "Medical Reports", path: "/medical-reports" },
     { icon: BookOpen, label: "Education", path: "/education" },
-    { icon: Bell, label: "Notifications", path: "/notifications" },
+    {
+      icon: Bell,
+      label: "Notifications",
+      badge: unreadNotifCount,
+      path: "/notifications",
+    },
     { icon: User, label: "Profile", path: "/profile" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
   // Check if a path is active
   const isActive = (path) => {
-    if (path === '/dashboard') {
-      return location.pathname === '/dashboard';
+    if (path === "/dashboard") {
+      return location.pathname === "/dashboard";
     }
     return location.pathname.startsWith(path);
   };
@@ -165,19 +207,19 @@ export default function Sidebar({
             ))}
           </div>
 
-          {/* Talk to a Gynecologist - Inside scrollable area */}
+          {/* Talk to a Gynecologist */}
           <div className="mt-4 rounded-2xl bg-[#F33B7D] p-4 text-white shadow-lg shadow-[#F33B7D]/30">
             <p className="text-sm font-semibold">Talk to a Gynecologist</p>
             <p className="mt-1 text-xs text-white/85">
               Get expert advice for your health concerns
             </p>
             <Link
-  to="/chat"
-  onClick={() => setSidebarOpen(false)}
-  className="mt-3 block w-full rounded-full bg-white px-4 py-2 text-center text-xs font-semibold text-[#F33B7D] hover:bg-[#FEF4F4] transition-colors"
->
-  Start Chat
-</Link>
+              to="/chat"
+              onClick={() => setSidebarOpen(false)}
+              className="mt-3 block w-full rounded-full bg-white px-4 py-2 text-center text-xs font-semibold text-[#F33B7D] hover:bg-[#FEF4F4] transition-colors"
+            >
+              Start Chat
+            </Link>
           </div>
         </div>
 
@@ -198,7 +240,9 @@ export default function Sidebar({
 
           {/* Light Mode & Language */}
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-[#3D3939]">Light Mode</span>
+            <span className="text-xs font-medium text-[#3D3939]">
+              Light Mode
+            </span>
             <div className="flex items-center gap-3">
               <span className="text-xs font-medium text-[#8F8C8C]">EN ▾</span>
             </div>

@@ -3,6 +3,7 @@ const {
 } = require("../services/gynaeAssistant.service");
 
 const GynaeConversation = require("../models/GynaeConversation");
+const { createNotification } = require("../services/notification.service");
 
 const {
   GYNAE_CATEGORIES,
@@ -399,6 +400,20 @@ const processAssessmentAnswer = async (
   });
 
   await conversation.save();
+
+  await createNotification({
+    userId: conversation.user,
+    type: "gynae",
+    title: "Gynae Assistant assessment completed",
+    message: "Your guided gynae health assessment is complete. Review the result and recommendations.",
+    link: `/gynae-assistant/history/${conversation._id}`,
+    priority: redFlags.length > 0 ? "high" : "normal",
+    uniqueKey: `gynae-assessment-${conversation._id}`,
+    metadata: {
+      conversationId: conversation._id,
+      riskLevel: conversation.assessment.riskLevel,
+    },
+  });
 
   return {
     completed: true,

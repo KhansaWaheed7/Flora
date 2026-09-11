@@ -1,6 +1,7 @@
 const Pregnancy = require("../models/Pregnancy");
 const PregnancyReminder = require("../models/PregnancyReminder");
 const ApiError = require("../utils/ApiError");
+const Notification = require("../models/Notification");
 
 // Get all reminders
 const getReminders = async (userId) => {
@@ -42,6 +43,21 @@ const completeReminder = async (userId, reminderId) => {
   reminder.completedAt = new Date();
 
   await reminder.save();
+
+  await Notification.updateMany(
+    {
+      user: userId,
+      type: "pregnancy",
+      "metadata.reminderId": reminder._id,
+      read: false,
+    },
+    {
+      $set: {
+        read: true,
+        readAt: new Date(),
+      },
+    }
+  );
 
   return reminder;
 };

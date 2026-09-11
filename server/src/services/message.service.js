@@ -2,6 +2,7 @@ const Chat = require("../models/Chat");
 const Message = require("../models/Message");
 const ApiError = require("../utils/ApiError");
 const EncryptionUtil = require("../utils/encryptionUtil");
+const { createNotification } = require("./notification.service");
 // =========================================
 // Send Message
 // =========================================
@@ -124,6 +125,18 @@ const sendMessage = async (
   }
 
   await chat.save();
+
+  await createNotification({
+    userId: receiver,
+    type: "message",
+    title: "New message",
+    message: message?.trim()
+      ? `You received a new message: ${message.trim().slice(0, 80)}${message.trim().length > 80 ? "..." : ""}`
+      : "You received a new attachment.",
+    link: `/chat/${chat._id}`,
+    uniqueKey: `message-${newMessage._id}`,
+    metadata: { chatId: chat._id, messageId: newMessage._id, senderId },
+  });
 
   const populatedMessage = await newMessage.populate(
   "sender",

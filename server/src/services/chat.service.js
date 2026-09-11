@@ -4,6 +4,7 @@ const ApiError = require("../utils/ApiError");
 
 const { emitToUser } = require("../socket/services/socketEmitter");
 const SocketEvents = require("../constants/socketEvents");
+const { createNotification } = require("./notification.service");
 
 // =========================================
 // Create Consultation Request
@@ -78,6 +79,26 @@ const createChat = async (patientId, doctorId, reason) => {
     "patient",
     "fullName profilePicture"
   );
+
+  await createNotification({
+    userId: patientId,
+    type: "consultation",
+    title: "Consultation request sent",
+    message: "Your consultation request has been sent to the doctor.",
+    link: "/chat",
+    uniqueKey: `consultation-request-sent-${chat._id}`,
+    metadata: { chatId: chat._id, doctorId },
+  });
+
+  await createNotification({
+    userId: doctorId,
+    type: "consultation",
+    title: "New consultation request",
+    message: "A patient has sent you a new consultation request.",
+    link: "/doctor/consultation-requests",
+    uniqueKey: `consultation-request-${chat._id}`,
+    metadata: { chatId: chat._id, patientId },
+  });
 
   emitToUser(
     doctorId,

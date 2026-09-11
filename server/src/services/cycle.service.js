@@ -9,6 +9,7 @@ const {
 
 const detectIrregularCycle = require("../utils/irregularCycle");
 const analyzeCycle = require("../utils/cycleHealth");
+const { createNotification } = require("./notification.service");
 
 const createCycle = async (userId, data) => {
   // Prevent creating a second active period
@@ -77,6 +78,16 @@ const createCycle = async (userId, data) => {
     cycleLength,
     symptoms: data.symptoms || [],
     notes: data.notes || "",
+  });
+
+  await createNotification({
+    userId,
+    type: "cycle",
+    title: "Period logged",
+    message: "Your period has been successfully added to your cycle tracker.",
+    link: `/cycle-tracker/${cycle._id}`,
+    uniqueKey: `cycle-logged-${cycle._id}`,
+    metadata: { cycleId: cycle._id },
   });
 
   return cycle;
@@ -183,6 +194,16 @@ const updateCycle = async (userId, cycleId, data) => {
   }
 
   await cycle.save();
+
+  await createNotification({
+    userId,
+    type: "cycle",
+    title: "Cycle updated",
+    message: "Your cycle information has been updated successfully.",
+    link: `/cycle-tracker/${cycle._id}`,
+    uniqueKey: `cycle-updated-${cycle._id}-${cycle.updatedAt?.getTime() || Date.now()}`,
+    metadata: { cycleId: cycle._id },
+  });
 
   return cycle;
 };

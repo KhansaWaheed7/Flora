@@ -6,6 +6,7 @@ const DataParserUtil = require("../utils/dataParserUtil");
 const MedicalAIUtil = require("../utils/medicalAIUtil");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
+const { createNotification } = require("../services/notification.service");
 
 class MedicalReportController {
   /**
@@ -58,6 +59,16 @@ class MedicalReportController {
     });
 
     await report.save();
+
+    await createNotification({
+      userId,
+      type: "medical_report",
+      title: "Medical report uploaded",
+      message: `${report.fileName} was uploaded and is being analyzed.`,
+      link: `/medical-reports/${report._id}/processing`,
+      uniqueKey: `report-uploaded-${report._id}`,
+      metadata: { reportId: report._id, fileName: report.fileName },
+    });
 
     // Process asynchronously
     this.processReportAsync(report._id, file.buffer, fileType);
@@ -193,6 +204,17 @@ console.log(
           report.processingStatus = "failed";
           report.processingError = error.message;
           await report.save();
+
+          await createNotification({
+            userId: report.user,
+            type: "medical_report",
+            title: "Medical report analysis failed",
+            message: `${report.fileName} could not be analyzed. Please try again or upload another copy.`,
+            link: `/medical-reports/${report._id}`,
+            priority: "high",
+            uniqueKey: `report-failed-${report._id}`,
+            metadata: { reportId: report._id },
+          });
         }
       } catch (saveError) {
         console.error("Error saving failed status:", saveError);

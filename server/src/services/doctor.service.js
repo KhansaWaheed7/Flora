@@ -10,6 +10,7 @@ const {
 const Message = require("../models/Message");
 
 const SocketEvents = require("../constants/socketEvents");
+const { createNotification } = require("./notification.service");
 // =========================================
 // Dashboard Summary
 // =========================================
@@ -167,6 +168,17 @@ const acceptConsultation = async (doctorId, chatId) => {
   chat.acceptedAt = new Date();
 
   await chat.save();
+
+  await createNotification({
+    userId: chat.patient,
+    type: "consultation",
+    title: "Consultation accepted",
+    message: "Your doctor accepted the consultation request.",
+    link: `/chat/${chat._id}`,
+    uniqueKey: `consultation-accepted-${chat._id}`,
+    metadata: { chatId: chat._id, doctorId },
+  });
+
   await chat.populate(
   "doctor",
   "fullName specialization profilePicture"
@@ -208,6 +220,17 @@ const rejectConsultation = async (doctorId, chatId) => {
   chat.status = "rejected";
 
   await chat.save();
+
+  await createNotification({
+    userId: chat.patient,
+    type: "consultation",
+    title: "Consultation request declined",
+    message: "Your doctor declined the consultation request.",
+    link: "/chat",
+    uniqueKey: `consultation-rejected-${chat._id}`,
+    metadata: { chatId: chat._id, doctorId },
+  });
+
   await chat.populate(
   "doctor",
   "fullName specialization profilePicture"
@@ -248,6 +271,16 @@ const closeConsultation = async (doctorId, chatId) => {
   chat.closedBy = doctorId;
 
   await chat.save();
+
+  await createNotification({
+    userId: chat.patient,
+    type: "consultation",
+    title: "Consultation closed",
+    message: "Your consultation with the doctor has been closed.",
+    link: `/chat/${chat._id}/closed`,
+    uniqueKey: `consultation-closed-${chat._id}`,
+    metadata: { chatId: chat._id },
+  });
 
   await Message.create({
   chat: chat._id,
