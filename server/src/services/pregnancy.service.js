@@ -18,16 +18,13 @@ const {
 // Create Pregnancy
 
 const createPregnancy = async (userId, lastPeriodDate) => {
-  const existing = await Pregnancy.findOne({
-    user: userId,
-    isActive: true,
-  });
+  const existing = await Pregnancy.findOne({ user: userId });
 
-  if (existing) {
-    throw new ApiError(
-  400,
-  "Active pregnancy already exists."
-);
+  // The Pregnancy model keeps one record per user. If the user previously
+  // stopped pregnancy tracking, reactivate that record instead of trying to
+  // create a second document (the `user` field is unique).
+  if (existing?.isActive) {
+    throw new ApiError(400, "Active pregnancy already exists.");
   }
 const lmp = new Date(lastPeriodDate);
 const today = new Date();
@@ -54,26 +51,41 @@ if (daysDifference > 294) {
 
   const trimester = calculateTrimester(currentWeek);
 
-  const pregnancy = await Pregnancy.create({
-  user: userId,
-  lastPeriodDate,
-  dueDate,
-  currentWeek,
-  trimester,
-});
-await generatePregnancyReminders(pregnancy._id);
+  let pregnancy;
 
-await createNotification({
-  userId,
-  type: "pregnancy",
-  title: "Pregnancy tracking started",
-  message: "Your pregnancy profile and weekly reminders are ready.",
-  link: "/pregnancy",
-  uniqueKey: `pregnancy-created-${pregnancy._id}`,
-  metadata: { pregnancyId: pregnancy._id },
-});
+  if (existing) {
+    existing.lastPeriodDate = lastPeriodDate;
+    existing.dueDate = dueDate;
+    existing.currentWeek = currentWeek;
+    existing.trimester = trimester;
+    existing.isActive = true;
+    pregnancy = await existing.save();
 
-return pregnancy;
+    // Recreate/reset reminders for the newly active pregnancy.
+    await PregnancyReminder.deleteMany({ pregnancy: pregnancy._id });
+    await generatePregnancyReminders(pregnancy._id);
+  } else {
+    pregnancy = await Pregnancy.create({
+      user: userId,
+      lastPeriodDate,
+      dueDate,
+      currentWeek,
+      trimester,
+    });
+    await generatePregnancyReminders(pregnancy._id);
+  }
+
+  await createNotification({
+    userId,
+    type: "pregnancy",
+    title: "Pregnancy tracking started",
+    message: "Your pregnancy profile and weekly reminders are ready.",
+    link: "/pregnancy",
+    uniqueKey: `pregnancy-started-${pregnancy._id}-${pregnancy.updatedAt?.getTime() || Date.now()}`,
+    metadata: { pregnancyId: pregnancy._id },
+  });
+
+  return pregnancy;
 };
 
 // Get Pregnancy

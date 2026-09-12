@@ -275,7 +275,12 @@ const predictCycle = async (userId) => {
   });
 
   if (cycles.length === 0) {
-    throw new ApiError(404, "No cycle history found");
+    return {
+      isTracking: false,
+      isPaused: false,
+      reason: "no_cycle_data",
+      message: "No menstrual cycle has been logged yet.",
+    };
   }
 
   const averageCycle = calculateAverageCycleLength(cycles);

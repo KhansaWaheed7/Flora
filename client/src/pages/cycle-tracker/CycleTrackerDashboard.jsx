@@ -128,9 +128,13 @@ export default function CycleTrackerDashboard() {
   }
 
   // Real backend shape: { latestCycle, prediction }
-  // prediction = { averageCycleLength, periodLength, nextPeriod, ovulation,
-  //                fertileWindow: { start, end }, irregularCycle, health: { status, insights } }
+  // prediction can also return { isTracking: false, reason: "no_cycle_data" }
+  // for a new user who has not logged a period yet.
   const { latestCycle, prediction } = data;
+
+  if (!latestCycle || prediction?.isTracking === false || prediction?.reason === "no_cycle_data") {
+    return <NoCycleData />;
+  }
 
   const periodInProgress =
   !latestCycle?.periodEnd;
@@ -193,7 +197,7 @@ const cyclePieData = [
         <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
           <p className="text-xs font-semibold text-[#8F8C8C]">Current Cycle</p>
           <p className="mt-1 font-display text-lg font-semibold text-[#0D0D0D]">
-            Day {currentDay ?? "-"} of {cycleLength}
+            Day {currentDay ?? "Not available"} of {cycleLength}
           </p>
           <div className="mt-2 flex items-center gap-2">
   <span className="rounded-full bg-[#FEE4EB] px-3 py-1 text-xs font-semibold text-[#F33B7D]">
@@ -243,7 +247,7 @@ const cyclePieData = [
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
   <p className="font-display text-2xl font-semibold text-[#0D0D0D]">
-    {currentDay ?? "-"}
+    {currentDay ?? "Not available"}
   </p>
 
   <p className="text-xs text-[#8F8C8C]">
@@ -267,7 +271,7 @@ const cyclePieData = [
               <ShieldCheck className="h-3.5 w-3.5" /> Cycle Health
             </p>
             <p className="mt-0.5 text-sm font-semibold text-[#0D0D0D]">
-              {prediction?.health?.status || "-"}
+              {prediction?.health?.status || "Not available"}
             </p>
             <p className="text-xs text-[#8F8C8C]">{insight}</p>
           </div>

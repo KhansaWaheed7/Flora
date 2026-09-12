@@ -50,6 +50,29 @@ export default function Predictions() {
     );
   }
 
+  if (data?.isTracking === false || data?.reason === "no_cycle_data") {
+    return (
+      <PageLayout
+        title="Predictions"
+        subtitle="Your upcoming cycle predictions."
+        backTo="/cycle-tracker"
+      >
+        <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 text-center shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#FEE4EB]">
+            <CalendarHeart className="h-8 w-8 text-[#F33B7D]" />
+          </div>
+          <h2 className="mt-5 font-display text-xl font-semibold text-[#0D0D0D]">
+            No Cycle Tracking Yet
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#8F8C8C]">
+            Log your first period to start receiving cycle predictions,
+            ovulation estimates and fertile-window information.
+          </p>
+        </div>
+      </PageLayout>
+    );
+  }
+
   if (data?.isPaused) {
     return (
       <PageLayout
@@ -109,7 +132,7 @@ export default function Predictions() {
               </p>
               <p className="mt-1 text-sm text-white/90">
                 {daysUntilNextPeriod === null
-                  ? "-"
+                  ? "Not available"
                   : daysUntilNextPeriod < 0
                   ? `${Math.abs(daysUntilNextPeriod)} Days Late`
                   : `${daysUntilNextPeriod} Days Left`}
@@ -146,7 +169,7 @@ export default function Predictions() {
             </span>
             <p className="mt-2 text-xs text-[#8F8C8C]">Avg Cycle Length</p>
             <p className="font-display text-sm font-semibold text-[#0D0D0D]">
-              {data.averageCycleLength ?? "-"} Days
+              {data.averageCycleLength ?? "Not available"} {data.averageCycleLength ? "Days" : ""}
             </p>
           </div>
         </div>
@@ -157,7 +180,7 @@ export default function Predictions() {
             <div>
               <p className="text-xs text-[#8F8C8C]">Period Length</p>
               <p className="mt-0.5 text-sm font-semibold text-[#0D0D0D]">
-                {data.periodLength ?? "-"} Days
+                {data.periodLength ?? "Not available"} {data.periodLength ? "Days" : ""}
               </p>
             </div>
             <div>
@@ -178,7 +201,7 @@ export default function Predictions() {
             <div>
               <p className="text-xs text-[#8F8C8C]">Cycle Health</p>
               <p className="mt-0.5 text-sm font-semibold text-[#0D0D0D]">
-                {data.health?.status || "-"}
+                {data.health?.status || "Not available"}
               </p>
             </div>
           </div>

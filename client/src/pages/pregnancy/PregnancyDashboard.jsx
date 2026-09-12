@@ -15,6 +15,7 @@ import {
 import PageLayout from "../../layouts/PageLayout";
 import {
   getPregnancyDashboard,
+  endPregnancy,
   formatDate,
   trimesterLabel,
 } from "../../services/pregnancy.service";
@@ -34,6 +35,8 @@ export default function PregnancyDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [stopping, setStopping] = useState(false);
+  const [showStopModal, setShowStopModal] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -48,6 +51,16 @@ export default function PregnancyDashboard() {
     };
     load();
   }, []);
+
+  // Close stop-tracking modal on Escape key
+  useEffect(() => {
+    if (!showStopModal) return;
+    const onKey = (e) => {
+      if (e.key === "Escape" && !stopping) setShowStopModal(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showStopModal, stopping]);
 
   if (loading) {
     return (
@@ -112,6 +125,27 @@ export default function PregnancyDashboard() {
     { label: "View Timeline", to: "/pregnancy/timeline", icon: Milestone },
   ];
 
+  const handleStopTracking = () => {
+    setShowStopModal(true);
+  };
+
+  const confirmStopTracking = async () => {
+    try {
+      setStopping(true);
+      setError("");
+      await endPregnancy();
+      setShowStopModal(false);
+      navigate("/pregnancy");
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          "Could not stop pregnancy tracking. Please try again."
+      );
+      setStopping(false);
+      setShowStopModal(false);
+    }
+  };
+
   return (
     <PageLayout title="Pregnancy Dashboard" subtitle="Track your pregnancy journey and stay healthy.">
       {/* ------------------------------------------------------------- */}
@@ -120,9 +154,9 @@ export default function PregnancyDashboard() {
       {!hasPregnancy ? (
         <div className="rounded-2xl bg-white p-8 text-center shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 sm:p-10">
           <div className="mx-auto mb-4 flex h-30 w-30 items-center justify-center rounded-full bg-[#FEE4EB] overflow-hidden">
-            <img 
-              src={motherImg} 
-              alt="Mother" 
+            <img
+              src={motherImg}
+              alt="Mother"
               className="h-full w-full object-cover"
             />
           </div>
@@ -256,6 +290,28 @@ export default function PregnancyDashboard() {
             </div>
           </div>
 
+          {/* Stop pregnancy tracking */}
+          <div className="mt-4 rounded-2xl border border-[#F0DCE4] bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-[#0D0D0D]">
+                  Stop Pregnancy Tracking
+                </p>
+                <p className="mt-1 max-w-xl text-xs leading-5 text-[#8F8C8C]">
+                  End your active pregnancy tracking. Your pregnancy record will be preserved, and menstrual cycle tracking will become available again.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleStopTracking}
+                disabled={stopping}
+                className="shrink-0 rounded-full border border-[#E9B8C9] px-5 py-2.5 text-xs font-semibold text-[#C52F62] transition hover:bg-[#FEF4F4] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {stopping ? "Stopping..." : "Stop Tracking"}
+              </button>
+            </div>
+          </div>
+
           {/* Quick Actions */}
           <div className="mt-4 rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -274,6 +330,53 @@ export default function PregnancyDashboard() {
             </div>
           </div>
         </>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* STOP TRACKING CONFIRMATION MODAL                              */}
+      {/* ------------------------------------------------------------- */}
+      {showStopModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+          onClick={() => !stopping && setShowStopModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.25)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#FEE4EB]">
+              <Heart className="h-6 w-6 text-[#F33B7D]" strokeWidth={2} />
+            </div>
+
+            <h3 className="text-center font-display text-lg font-semibold text-[#0D0D0D]">
+              Stop Pregnancy Tracking?
+            </h3>
+
+            <p className="mt-2 text-center text-sm leading-6 text-[#8F8C8C]">
+              This will end your active pregnancy tracker. Your pregnancy record will
+              be preserved, and menstrual cycle tracking will become available again.
+            </p>
+
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setShowStopModal(false)}
+                disabled={stopping}
+                className="rounded-full border border-[#E5E5E5] px-5 py-2.5 text-sm font-semibold text-[#3D3939] transition hover:bg-[#F7F7F7] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmStopTracking}
+                disabled={stopping}
+                className="rounded-full bg-[#F33B7D] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_-6px_rgba(243,59,125,0.5)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {stopping ? "Stopping..." : "Yes, Stop Tracking"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </PageLayout>
   );

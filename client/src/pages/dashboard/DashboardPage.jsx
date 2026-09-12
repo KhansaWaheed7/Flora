@@ -487,11 +487,12 @@ export default function DashboardPage() {
 
     if (!hasCycleData) {
       // No cycle data state
-      stats[0].value = "-";
-      stats[0].sub = "No data";
-      stats[1].value = "-";
+      stats[0].value = "No data";
+      stats[0].unit = "";
+      stats[0].sub = "Log your period";
+      stats[1].value = "No data";
       stats[1].unit = "";
-      stats[1].sub = "No data";
+      stats[1].sub = "Log your period";
     } else {
       // Update Next Period
       if (predictionData?.nextPeriod) {
@@ -502,8 +503,8 @@ export default function DashboardPage() {
         stats[0].value = daysUntil > 0 ? daysUntil : 0;
         stats[0].sub = daysUntil > 0 ? "Days Left" : "Due Today";
       } else {
-        stats[0].value = "-";
-        stats[0].sub = "No data";
+        stats[0].value = "No data";
+        stats[0].sub = "Log your period";
       }
 
       // Update Cycle Day
@@ -519,6 +520,10 @@ export default function DashboardPage() {
         stats[1].value = cycleDay;
         stats[1].unit = `/${cycleLength}`;
         stats[1].sub = `Day ${cycleDay}`;
+      } else {
+        stats[1].value = "No data";
+        stats[1].unit = "";
+        stats[1].sub = "Log your period";
       }
     }
 
@@ -816,18 +821,27 @@ export default function DashboardPage() {
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <p className="text-xs text-[#8F8C8C]">Day</p>
-              <p className="font-display text-2xl font-semibold text-[#0D0D0D]">
-                {hasCycleData
-                  ? dashboardData?.prediction?.currentPhase?.cycleDay ||
-                    predictionData?.currentPhase?.cycleDay ||
-                    "-"
-                  : "-"}
-              </p>
-              <p className="text-xs text-[#8F8C8C]">
-                {hasCycleData ? `of ${cycleLength}` : "No data"}
-              </p>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+              {hasCycleData ? (
+                <>
+                  <p className="text-xs text-[#8F8C8C]">Day</p>
+                  <p className="font-display text-2xl font-semibold text-[#0D0D0D]">
+                    {dashboardData?.prediction?.currentPhase?.cycleDay ||
+                      predictionData?.currentPhase?.cycleDay ||
+                      "-"}
+                  </p>
+                  <p className="text-xs text-[#8F8C8C]">of {cycleLength}</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-display text-sm font-semibold text-[#8F8C8C]">
+                    No data
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-[#B8AEB2]">
+                    Log your period
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
@@ -1077,7 +1091,9 @@ export default function DashboardPage() {
             <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
               Cycle History{" "}
               <span className="font-normal text-[#8F8C8C]">
-                (Last {Math.min(cycleHistoryData.length, 6)} Cycles)
+                {cycleHistoryData.length > 0
+                  ? `(Last ${Math.min(cycleHistoryData.length, 6)} Cycles)`
+                  : "(No data yet)"}
               </span>
             </h2>
             <div className="flex items-center gap-3 text-[10px] text-[#8F8C8C]">

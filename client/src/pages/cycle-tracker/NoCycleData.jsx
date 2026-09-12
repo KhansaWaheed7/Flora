@@ -13,17 +13,18 @@ export default function NoCycleData() {
           <CalendarHeart className="h-9 w-9 text-[#F33B7D]" />
         </div>
         <h2 className="mt-5 font-display text-xl font-semibold text-[#0D0D0D]">
-          No Cycle Data Yet
+          No Cycle Tracking Yet
         </h2>
         <p className="mt-2 max-w-sm text-sm text-[#8F8C8C]">
-          Start tracking your menstrual cycle to receive predictions,
-          fertility insights and personalized health tips.
+          You have not logged a menstrual cycle yet. Start tracking your
+          period to receive cycle predictions, fertility insights and
+          personalized health tips.
         </p>
         <Link
           to="/cycle-tracker/log"
           className="mt-6 rounded-full bg-[#F33B7D] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_-6px_rgba(243,59,125,0.5)] transition hover:-translate-y-0.5"
         >
-          Log Your First Period
+          Start Cycle Tracking
         </Link>
       </div>
     </PageLayout>
