@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "../../layouts/PageLayout";
 import { createCycle, symptomLabelToEnum } from "../../services/cycle.service";
+import { getPregnancy } from "../../services/pregnancy.service";
+import { Link } from "react-router-dom";
 
 const symptomOptions = Object.keys(symptomLabelToEnum);
 
@@ -13,6 +15,23 @@ export default function LogPeriod() {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pregnancyActive, setPregnancyActive] = useState(false);
+  const [checkingPregnancy, setCheckingPregnancy] = useState(true);
+
+  useEffect(() => {
+    const checkPregnancy = async () => {
+      try {
+        const res = await getPregnancy();
+        setPregnancyActive(Boolean(res?.pregnancy?.isActive));
+      } catch (err) {
+        // No active pregnancy is the normal state.
+      } finally {
+        setCheckingPregnancy(false);
+      }
+    };
+
+    checkPregnancy();
+  }, []);
 
   const periodLength =
     periodStart && periodEnd
@@ -42,6 +61,11 @@ export default function LogPeriod() {
   e.preventDefault();
 
   setError("");
+
+  if (pregnancyActive) {
+    setError("Menstrual cycle tracking is paused while your pregnancy is active.");
+    return;
+  }
 
   if (!periodStart) {
     setError("Please select your period start date.");
@@ -91,6 +115,30 @@ export default function LogPeriod() {
       subtitle="Add details about your period."
       backTo="/cycle-tracker"
     >
+      {checkingPregnancy ? (
+        <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 text-center shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <p className="text-sm text-[#8F8C8C]">Checking your tracking status...</p>
+        </div>
+      ) : pregnancyActive ? (
+        <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 text-center shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#FEE4EB]">
+            <span className="text-2xl">♥</span>
+          </div>
+          <h2 className="mt-5 font-display text-xl font-semibold text-[#0D0D0D]">
+            Period Logging Is Paused
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#8F8C8C]">
+            You have an active pregnancy. Menstrual-cycle logging and predictions
+            are paused until the pregnancy tracker is ended. Your old cycle history remains available.
+          </p>
+          <Link
+            to="/pregnancy"
+            className="mt-5 inline-flex rounded-full bg-[#F33B7D] px-5 py-2.5 text-sm font-semibold text-white"
+          >
+            View Pregnancy
+          </Link>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-4">
         {error && (
           <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -205,6 +253,7 @@ export default function LogPeriod() {
     : "Start Period"}
         </button>
       </form>
+      )}
     </PageLayout>
   );
 }

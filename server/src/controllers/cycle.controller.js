@@ -98,6 +98,7 @@ exports.dashboard = asyncHandler(async (req, res) => {
       {
         latestCycle,
         prediction,
+        isPaused: prediction?.isPaused === true,
       }
     )
   );

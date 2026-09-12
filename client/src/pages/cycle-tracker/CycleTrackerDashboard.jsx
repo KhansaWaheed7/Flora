@@ -65,6 +65,44 @@ export default function CycleTrackerDashboard() {
     );
   }
 
+  // Pregnancy and menstrual-cycle tracking are mutually exclusive.
+  // Historical cycle data is preserved, but active cycle tracking/predictions pause.
+  if (data?.isPaused || data?.prediction?.isPaused) {
+    return (
+      <PageLayout
+        title="Cycle Tracker Dashboard"
+        subtitle="Your menstrual cycle tracker is currently paused."
+      >
+        <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 text-center shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#FEE4EB]">
+            <span className="text-2xl">♥</span>
+          </div>
+          <h2 className="mt-5 font-display text-xl font-semibold text-[#0D0D0D]">
+            Menstrual Cycle Tracking Paused
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#8F8C8C]">
+            Your active pregnancy has paused menstrual-cycle predictions and
+            period logging. Your previous cycle history is safely preserved.
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Link
+              to="/pregnancy"
+              className="rounded-full bg-[#F33B7D] px-5 py-2.5 text-sm font-semibold text-white"
+            >
+              View Pregnancy
+            </Link>
+            <Link
+              to="/cycle-tracker/history"
+              className="rounded-full border border-[#F0DCE4] bg-white px-5 py-2.5 text-sm font-semibold text-[#F33B7D]"
+            >
+              View Cycle History
+            </Link>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
+
   if (error === "empty") {
     return <NoCycleData />;
   }

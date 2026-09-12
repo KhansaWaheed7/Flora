@@ -50,6 +50,29 @@ export default function Predictions() {
     );
   }
 
+  if (data?.isPaused) {
+    return (
+      <PageLayout
+        title="Predictions"
+        subtitle="Your upcoming cycle predictions."
+        backTo="/cycle-tracker"
+      >
+        <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 text-center shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#FEE4EB]">
+            <span className="text-2xl">♥</span>
+          </div>
+          <h2 className="mt-5 font-display text-xl font-semibold text-[#0D0D0D]">
+            Cycle Predictions Paused
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#8F8C8C]">
+            Menstrual-cycle predictions, ovulation dates and fertile-window
+            estimates are paused while your pregnancy is active.
+          </p>
+        </div>
+      </PageLayout>
+    );
+  }
+
   if (error || !data) {
     return (
       <PageLayout

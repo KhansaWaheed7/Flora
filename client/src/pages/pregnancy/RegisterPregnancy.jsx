@@ -127,10 +127,12 @@ export default function RegisterPregnancy() {
           </div>
         )}
 
-        <div className="rounded-xl bg-[#FEF4F4] p-3 text-xs text-[#8F8C8C]">
+        <div className="rounded-xl bg-[#FEF4F4] p-3 text-xs leading-5 text-[#8F8C8C]">
           <span className="font-semibold text-[#3D3939]">Note: </span>
           Due date is calculated based on a 28-day cycle. It may vary as your
-          pregnancy progresses.
+          pregnancy progresses. Once pregnancy tracking starts, menstrual-cycle
+          logging and predictions are automatically paused. Your previous cycle
+          history is preserved and can be viewed later.
         </div>
 
         <button

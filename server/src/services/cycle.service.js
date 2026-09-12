@@ -1,4 +1,5 @@
 const Cycle = require("../models/Cycle");
+const Pregnancy = require("../models/Pregnancy");
 const ApiError = require("../utils/ApiError");
 const getCyclePhase = require("../utils/cyclePhase");
 
@@ -12,6 +13,20 @@ const analyzeCycle = require("../utils/cycleHealth");
 const { createNotification } = require("./notification.service");
 
 const createCycle = async (userId, data) => {
+  // Menstrual cycle tracking is paused while the user has an active pregnancy.
+  // Historical cycle records remain untouched.
+  const activePregnancy = await Pregnancy.findOne({
+    user: userId,
+    isActive: true,
+  });
+
+  if (activePregnancy) {
+    throw new ApiError(
+      400,
+      "Menstrual cycle tracking is paused while your pregnancy is active."
+    );
+  }
+
   // Prevent creating a second active period
   const activeCycle = await Cycle.findOne({
     user: userId,
@@ -124,6 +139,18 @@ const getCycleById = async (userId, cycleId) => {
  * Update cycle
  */
 const updateCycle = async (userId, cycleId, data) => {
+  const activePregnancy = await Pregnancy.findOne({
+    user: userId,
+    isActive: true,
+  });
+
+  if (activePregnancy) {
+    throw new ApiError(
+      400,
+      "Menstrual cycle tracking is paused while your pregnancy is active."
+    );
+  }
+
   const cycle = await Cycle.findOne({
     _id: cycleId,
     user: userId,
@@ -226,6 +253,21 @@ const deleteCycle = async (userId, cycleId) => {
  * Predict menstrual cycle
  */
 const predictCycle = async (userId) => {
+  const activePregnancy = await Pregnancy.findOne({
+    user: userId,
+    isActive: true,
+  }).lean();
+
+  if (activePregnancy) {
+    return {
+      isPaused: true,
+      reason: "active_pregnancy",
+      message: "Menstrual cycle tracking is paused during pregnancy.",
+      pregnancyId: activePregnancy._id,
+      dueDate: activePregnancy.dueDate,
+    };
+  }
+
   const cycles = await Cycle.find({
     user: userId,
   }).sort({
