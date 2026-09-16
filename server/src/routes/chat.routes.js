@@ -11,6 +11,8 @@ const {
   getAvailableDoctors,
   getMyRequests,
   getConversations,
+  getDoctorProfileForConsultation,
+  closeConsultationAsPatient,
 } = require("../controllers/chat.controller");
 
 router.get(
@@ -24,6 +26,21 @@ router.get(
   "/conversations",
   protect,
   getConversations
+);
+
+
+router.get(
+  "/:id/doctor-profile",
+  protect,
+  authorize(ROLES.USER),
+  getDoctorProfileForConsultation
+);
+
+router.put(
+  "/:id/close",
+  protect,
+  authorize(ROLES.USER),
+  closeConsultationAsPatient
 );
 
 router.post(

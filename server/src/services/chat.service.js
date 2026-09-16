@@ -1,5 +1,7 @@
 const Chat = require("../models/Chat");
 const User = require("../models/User");
+const Profile = require("../models/Profile");
+const Message = require("../models/Message");
 const ApiError = require("../utils/ApiError");
 
 const { emitToUser } = require("../socket/services/socketEmitter");
@@ -251,9 +253,165 @@ const getConversations = async (userId) => {
   return conversations;
 };
 
+// =========================================
+// Get Doctor Profile for an Existing Consultation
+// =========================================
+
+const getDoctorProfileForConsultation = async (patientId, chatId) => {
+  const chat = await Chat.findOne({
+    _id: chatId,
+    patient: patientId,
+  });
+
+  if (!chat) {
+    throw new ApiError(404, "Consultation not found.");
+  }
+
+  const doctor = await User.findOne({
+    _id: chat.doctor,
+    role: "doctor",
+  }).select(
+    "fullName email phone profilePicture specialization hospital yearsOfExperience bio areasOfExpertise languages city consultationFee doctorVerification"
+  );
+
+  if (!doctor) {
+    throw new ApiError(404, "Doctor profile not found.");
+  }
+
+  return {
+    chatId: chat._id,
+    consultationStatus: chat.status,
+    _id: doctor._id,
+    fullName: doctor.fullName,
+    email: doctor.email,
+    phone: doctor.phone,
+    profilePicture: doctor.profilePicture,
+    specialization: doctor.specialization,
+    hospital: doctor.hospital,
+    yearsOfExperience: doctor.yearsOfExperience,
+    qualifications: doctor.doctorVerification?.qualifications || [],
+    bio: doctor.bio,
+    areasOfExpertise: doctor.areasOfExpertise || [],
+    languages: doctor.languages || [],
+    city: doctor.city,
+    consultationFee: doctor.consultationFee,
+    verificationStatus: doctor.doctorVerification?.status || "pending",
+  };
+};
+
+// =========================================
+// Get Patient Profile for an Existing Consultation
+// =========================================
+
+const getPatientProfileForConsultation = async (doctorId, chatId) => {
+  const chat = await Chat.findOne({
+    _id: chatId,
+    doctor: doctorId,
+  });
+
+  if (!chat) {
+    throw new ApiError(404, "Consultation not found.");
+  }
+
+  const patient = await User.findOne({
+    _id: chat.patient,
+    role: "user",
+  }).select("fullName email phone age profilePicture role accountStatus isEmailVerified");
+
+  if (!patient) {
+    throw new ApiError(404, "Patient profile not found.");
+  }
+
+  let profile = await Profile.findOne({ user: patient._id }).lean();
+
+  if (!profile) {
+    profile = {
+      dateOfBirth: null,
+      gender: null,
+      bloodGroup: null,
+      location: null,
+      height: null,
+      weight: null,
+      allergies: [],
+      medicalConditions: [],
+      avatar: "",
+    };
+  }
+
+  return {
+    chatId: chat._id,
+    consultationStatus: chat.status,
+    patient: {
+      _id: patient._id,
+      fullName: patient.fullName,
+      email: patient.email,
+      phone: patient.phone,
+      age: patient.age,
+      profilePicture: patient.profilePicture,
+      avatar: profile.avatar || patient.profilePicture || "",
+      accountStatus: patient.accountStatus,
+      isEmailVerified: patient.isEmailVerified,
+      dateOfBirth: profile.dateOfBirth,
+      gender: profile.gender,
+      bloodGroup: profile.bloodGroup,
+      location: profile.location,
+      height: profile.height,
+      weight: profile.weight,
+      allergies: profile.allergies || [],
+      medicalConditions: profile.medicalConditions || [],
+    },
+  };
+};
+
+// =========================================
+// Close Consultation from Patient Side
+// =========================================
+
+const closeConsultationAsPatient = async (patientId, chatId) => {
+  const chat = await Chat.findOne({
+    _id: chatId,
+    patient: patientId,
+    status: "active",
+  });
+
+  if (!chat) {
+    throw new ApiError(404, "Active consultation not found.");
+  }
+
+  chat.status = "closed";
+  chat.closedAt = new Date();
+  chat.closedBy = patientId;
+
+  await chat.save();
+
+  await createNotification({
+    userId: chat.doctor,
+    type: "consultation",
+    title: "Consultation closed",
+    message: "The patient has closed the consultation.",
+    link: `/doctor/messages/${chat._id}`,
+    uniqueKey: `consultation-closed-by-patient-${chat._id}`,
+    metadata: { chatId: chat._id, patientId },
+  });
+
+  await Message.create({
+    chat: chat._id,
+    sender: patientId,
+    receiver: chat.doctor,
+    message: "Consultation has been closed.",
+    messageType: "system",
+    isRead: false,
+  });
+
+  return chat;
+};
+
 module.exports = {
   createChat,
   getAvailableDoctors,
   getMyRequests,
   getConversations,
+  getDoctorProfileForConsultation,
+  getPatientProfileForConsultation,
+  closeConsultationAsPatient,
 };

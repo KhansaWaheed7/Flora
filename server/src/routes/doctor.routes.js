@@ -18,6 +18,7 @@ const {
   updateDoctorProfile,
   uploadDoctorAvatar,
   removeDoctorAvatar,
+  getPatientProfileForConsultation,
 } = require("../controllers/doctor.controller");
 
 const {
@@ -132,5 +133,12 @@ router.put(
   protect,
   authorize(ROLES.DOCTOR),
   closeConsultation
+);
+
+router.get(
+  "/chat/:id/patient-profile",
+  protect,
+  authorize(ROLES.DOCTOR),
+  getPatientProfileForConsultation
 );
 module.exports = router;

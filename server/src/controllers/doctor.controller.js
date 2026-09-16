@@ -15,6 +15,8 @@ const {
   removeDoctorAvatar,
 } = require("../services/doctor.service");
 
+const { getPatientProfileForConsultation } = require("../services/chat.service");
+
 // Dashboard
 exports.getDashboard = asyncHandler(async (req, res) => {
   const dashboard = await getDashboard(req.user.id);
@@ -80,6 +82,22 @@ exports.getClosedConsultations = asyncHandler(async (req, res) => {
     )
   );
 });
+
+// =========================================
+// Patient Profile for a Consultation
+// =========================================
+
+exports.getPatientProfileForConsultation = asyncHandler(async (req, res) => {
+  const profile = await getPatientProfileForConsultation(
+    req.user.id,
+    req.params.id
+  );
+
+  res.status(200).json(
+    new ApiResponse(200, "Patient profile fetched successfully.", profile)
+  );
+});
+
 // =========================================
 // Doctor Profile
 // =========================================

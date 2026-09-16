@@ -41,6 +41,7 @@ function Avatar({ name, image, size = "h-11 w-11" }) {
     );
   }
 
+
   return (
     <div
       className={`${size} flex-shrink-0 rounded-full bg-[#F33B7D] flex items-center justify-center text-sm font-semibold text-white`}
@@ -82,6 +83,9 @@ export default function DoctorChat() {
   const navigate = useNavigate();
 
   const { socket, connected } = useSocket();
+  const handleOpenPatientProfile = () => {
+  navigate(`/doctor/patient/${id}`);
+};
   const { user } = useAuth();
   const currentUserId = getUserId(user);
 
@@ -700,24 +704,35 @@ export default function DoctorChat() {
             <ArrowLeft className="h-5 w-5" />
           </button>
 
-          <Avatar
-            name={patient?.fullName}
-            image={patient?.profilePicture}
-          />
+          <button
+  type="button"
+  onClick={handleOpenPatientProfile}
+  className="rounded-full focus:outline-none focus:ring-2 focus:ring-[#F33B7D] focus:ring-offset-2"
+  title="View patient profile"
+>
+  <Avatar
+    name={patient?.fullName}
+    image={patient?.profilePicture || patient?.avatar}
+  />
+</button>
 
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-semibold text-[#0D0D0D]">
-              {patient?.fullName || "Patient"}
-            </p>
+<div className="min-w-0 flex-1">
+  <button
+    type="button"
+    onClick={handleOpenPatientProfile}
+    className="truncate text-left text-base font-semibold text-[#0D0D0D] hover:text-[#F33B7D] hover:underline"
+  >
+    {patient?.fullName || "Patient"}
+  </button>
 
-            <p className="mt-0.5 text-xs text-[#8F8C8C]">
-              {otherTyping
-                ? "Typing..."
-                : connected
-                ? "Online"
-                : "Connecting..."}
-            </p>
-          </div>
+  <p className="mt-0.5 text-xs text-[#8F8C8C]">
+    {otherTyping
+      ? "Typing..."
+      : connected
+      ? "Online"
+      : "Connecting..."}
+  </p>
+</div>
 
           <span className="rounded-full bg-[#FFF1F6] px-3 py-1 text-[10px] font-semibold text-[#F33B7D]">
             Patient

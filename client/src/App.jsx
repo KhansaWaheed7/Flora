@@ -91,6 +91,8 @@ import PatientDoctorProfile from "./pages/chat/DoctorProfile";
 import DoctorProfileDetails from "./pages/doctor-portal/DoctorProfileDetails";
 import DoctorEditProfile from "./pages/doctor-portal/DoctorEditProfile";
 import DoctorSettings from "./pages/doctor-portal/DoctorSettings";
+import ConsultationDoctorProfile from "./pages/chat/ConsultationDoctorProfile";
+import PatientProfile from "./pages/doctor-portal/PatientProfile";
 
 function App() {
   return (
@@ -474,6 +476,15 @@ function App() {
       />
 
       <Route
+        path="/chat/:id/doctor-profile"
+        element={
+          <ProtectedRoute>
+            <ConsultationDoctorProfile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/chat/:id"
         element={
           <ProtectedRoute>
@@ -605,6 +616,15 @@ function App() {
         element={
           <DoctorRoute> 
             <DoctorChat />
+          </DoctorRoute>
+        }
+      />
+
+      <Route
+        path="/doctor/patient/:id"
+        element={
+          <DoctorRoute>
+            <PatientProfile />
           </DoctorRoute>
         }
       />

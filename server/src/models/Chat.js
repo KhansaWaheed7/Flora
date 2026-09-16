@@ -48,6 +48,11 @@ closedAt: {
   type: Date,
 },
 
+    closedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
     lastMessage: {
   type: mongoose.Schema.Types.ObjectId,
   ref: "Message",

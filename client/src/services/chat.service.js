@@ -95,3 +95,12 @@ export const getChatAttachment = async (
 
   return response.data;
 };
+export const getConsultationDoctorProfile = async (chatId) => {
+  const response = await api.get(`/chat/${chatId}/doctor-profile`);
+  return response.data.data;
+};
+
+export const closePatientConsultation = async (chatId) => {
+  const response = await api.put(`/chat/${chatId}/close`);
+  return response.data.data;
+};

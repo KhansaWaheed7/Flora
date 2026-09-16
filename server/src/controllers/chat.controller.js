@@ -8,6 +8,9 @@ const {
   getAvailableDoctors,
   getMyRequests,
   getConversations,
+  getDoctorProfileForConsultation,
+  getPatientProfileForConsultation,
+  closeConsultationAsPatient,
 } = require("../services/chat.service");
 
 // =========================================
@@ -61,6 +64,36 @@ exports.getConversations = asyncHandler(async (req, res) => {
       "Conversations fetched successfully.",
       conversations
     )
+  );
+});
+
+// =========================================
+// Get Doctor Profile for Consultation
+// =========================================
+
+exports.getDoctorProfileForConsultation = asyncHandler(async (req, res) => {
+  const profile = await getDoctorProfileForConsultation(
+    req.user.id,
+    req.params.id
+  );
+
+  res.status(200).json(
+    new ApiResponse(200, "Doctor profile fetched successfully.", profile)
+  );
+});
+
+// =========================================
+// Close Consultation from Patient Side
+// =========================================
+
+exports.closeConsultationAsPatient = asyncHandler(async (req, res) => {
+  const chat = await closeConsultationAsPatient(
+    req.user.id,
+    req.params.id
+  );
+
+  res.status(200).json(
+    new ApiResponse(200, "Consultation closed successfully.", chat)
   );
 });
 

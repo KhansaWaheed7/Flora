@@ -102,3 +102,7 @@ export const removeDoctorAvatar = async () => {
 
   return response.data;
 };
+export const getPatientProfileForConsultation = async (chatId) => {
+  const response = await api.get(`/doctor/chat/${chatId}/patient-profile`);
+  return response.data.data;
+};

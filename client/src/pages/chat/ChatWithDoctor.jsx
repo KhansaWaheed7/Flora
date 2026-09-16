@@ -401,11 +401,22 @@ const handleOpenAttachment = async (message) => {
     <PageLayout title="Chat with Doctor" backTo="/chat/my-consultations">
       <div className="mx-auto flex h-[70vh] max-w-2xl flex-col rounded-2xl bg-white shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
         <div className="flex items-center gap-3 border-b border-[#F7DCE4] p-4">
-          <Avatar name={doctor?.fullName} image={doctor?.profilePicture} />
+          <button
+            type="button"
+            onClick={() => navigate(`/chat/${id}/doctor-profile`)}
+            className="rounded-full focus:outline-none focus:ring-2 focus:ring-[#F33B7D] focus:ring-offset-2"
+            title="View doctor profile"
+          >
+            <Avatar name={doctor?.fullName} image={doctor?.profilePicture} />
+          </button>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-[#0D0D0D]">
-               {doctor?.fullName}
-            </p>
+            <button
+              type="button"
+              onClick={() => navigate(`/chat/${id}/doctor-profile`)}
+              className="truncate text-left text-sm font-semibold text-[#0D0D0D] hover:text-[#F33B7D] hover:underline"
+            >
+              {doctor?.fullName}
+            </button>
             <p className="text-xs text-[#8F8C8C]">
               {otherTyping ? "Typing..." : doctor?.specialization}
             </p>
