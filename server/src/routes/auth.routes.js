@@ -18,7 +18,16 @@ const {
 
 // Public routes
 // Use upload.array for multiple files with field name "documents"
-router.post("/register", upload.array("documents", 5), register);
+router.post(
+  "/register",
+  upload.fields([
+    { name: "pmdcCertificate", maxCount: 1 },
+    { name: "medicalDegree", maxCount: 1 },
+    { name: "identityDocument", maxCount: 1 },
+    { name: "specialistCertificate", maxCount: 1 },
+  ]),
+  register
+);
 router.post("/login", login);
 router.post("/google-login", googleLogin);
 router.post("/refresh-token", refreshToken);

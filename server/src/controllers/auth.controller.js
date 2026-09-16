@@ -69,23 +69,56 @@ exports.register = asyncHandler(async (req, res) => {
   console.log("✅ Validation passed:", validatedData);
 
   // =========================================
-  // Handle document uploads
+  // Handle doctor verification documents
   // =========================================
+  // PMDC Certificate, Medical Degree, and ID/CNIC are mandatory.
+  // Specialist Certificate/Document is optional.
 
-  const files = req.files || [];
-  
-  // documentTypes can be string or array depending on how many files
-  let documentTypes = req.body.documentTypes || [];
-  if (typeof documentTypes === "string") {
-    documentTypes = [documentTypes];
+  const uploadedFiles = req.files || {};
+
+  if (validatedData.role === "doctor") {
+    const missingDocuments = [];
+
+    if (!uploadedFiles.pmdcCertificate?.[0]) {
+      missingDocuments.push("PMDC Certificate");
+    }
+
+    if (!uploadedFiles.medicalDegree?.[0]) {
+      missingDocuments.push("Medical Degree");
+    }
+
+    if (!uploadedFiles.identityDocument?.[0]) {
+      missingDocuments.push("Identity Document / CNIC");
+    }
+
+    if (missingDocuments.length > 0) {
+      throw new ApiError(
+        400,
+        `The following verification documents are required: ${missingDocuments.join(", ")}`
+      );
+    }
   }
 
-  console.log(`📎 Processing ${files.length} documents`);
+  const documents = [];
 
-  // Attach document types to the data
-  validatedData.documentTypes = documentTypes;
+  const documentFieldMap = [
+    ["pmdcCertificate", "pmdc_certificate"],
+    ["medicalDegree", "medical_degree"],
+    ["identityDocument", "identity_document"],
+    ["specialistCertificate", "specialist_certificate"],
+  ];
 
-  const user = await registerUser(validatedData, files);
+  documentFieldMap.forEach(([fieldName, documentType]) => {
+    const file = uploadedFiles[fieldName]?.[0];
+
+    if (file) {
+      documents.push({ file, documentType });
+    }
+  });
+
+  console.log(`📎 Processing ${documents.length} doctor verification documents`);
+
+  const user = await registerUser(validatedData, documents);
 
   res.status(201).json(
     new ApiResponse(
@@ -97,7 +130,7 @@ exports.register = asyncHandler(async (req, res) => {
         email: user.email,
         role: user.role,
         requiresEmailVerification: !user.isEmailVerified,
-        documentsUploaded: files.length,
+        documentsUploaded: documents.length,
       }
     )
   );

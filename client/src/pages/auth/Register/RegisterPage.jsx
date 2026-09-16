@@ -108,7 +108,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState({});
-  const [documents, setDocuments] = useState([]);
+  const [documents, setDocuments] = useState({});
 
   const [form, setForm] = useState(initialForm);
 
@@ -140,11 +140,16 @@ export default function RegisterPage() {
   const handleDocumentsChange = (newDocuments) => {
     setDocuments(newDocuments);
 
-    if (fieldErrors.documents) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        documents: null,
-      }));
+    // Clear document-specific errors as soon as a file is selected.
+    const documentTypes = Object.keys(newDocuments);
+    if (documentTypes.length > 0) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        documentTypes.forEach((type) => {
+          delete next[type];
+        });
+        return next;
+      });
     }
   };
 
@@ -308,22 +313,24 @@ export default function RegisterPage() {
         }
       });
 
-      // Documents
-      if (documents.length === 0) {
-        errors.documents =
-          "Please upload at least one verification document";
+      // Verification Documents
+      // PMDC Certificate, Medical Degree, and ID/CNIC are compulsory.
+      if (!documents.pmdc_certificate) {
+        errors.pmdc_certificate = "PMDC Certificate is required";
         isValid = false;
-      } else {
-        const hasInvalidDocument = documents.some(
-          (doc) => !doc.documentType
-        );
-
-        if (hasInvalidDocument) {
-          errors.documents =
-            "Please select a document type for each uploaded file";
-          isValid = false;
-        }
       }
+
+      if (!documents.medical_degree) {
+        errors.medical_degree = "Medical Degree is required";
+        isValid = false;
+      }
+
+      if (!documents.identity_document) {
+        errors.identity_document = "Identity Document / CNIC is required";
+        isValid = false;
+      }
+      // specialist_certificate is intentionally optional.
+
     }
 
     setFieldErrors(errors);
@@ -540,14 +547,35 @@ export default function RegisterPage() {
           JSON.stringify(qualifications)
         );
 
-        // Documents
-        documents.forEach((doc) => {
-          formData.append("documents", doc.file);
+        // Verification Documents
+        // Each document has its own multipart field.
+        if (documents.pmdc_certificate) {
           formData.append(
-            "documentTypes",
-            doc.documentType
+            "pmdcCertificate",
+            documents.pmdc_certificate.file
           );
-        });
+        }
+
+        if (documents.medical_degree) {
+          formData.append(
+            "medicalDegree",
+            documents.medical_degree.file
+          );
+        }
+
+        if (documents.identity_document) {
+          formData.append(
+            "identityDocument",
+            documents.identity_document.file
+          );
+        }
+
+        if (documents.specialist_certificate) {
+          formData.append(
+            "specialistCertificate",
+            documents.specialist_certificate.file
+          );
+        }
       }
 
       // =========================================
@@ -621,7 +649,7 @@ export default function RegisterPage() {
       // =========================================
 
       setForm(initialForm);
-      setDocuments([]);
+      setDocuments({});
       setFieldErrors({});
 
       // =========================================

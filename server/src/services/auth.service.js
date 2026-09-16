@@ -40,6 +40,34 @@ const registerUser = async (data, files = []) => {
 
   // Doctor information
   if (role === "doctor") {
+    // Enforce required verification documents at the service layer as well.
+    // This prevents a doctor from being created without PMDC, degree, and ID
+    // even if registerUser is called from another backend path.
+    const documentTypes = new Set(
+      (files || []).map((document) => document?.documentType)
+    );
+
+    const missingDocuments = [];
+
+    if (!documentTypes.has("pmdc_certificate")) {
+      missingDocuments.push("PMDC Certificate");
+    }
+
+    if (!documentTypes.has("medical_degree")) {
+      missingDocuments.push("Medical Degree");
+    }
+
+    if (!documentTypes.has("identity_document")) {
+      missingDocuments.push("Identity Document / CNIC");
+    }
+
+    if (missingDocuments.length > 0) {
+      throw new ApiError(
+        400,
+        `The following verification documents are required: ${missingDocuments.join(", ")}`
+      );
+    }
+
     // Ensure qualifications is an array
     let qualifications = data.qualifications || [];
     if (typeof qualifications === "string") {
@@ -73,27 +101,24 @@ const registerUser = async (data, files = []) => {
 
   const user = await User.create(userData);
 
-  // Upload documents if doctor and files exist
+  // Upload doctor verification documents.
+  // Required-document validation is performed before registration.
   if (role === "doctor" && files && files.length > 0) {
-    // Import dynamically to avoid circular dependency
     try {
       const { uploadDocument } = require("./doctorVerification.service");
-      
-      // Get document types from the request
-      const documentTypes = data.documentTypes || [];
-      
-      for (let i = 0; i < files.length; i++) {
-        try {
-          const documentType = documentTypes[i] || "other";
-          await uploadDocument(user._id, files[i], documentType);
-        } catch (error) {
-          console.error("Failed to upload document:", error.message);
-          // Continue with other documents even if one fails
-        }
+
+      for (const document of files) {
+        await uploadDocument(
+          user._id,
+          document.file,
+          document.documentType
+        );
       }
     } catch (error) {
-      console.error("Failed to load document service:", error.message);
-      // Continue without document upload
+      // Do not leave a doctor account registered if a required document
+      // cannot be stored successfully.
+      await User.findByIdAndDelete(user._id);
+      throw error;
     }
   }
 
