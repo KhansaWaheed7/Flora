@@ -139,13 +139,6 @@ const trustPoints = [
   { icon: Globe, label: "Bilingual (EN/UR)" },
 ];
 
-const stats = [
-  { icon: Users, value: "30,000+", label: "Happy Users" },
-  { icon: Stethoscope, value: "50+", label: "Expert Doctors" },
-  { icon: Lock, value: "100%", label: "Confidential" },
-  { icon: Star, value: "4.8/5", label: "Average Rating" },
-];
-
 const footerCols = [
   {
     title: "Product",
@@ -444,23 +437,6 @@ export default function FloraLanding() {
           </div>
         ))}
       </div>
-
-      <div className="hidden h-10 w-px bg-gradient-to-b from-transparent via-[#F3DCE4] to-transparent sm:block" />
-
-      {/* Social Proof - Only Rating */}
-      <div className="flex items-center justify-center">
-        <div className="flex flex-col items-center gap-1.5">
-          <div className="flex items-center gap-0.5">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star key={star} className="h-4 w-4 fill-[#EB6991] text-[#EB6991]" />
-            ))}
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-sm font-semibold text-[#2B1620]">4.8</span>
-            <span className="text-[10px] text-[#8F7C87]">Avg. Rating</span>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -593,23 +569,6 @@ export default function FloraLanding() {
               />
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* STATS */}
-      <section className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid grid-cols-2 gap-6 rounded-3xl bg-[#FBE4EC]/50 backdrop-blur-sm p-8 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] ring-1 ring-[#fcd3e2] sm:grid-cols-4">
-          {stats.map(({ icon: Icon, value, label }) => (
-            <div key={label} className="text-center group">
-              <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#FEE4EB] to-[#FDE3E5] text-[#EB6991] shadow-[0_4px_10px_rgba(235,105,145,0.15)] transition-all duration-300 group-hover:shadow-[0_8px_20px_rgba(235,105,145,0.3)] group-hover:scale-110">
-                <Icon className="h-5 w-5" />
-              </div>
-              <p className="font-display text-2xl font-semibold text-[#2B1620]">
-                {value}
-              </p>
-              <p className="mt-1 text-xs text-[#8F7C87]">{label}</p>
-            </div>
-          ))}
         </div>
       </section>
 

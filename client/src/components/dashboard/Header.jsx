@@ -143,7 +143,7 @@ export default function Header({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [loading, setLoading] = useState(false);
+
   const searchInputRef = useRef(null);
   const searchContainerRef = useRef(null);
 
@@ -216,40 +216,141 @@ export default function Header({
     }
   };
 
-  const handleSearch = async (query) => {
-    setSearchQuery(query);
-    if (query.length < 2) {
-      setSearchResults([]);
-      setShowSearchResults(false);
-      return;
-    }
+  const handleSearch = (query) => {
+  setSearchQuery(query);
 
-    setLoading(true);
-    try {
-      const results = await headerService.search(query);
-      if (results && results.length > 0) {
-        setSearchResults(results);
-        setShowSearchResults(true);
-      } else {
-        // Demo search results if API not available
-        const demoResults = [
-          {
-            id: "1",
-            title: `Results for "${query}"`,
-            description: "View all matching items",
-            icon: "🔍",
-          },
-        ];
-        setSearchResults(demoResults);
-        setShowSearchResults(true);
-      }
-    } catch (error) {
-      console.error("Error searching:", error);
-      setSearchResults([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (query.trim().length < 2) {
+    setSearchResults([]);
+    setShowSearchResults(false);
+    return;
+  }
+
+  const q = query.toLowerCase().trim();
+
+  const searchableItems = [
+    {
+      id: "dashboard",
+      title: "Dashboard",
+      description: "Your health overview",
+      icon: "🏠",
+      path: "/dashboard",
+    },
+    {
+      id: "cycle",
+      title: "Cycle Tracker",
+      description: "Track your menstrual cycle",
+      icon: "📅",
+      path: "/cycle-tracker",
+    },
+    {
+      id: "cycle-log",
+      title: "Log Period",
+      description: "Log your period",
+      icon: "🩸",
+      path: "/cycle-tracker/log",
+    },
+    {
+      id: "cycle-history",
+      title: "Cycle History",
+      description: "View your cycle history",
+      icon: "📊",
+      path: "/cycle-tracker/history",
+    },
+    {
+      id: "pcos",
+      title: "PCOS Assessment",
+      description: "Check your PCOS risk",
+      icon: "🩺",
+      path: "/pcos-detection",
+    },
+    {
+      id: "pregnancy",
+      title: "Pregnancy",
+      description: "Track your pregnancy",
+      icon: "👶",
+      path: "/pregnancy",
+    },
+    {
+      id: "doctor",
+      title: "Talk to Doctor",
+      description: "Connect with a doctor",
+      icon: "👩‍⚕️",
+      path: "/doctors",
+    },
+    {
+      id: "chat",
+      title: "Messages",
+      description: "Chat with your doctor",
+      icon: "💬",
+      path: "/chat",
+    },
+    {
+      id: "reports",
+      title: "Medical Reports",
+      description: "Upload and view medical reports",
+      icon: "📄",
+      path: "/medical-reports",
+    },
+    {
+      id: "gynae",
+      title: "Gynae Assistant",
+      description: "Get AI health guidance",
+      icon: "🤖",
+      path: "/gynae-assistant",
+    },
+    {
+      id: "diet",
+      title: "Diet & Nutrition",
+      description: "Healthy eating guidance",
+      icon: "🍎",
+      path: "/diet-nutrition",
+    },
+    {
+      id: "exercise",
+      title: "Exercise",
+      description: "Exercise and fitness",
+      icon: "🏃",
+      path: "/exercise",
+    },
+    {
+      id: "education",
+      title: "Health Education",
+      description: "Learn about women's health",
+      icon: "📚",
+      path: "/health-education",
+    },
+    {
+      id: "profile",
+      title: "Profile",
+      description: "Manage your profile",
+      icon: "👤",
+      path: "/profile",
+    },
+    {
+      id: "settings",
+      title: "Settings",
+      description: "Manage your account settings",
+      icon: "⚙️",
+      path: "/settings",
+    },
+    {
+      id: "notifications",
+      title: "Notifications",
+      description: "View your notifications",
+      icon: "🔔",
+      path: "/notifications",
+    },
+  ];
+
+  const results = searchableItems.filter(
+    (item) =>
+      item.title.toLowerCase().includes(q) ||
+      item.description.toLowerCase().includes(q)
+  );
+
+  setSearchResults(results);
+  setShowSearchResults(true);
+};
 
   const handleSearchSelect = (result) => {
     setShowSearchResults(false);
@@ -300,16 +401,10 @@ export default function Header({
           {/* Search Results Dropdown */}
           {showSearchResults && (
             <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 z-30 overflow-hidden">
-              {loading ? (
-                <div className="flex items-center justify-center p-4">
-                  <div className="animate-spin h-5 w-5 border-b-2 border-[#F33B7D] rounded-full"></div>
-                </div>
-              ) : (
-                <SearchResults
-                  results={searchResults}
-                  onSelect={handleSearchSelect}
-                />
-              )}
+              <SearchResults
+  results={searchResults}
+  onSelect={handleSearchSelect}
+/>
             </div>
           )}
         </div>

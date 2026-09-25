@@ -21,7 +21,7 @@ export function AuthSplitLayout({
 
       <div className="relative mx-auto grid max-w-5xl grid-cols-1 overflow-hidden rounded-3xl bg-white shadow-[0_30px_60px_-15px_rgba(243,59,125,0.2)] ring-1 ring-black/5 md:grid-cols-2">
         {/* Left panel */}
-        <div className="relative flex flex-col bg-gradient-to-br from-[#FEE4EB] to-[#FEF4F4] p-7 sm:p-15">
+        <div className="relative flex flex-col bg-gradient-to-br from-[#ffd2dd] to-[#FEF4F4] p-7 sm:p-15">
           <Logo />
           <div className="mt-30 flex flex-1 flex-col items-center text-center">
             {illustrationSrc && (
