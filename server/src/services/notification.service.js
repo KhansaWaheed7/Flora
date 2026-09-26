@@ -202,6 +202,7 @@ const getUnreadCount = async (userId) => {
   return Notification.countDocuments({ user: userId, read: false });
 };
 
+
 module.exports = {
   createNotification,
   getNotifications,
