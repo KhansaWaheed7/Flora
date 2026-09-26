@@ -1,9 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Send, Paperclip, FileText, X, Loader2 } from "lucide-react";
+import {
+  Send,
+  Paperclip,
+  FileText,
+  X,
+  Loader2,
+  ArrowLeft,
+} from "lucide-react";
+
 import PageLayout from "../../layouts/PageLayout";
 import { useSocket } from "../../context/SocketContext";
 import { useAuth } from "../../context/AuthContext";
+
 import {
   getMyRequests,
   getChatMessages,
@@ -11,26 +20,32 @@ import {
   getChatAttachment,
 } from "../../services/chat.service";
 
+// --------------------------------------------------
+// Helpers
+// --------------------------------------------------
+
 function Avatar({ name, image, size = "h-9 w-9" }) {
-  if (image) {
-    return (
-      <img
-        src={image}
-        alt={name}
-        className={`${size} flex-shrink-0 rounded-full object-cover`}
-      />
-    );
-  }
-  const initials = (name || "Dr")
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("");
+  const initials =
+    name
+      ?.split(" ")
+      .map((word) => word?.[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "?";
+
   return (
     <div
-      className={`flex ${size} flex-shrink-0 items-center justify-center rounded-full bg-[#F33B7D] text-xs font-semibold text-white`}
+      className={`${size} rounded-full overflow-hidden flex-shrink-0 bg-[#F33B7D] flex items-center justify-center text-white font-semibold ring-2 ring-[#FDE4EE]`}
     >
-      {initials}
+      {image ? (
+        <img
+          src={image}
+          alt={name || "User"}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        initials
+      )}
     </div>
   );
 }
@@ -50,541 +65,833 @@ function getUserId(value) {
     return value.id.toString();
   }
 
+  if (value.userId) {
+    return value.userId.toString();
+  }
+
   return null;
+}
+
+function isSameUser(first, second) {
+  const firstId = getUserId(first);
+  const secondId = getUserId(second);
+
+  if (!firstId || !secondId) {
+    return false;
+  }
+
+  return firstId.toString() === secondId.toString();
 }
 
 function formatTime(value) {
   if (!value) return "";
-  return new Date(value).toLocaleTimeString("en-US", {
-    hour: "numeric",
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
     minute: "2-digit",
   });
 }
 
+// --------------------------------------------------
+// Component
+// --------------------------------------------------
+
 export default function ChatWithDoctor() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const { socket, connected } = useSocket();
   const { user } = useAuth();
-const currentUserId = getUserId(user);
 
   const [consultation, setConsultation] = useState(null);
   const [messages, setMessages] = useState([]);
+
   const [draft, setDraft] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-const [uploading, setUploading] = useState(false);
-
-const fileInputRef = useRef(null);
-  const [otherTyping, setOtherTyping] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [openingAttachment, setOpeningAttachment] = useState(null);
+  const [sending, setSending] = useState(false);
 
-  const bottomRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [openingAttachment, setOpeningAttachment] =
+    useState(null);
+
+  const [otherTyping, setOtherTyping] = useState(false);
+
+  const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
+  // --------------------------------------------------
+  // Load consultation and messages
+  // --------------------------------------------------
+
   useEffect(() => {
-    const load = async () => {
+    let mounted = true;
+
+    const loadChat = async () => {
       try {
+        setLoading(true);
+
         const list = await getMyRequests();
-        const found = list.find((c) => c._id === id);
+
+        if (!mounted) return;
+
+        const found = list?.find(
+          (item) =>
+            item?._id?.toString() === id?.toString()
+        );
+
         if (!found) {
-          setError("Consultation not found.");
-          setLoading(false);
+          setConsultation(null);
+          setMessages([]);
           return;
         }
+
         setConsultation(found);
 
-        try {
-          const history = await getChatMessages(id);
-          setMessages(history || []);
-        } catch (err) {
-          setMessages([]);
-        }
-      } catch (err) {
-        setError("Could not load this consultation.");
+        const history = await getChatMessages(id);
+
+        if (!mounted) return;
+
+        setMessages(history || []);
+      } catch (error) {
+        console.error("Failed to load chat:", error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
-    load();
-  }, [id]);
 
-  useEffect(() => {
-    if (!socket || !connected) return;
-
-    socket.emit("join-chat", id);
-    socket.emit("mark-read", { chatId: id });
-
-    const handleNewMessage = (message) => {
-  if (message.chat === id || message.chatId === id) {
-    setMessages((prev) => [...prev, message]);
-
-    // Tell backend that this message reached the receiver
-    if (message._id) {
-      socket.emit("message-delivered", {
-        messageId: message._id,
-      });
+    if (id) {
+      loadChat();
     }
 
-    // Since this chat is currently open, mark it as read
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
+  // --------------------------------------------------
+  // Scroll to bottom
+  // --------------------------------------------------
+
+  useEffect(() => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 50);
+  }, [messages]);
+
+  // --------------------------------------------------
+  // Socket
+  // --------------------------------------------------
+
+  useEffect(() => {
+    if (!socket || !connected || !id) {
+      return;
+    }
+
+    socket.emit("join-chat", id);
+
     socket.emit("mark-read", {
       chatId: id,
     });
-  }
-};
 
-    const handleTyping = ({ userId }) => {
-      if (userId !== user?._id) setOtherTyping(true);
+    const handleNewMessage = (message) => {
+      if (!message) return;
+
+      const messageChatId =
+        message.chat?._id ||
+        message.chat?.id ||
+        message.chat ||
+        message.chatId;
+
+      if (
+        messageChatId?.toString() !== id?.toString()
+      ) {
+        return;
+      }
+
+      setMessages((prev) => {
+        if (
+          message._id &&
+          prev.some(
+            (existing) =>
+              existing?._id?.toString() ===
+              message._id?.toString()
+          )
+        ) {
+          return prev;
+        }
+
+        return [...prev, message];
+      });
+
+      if (message._id) {
+        socket.emit("message-delivered", {
+          messageId: message._id,
+        });
+      }
+
+      socket.emit("mark-read", {
+        chatId: id,
+      });
     };
 
-    const handleStopTyping = () => setOtherTyping(false);
+    const handleTyping = ({ userId }) => {
+      const typingUserId = getUserId(userId);
+      const currentUserId = getUserId(user);
+
+      if (
+        typingUserId &&
+        currentUserId &&
+        typingUserId !== currentUserId
+      ) {
+        setOtherTyping(true);
+      }
+    };
+
+    const handleStopTyping = ({ userId }) => {
+      const typingUserId = getUserId(userId);
+      const currentUserId = getUserId(user);
+
+      if (
+        !typingUserId ||
+        !currentUserId ||
+        typingUserId !== currentUserId
+      ) {
+        setOtherTyping(false);
+      }
+    };
 
     socket.on("new-message", handleNewMessage);
     socket.on("user-typing", handleTyping);
-    socket.on("user-stop-typing", handleStopTyping);
+    socket.on(
+      "user-stop-typing",
+      handleStopTyping
+    );
 
     return () => {
-      socket.off("new-message", handleNewMessage);
-      socket.off("user-typing", handleTyping);
-      socket.off("user-stop-typing", handleStopTyping);
+      socket.off(
+        "new-message",
+        handleNewMessage
+      );
+      socket.off(
+        "user-typing",
+        handleTyping
+      );
+      socket.off(
+        "user-stop-typing",
+        handleStopTyping
+      );
     };
   }, [socket, connected, id, user]);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, otherTyping]);
+  // --------------------------------------------------
+  // Typing
+  // --------------------------------------------------
 
-  const handleDraftChange = (e) => {
-    setDraft(e.target.value);
-    if (!socket) return;
-    socket.emit("typing", { chatId: id });
-    clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      socket.emit("stop-typing", { chatId: id });
-    }, 1500);
-  };
+  const handleDraftChange = (event) => {
+    const value = event.target.value;
 
-const handleFileSelect = (e) => {
-  const file = e.target.files?.[0];
+    setDraft(value);
 
-  if (!file) return;
-
-  setSelectedFile(file);
-
-  // Allow selecting the same file again later
-  e.target.value = "";
-};
-
-const isImageAttachment = (message) => {
-  const mimeType = message?.attachment?.mimeType || "";
-  const fileName = message?.attachment?.originalName || "";
-
-  return (
-    mimeType.startsWith("image/") ||
-    /\.(jpg|jpeg|png|webp)$/i.test(fileName)
-  );
-};
-
-const handleOpenAttachment = async (message) => {
-  const newTab = window.open("", "_blank");
-
-  if (!newTab) {
-    setError(
-      "The attachment could not be opened. Please allow pop-ups for this site."
-    );
-    return;
-  }
-
-  newTab.document.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Opening attachment...</title>
-        <style>
-          body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fffbfc;
-            font-family: Arial, sans-serif;
-          }
-
-          .container {
-            text-align: center;
-            color: #3d3939;
-          }
-
-          .spinner {
-            width: 42px;
-            height: 42px;
-            margin: 0 auto 18px;
-            border: 4px solid #f7d9e5;
-            border-top-color: #f33b7d;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-          }
-
-          .title {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 6px;
-          }
-
-          .subtitle {
-            font-size: 12px;
-            color: #8f8c8c;
-          }
-
-          @keyframes spin {
-            to {
-              transform: rotate(360deg);
-            }
-          }
-        </style>
-      </head>
-
-      <body>
-        <div class="container">
-          <div class="spinner"></div>
-
-          <div class="title">
-            Opening attachment...
-          </div>
-
-          <div class="subtitle">
-            Please wait while your file is being prepared.
-          </div>
-        </div>
-      </body>
-    </html>
-  `);
-
-  newTab.document.close();
-
-  try {
-    setOpeningAttachment(message._id);
-    setError("");
-
-    const blob = await getChatAttachment(
-      id,
-      message._id
-    );
-
-    const blobUrl = URL.createObjectURL(blob);
-
-    newTab.location.href = blobUrl;
-
-    setTimeout(() => {
-      URL.revokeObjectURL(blobUrl);
-    }, 60000);
-  } catch (err) {
-    console.error("Failed to open attachment:", err);
-
-    newTab.document.body.innerHTML = `
-      <div style="
-        min-height:100vh;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-family:Arial,sans-serif;
-        background:#fffbfc;
-      ">
-        <div style="
-          text-align:center;
-          padding:30px;
-        ">
-          <div style="
-            font-size:16px;
-            font-weight:600;
-            color:#dc2626;
-            margin-bottom:8px;
-          ">
-            Failed to open attachment
-          </div>
-
-          <div style="
-            font-size:13px;
-            color:#8f8c8c;
-          ">
-            Please close this tab and try again.
-          </div>
-        </div>
-      </div>
-    `;
-
-    setError(
-      err?.response?.data?.message ||
-        "Failed to open attachment."
-    );
-  } finally {
-    setOpeningAttachment(null);
-  }
-};
-
-  const handleSend = async (e) => {
-  e.preventDefault();
-
-  if (uploading) return;
-
-  // Attachment message
-  if (selectedFile) {
-    try {
-      setUploading(true);
-
-      const newMessage = await sendChatAttachment(
-        id,
-        selectedFile,
-        draft.trim()
-      );
-
-      setMessages((prev) => [...prev, newMessage]);
-
-      setSelectedFile(null);
-      setDraft("");
-
-      if (socket) {
-        socket.emit("stop-typing", { chatId: id });
-      }
-    } catch (err) {
-      console.error("Attachment upload failed:", err);
-      setError(
-        err?.response?.data?.message ||
-          "Failed to upload attachment."
-      );
-    } finally {
-      setUploading(false);
+    if (!socket || !connected || !id) {
+      return;
     }
 
-    return;
-  }
+    clearTimeout(typingTimeoutRef.current);
 
-  // Normal text message
-  if (!draft.trim() || !socket) return;
+    if (value.trim()) {
+      socket.emit("typing", {
+        chatId: id,
+      });
 
-  socket.emit("send-message", {
-    chatId: id,
-    message: draft.trim(),
-  });
+      typingTimeoutRef.current = setTimeout(() => {
+        socket.emit("stop-typing", {
+          chatId: id,
+        });
+      }, 1000);
+    } else {
+      socket.emit("stop-typing", {
+        chatId: id,
+      });
+    }
+  };
 
-  setDraft("");
+  // --------------------------------------------------
+  // Send text message
+  // --------------------------------------------------
 
-  socket.emit("stop-typing", {
-    chatId: id,
-  });
-};
+  const handleSendMessage = () => {
+    if (
+      !draft.trim() ||
+      !socket ||
+      !connected ||
+      sending
+    ) {
+      return;
+    }
+
+    const messageText = draft.trim();
+
+    setDraft("");
+
+    socket.emit("stop-typing", {
+      chatId: id,
+    });
+
+    socket.emit("send-message", {
+      chatId: id,
+      message: messageText,
+    });
+  };
+
+  // --------------------------------------------------
+  // Enter to send
+  // --------------------------------------------------
+
+  const handleKeyDown = (event) => {
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey
+    ) {
+      event.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // --------------------------------------------------
+  // File selection
+  // --------------------------------------------------
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    setSelectedFile(file);
+  };
+
+  // --------------------------------------------------
+  // Remove file
+  // --------------------------------------------------
+
+  const removeSelectedFile = () => {
+    setSelectedFile(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // --------------------------------------------------
+  // Send attachment
+  // --------------------------------------------------
+
+  const handleSendAttachment = async () => {
+    if (!selectedFile || sending) {
+      return;
+    }
+
+    try {
+      setSending(true);
+
+      const response = await sendChatAttachment(
+        id,
+        selectedFile
+      );
+
+      const newMessage =
+        response?.data ||
+        response?.message ||
+        response;
+
+      if (newMessage) {
+        setMessages((prev) => {
+          if (
+            newMessage._id &&
+            prev.some(
+              (message) =>
+                message?._id?.toString() ===
+                newMessage._id?.toString()
+            )
+          ) {
+            return prev;
+          }
+
+          return [...prev, newMessage];
+        });
+      }
+
+      removeSelectedFile();
+    } catch (error) {
+      console.error(
+        "Failed to send attachment:",
+        error
+      );
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // --------------------------------------------------
+  // Open attachment
+  // --------------------------------------------------
+
+  const handleOpenAttachment = async (message) => {
+    if (!message?._id) return;
+
+    try {
+      setOpeningAttachment(message._id);
+
+      const blob = await getChatAttachment(
+        message._id
+      );
+
+      const url = URL.createObjectURL(blob);
+
+      window.open(url, "_blank");
+
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 60000);
+    } catch (error) {
+      console.error(
+        "Failed to open attachment:",
+        error
+      );
+    } finally {
+      setOpeningAttachment(null);
+    }
+  };
+
+  // --------------------------------------------------
+  // Loading
+  // --------------------------------------------------
 
   if (loading) {
     return (
-      <PageLayout title="Chat" backTo="/chat/my-consultations">
-        <p className="text-sm text-[#8F8C8C]">Loading...</p>
-      </PageLayout>
-    );
-  }
-
-  if (error || !consultation) {
-    return (
-      <PageLayout title="Chat" backTo="/chat/my-consultations">
-        <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error || "Consultation not found."}
+      <PageLayout>
+        <div className="min-h-[70vh] flex items-center justify-center">
+          <Loader2
+            className="animate-spin text-[#F33B7D]"
+            size={32}
+          />
         </div>
       </PageLayout>
     );
   }
+
+  // --------------------------------------------------
+  // Consultation not found
+  // --------------------------------------------------
+
+  if (!consultation) {
+    return (
+      <PageLayout>
+        <div className="min-h-[70vh] flex flex-col items-center justify-center">
+          <p className="text-gray-600 mb-4">
+            Consultation not found.
+          </p>
+
+          <button
+            onClick={() => navigate("/chat")}
+            className="px-5 py-2 rounded-lg bg-[#F33B7D] text-white hover:bg-[#E83270]"
+          >
+            Back to Chat
+          </button>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  // --------------------------------------------------
+  // Doctor
+  // --------------------------------------------------
 
   const doctor = consultation.doctor;
-  const isClosed = consultation.status === "closed";
+
+  const doctorName =
+    doctor?.fullName ||
+    doctor?.name ||
+    "Doctor";
+
+  const doctorImage =
+    doctor?.profilePicture ||
+    doctor?.profileImage ||
+    doctor?.avatar;
+
+  // --------------------------------------------------
+  // UI
+  // --------------------------------------------------
 
   return (
-    <PageLayout title="Chat with Doctor" backTo="/chat/my-consultations">
-      <div className="mx-auto flex h-[70vh] max-w-2xl flex-col rounded-2xl bg-white shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-        <div className="flex items-center gap-3 border-b border-[#F7DCE4] p-4">
-          <button
-            type="button"
-            onClick={() => navigate(`/chat/${id}/doctor-profile`)}
-            className="rounded-full focus:outline-none focus:ring-2 focus:ring-[#F33B7D] focus:ring-offset-2"
-            title="View doctor profile"
-          >
-            <Avatar name={doctor?.fullName} image={doctor?.profilePicture} />
-          </button>
-          <div className="min-w-0 flex-1">
+    <PageLayout>
+      <div className="max-w-5xl mx-auto px-4 py-6">
+
+        {/* Single unified card: header + messages + input */}
+        <div className="bg-white border border-[#F4DCE6] rounded-2xl shadow-sm overflow-hidden">
+
+          {/* Header */}
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#F4DCE6] bg-[#FFF9FB]">
+
             <button
-              type="button"
-              onClick={() => navigate(`/chat/${id}/doctor-profile`)}
-              className="truncate text-left text-sm font-semibold text-[#0D0D0D] hover:text-[#F33B7D] hover:underline"
+              onClick={() => navigate("/chat")}
+              className="group flex items-center gap-1.5 rounded-full border border-[#F4DCE6] bg-white px-3 py-2 text-sm font-medium text-[#3D3939] shadow-sm transition hover:border-[#F33B7D] hover:bg-[#FFF1F6] hover:text-[#F33B7D] active:scale-95"
             >
-              {doctor?.fullName}
+              <ArrowLeft
+                size={16}
+                className="transition-transform group-hover:-translate-x-0.5"
+              />
+            
             </button>
-            <p className="text-xs text-[#8F8C8C]">
-              {otherTyping ? "Typing..." : doctor?.specialization}
-            </p>
+
+            <Avatar
+              name={doctorName}
+              image={doctorImage}
+              size="h-11 w-11"
+            />
+
+            <div>
+              <h2 className="font-semibold text-[#2F292B]">
+                {doctorName}
+              </h2>
+
+              <p className="text-xs text-gray-500">
+                {doctor?.specialization ||
+                  "Gynecologist"}
+              </p>
+            </div>
+
           </div>
-          {!connected && (
-            <span className="text-[10px] font-semibold text-amber-600">
-              Connecting...
-            </span>
-          )}
-        </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto p-4">
-          {messages.length === 0 && (
-            <p className="text-center text-xs text-[#B8AEB2]">
-              No messages yet. Say hello!
-            </p>
-          )}
-          {messages.map((m) => {
-  const senderId = (
-    m.sender?._id ||
-    m.sender?.id ||
-    m.sender
-  )?.toString();
+          {/* Messages */}
+          <div className="h-[60vh] overflow-y-auto px-5 py-5 bg-[#FFF9FB]">
 
-  const isMine =
-    senderId === currentUserId;
+            {messages.length === 0 ? (
+              <div className="h-full flex items-center justify-center">
 
-  const isLoadingAttachment = openingAttachment === m._id;
+                <div className="text-center">
 
-  return (
-    <div
-      key={m._id}
-      className={`flex ${
-        isMine
-          ? "justify-end"
-          : "justify-start"
-      }`}
-    >
-      <div
-        className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
-          isMine
-            ? "bg-[#F33B7D] text-white"
-            : "bg-[#FFF1F6] text-[#3D3939] border border-[#F7D9E5]"
-        }`}
-      >
-        {m.attachment && (
-  <button
-    type="button"
-    onClick={() => handleOpenAttachment(m)}
-    disabled={isLoadingAttachment}
-    className={`mb-1 flex w-full items-center gap-2 rounded-xl p-2 text-left transition ${
-      isMine
-        ? "bg-white/10 hover:bg-white/20"
-        : "bg-white hover:bg-[#FFF8FA]"
-    } ${isLoadingAttachment ? "cursor-wait opacity-70" : ""}`}
-  >
-    {isLoadingAttachment ? (
-      <Loader2 className="h-5 w-5 flex-shrink-0 animate-spin text-[#F33B7D]" />
-    ) : (
-      <FileText
-        className={`h-5 w-5 flex-shrink-0 ${
-          isMine ? "text-white" : "text-[#F33B7D]"
-        }`}
-      />
-    )}
+                  <div className="mx-auto mb-3 h-14 w-14 rounded-full bg-[#FDE4EE] flex items-center justify-center">
+                    <Send
+                      size={24}
+                      className="text-[#F33B7D]"
+                    />
+                  </div>
 
-    <div className="min-w-0 flex-1">
-      <p
-        className={`truncate text-xs font-medium ${
-          isMine ? "text-white" : "text-[#3D3939]"
-        }`}
-      >
-        {isLoadingAttachment ? "Opening..." : m.attachment.originalName}
-      </p>
+                  <p className="font-medium text-[#3D3939]">
+                    Start your conversation
+                  </p>
 
-      <p
-        className={`text-[10px] ${
-          isMine ? "text-white/70" : "text-[#B8AEB2]"
-        }`}
-      >
-        {m.attachment.size
-          ? `${(m.attachment.size / 1024).toFixed(1)} KB`
-          : "Attachment"}
-      </p>
-    </div>
-  </button>
-)}
+                  <p className="text-sm text-gray-500 mt-1">
+                    Send a message to your doctor.
+                  </p>
 
-{m.message && (
-  <p className="whitespace-pre-wrap break-words">
-    {m.message}
-  </p>
-)}
-
-        <p
-          className={`mt-1 text-[10px] ${
-            isMine
-              ? "text-white/70"
-              : "text-[#B8AEB2]"
-          }`}
-        >
-          {formatTime(m.createdAt)}
-        </p>
-      </div>
-    </div>
-  );
-})}
-          <div ref={bottomRef} />
-        </div>
-
-        {isClosed ? (
-          <div className="border-t border-[#F7DCE4] p-4 text-center text-xs text-[#8F8C8C]">
-            This consultation has been closed.
-          </div>
-        ) : (
-          <form
-            onSubmit={handleSend}
-            className="relative flex items-center gap-2 border-t border-[#F7DCE4] p-3"
-          >
-            {selectedFile && (
-              <div className="absolute bottom-full left-0 right-0 border-t border-[#F7DCE4] bg-white px-3 py-2">
-                <div className="flex items-center gap-2 rounded-xl bg-[#FFF1F6] px-3 py-2">
-                  <FileText className="h-4 w-4 flex-shrink-0 text-[#F33B7D]" />
-                  <span className="min-w-0 flex-1 truncate text-xs text-[#3D3939]">
-                    {selectedFile.name}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedFile(null)}
-                    className="text-[#8F8C8C] hover:text-[#F33B7D]"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
                 </div>
+
+              </div>
+            ) : (
+              <div className="space-y-3">
+
+                {messages.map((message) => {
+
+                  // ==================================================
+                  // IMPORTANT FIX
+                  // ==================================================
+                  //
+                  // This page is PATIENT -> DOCTOR.
+                  //
+                  // If the sender is the doctor:
+                  //     LEFT + LIGHT PINK
+                  //
+                  // Otherwise:
+                  //     RIGHT + DARK PINK
+                  //
+                  // We do NOT rely on the patient's auth ID.
+                  // ==================================================
+
+                  const senderRole = (
+                    message.sender?.role || ""
+                  )
+                    .toString()
+                    .toLowerCase();
+
+                  const isDoctorMessage =
+                    isSameUser(
+                      message.sender,
+                      doctor
+                    ) ||
+                    senderRole === "doctor";
+
+                  const isMine =
+                    !isDoctorMessage;
+
+                  const isLoadingAttachment =
+                    openingAttachment ===
+                    message._id;
+
+                  const isSystemMessage =
+                    message.messageType ===
+                    "system";
+
+                  // ------------------------------------------------
+                  // System message
+                  // ------------------------------------------------
+
+                  if (isSystemMessage) {
+                    return (
+                      <div
+                        key={message._id}
+                        className="flex justify-center my-4"
+                      >
+                        <div className="bg-[#FDECF3] text-[#8C6B77] text-xs px-4 py-2 rounded-full">
+                          {message.message ||
+                            "System message"}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // ------------------------------------------------
+                  // Normal message
+                  // ------------------------------------------------
+
+                  return (
+                    <div
+                      key={message._id}
+                      className={`flex w-full ${
+                        isMine
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+
+                      <div
+                        className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+                          isMine
+                            ? "bg-[#F33B7D] text-white rounded-br-md"
+                            : "bg-[#FFF1F6] text-[#3D3939] border border-[#F7D9E5] rounded-bl-md"
+                        }`}
+                      >
+
+                        {/* Attachment */}
+                        {message.messageType !==
+                          "text" &&
+                          message.attachment && (
+                            <button
+                              onClick={() =>
+                                handleOpenAttachment(
+                                  message
+                                )
+                              }
+                              disabled={
+                                isLoadingAttachment
+                              }
+                              className={`flex items-center gap-2 mb-2 p-2 rounded-lg w-full text-left ${
+                                isMine
+                                  ? "bg-white/15 hover:bg-white/20"
+                                  : "bg-white hover:bg-[#FDE4EE]"
+                              }`}
+                            >
+
+                              {isLoadingAttachment ? (
+                                <Loader2
+                                  size={18}
+                                  className="animate-spin"
+                                />
+                              ) : (
+                                <FileText
+                                  size={18}
+                                />
+                              )}
+
+                              <span className="truncate">
+                                {message.attachment
+                                  ?.originalName ||
+                                  "Attachment"}
+                              </span>
+
+                            </button>
+                          )}
+
+                        {/* Message */}
+                        {message.message && (
+                          <p className="whitespace-pre-wrap break-words">
+                            {message.message}
+                          </p>
+                        )}
+
+                        {/* Time */}
+                        <div
+                          className={`text-[10px] mt-1 ${
+                            isMine
+                              ? "text-white/75"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {formatTime(
+                            message.createdAt
+                          )}
+                        </div>
+
+                      </div>
+
+                    </div>
+                  );
+                })}
+
+                {/* Typing */}
+                {otherTyping && (
+                  <div className="flex justify-start">
+
+                    <div className="bg-[#FFF1F6] border border-[#F7D9E5] rounded-2xl rounded-bl-md px-4 py-2">
+
+                      <div className="flex items-center gap-1">
+
+                        <span className="h-1.5 w-1.5 bg-[#D99AAF] rounded-full animate-bounce" />
+
+                        <span
+                          className="h-1.5 w-1.5 bg-[#D99AAF] rounded-full animate-bounce"
+                          style={{
+                            animationDelay:
+                              "0.15s",
+                          }}
+                        />
+
+                        <span
+                          className="h-1.5 w-1.5 bg-[#D99AAF] rounded-full animate-bounce"
+                          style={{
+                            animationDelay:
+                              "0.3s",
+                          }}
+                        />
+
+                      </div>
+
+                    </div>
+
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[#8F8C8C] hover:bg-[#FEF4F4] disabled:opacity-40"
-            >
-              <Paperclip className="h-4 w-4" />
-            </button>
+          </div>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.txt,.doc,.docx,.jpg,.jpeg,.png,.webp,.mp3,.wav,.ogg"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <input
-              value={draft}
-              onChange={handleDraftChange}
-              placeholder="Type a message..."
-              className="flex-1 rounded-full border border-[#F0DCE4] bg-[#FEFAFB] px-4 py-2.5 text-sm outline-none focus:border-[#F33B7D]"
-            />
-            <button
-              type="submit"
-              disabled={!draft.trim()}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#F33B7D] text-white transition hover:-translate-y-0.5 disabled:opacity-40"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </form>
-        )}
+          {/* Selected file */}
+          {selectedFile && (
+            <div className="px-4 pt-3">
+
+              <div className="flex items-center justify-between bg-[#FFF1F6] border border-[#F7D9E5] rounded-xl px-3 py-2">
+
+                <div className="flex items-center gap-2 min-w-0">
+
+                  <FileText
+                    size={18}
+                    className="text-[#F33B7D] flex-shrink-0"
+                  />
+
+                  <span className="text-sm text-[#3D3939] truncate">
+                    {selectedFile.name}
+                  </span>
+
+                </div>
+
+                <button
+                  onClick={removeSelectedFile}
+                  className="text-gray-400 hover:text-[#F33B7D]"
+                >
+                  <X size={18} />
+                </button>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* Input */}
+          <div className="border-t border-[#F4DCE6] p-4">
+
+            <div className="flex items-end gap-2">
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+
+              <button
+                type="button"
+                onClick={() =>
+                  fileInputRef.current?.click()
+                }
+                className="h-11 w-11 flex-shrink-0 rounded-xl flex items-center justify-center text-gray-500 hover:text-[#F33B7D] hover:bg-[#FFF1F6] transition"
+              >
+                <Paperclip size={20} />
+              </button>
+
+              <textarea
+                value={draft}
+                onChange={handleDraftChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Type a message..."
+                rows={1}
+                className="flex-1 resize-none rounded-xl border border-[#EBD5DE] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F33B7D]/20 focus:border-[#F33B7D]"
+              />
+
+              {selectedFile ? (
+                <button
+                  type="button"
+                  onClick={handleSendAttachment}
+                  disabled={sending}
+                  className="h-11 w-11 flex-shrink-0 rounded-xl bg-[#F33B7D] text-white flex items-center justify-center hover:bg-[#E83270] disabled:opacity-50 transition"
+                >
+                  {sending ? (
+                    <Loader2
+                      size={20}
+                      className="animate-spin"
+                    />
+                  ) : (
+                    <Send size={20} />
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSendMessage}
+                  disabled={
+                    !draft.trim() ||
+                    !connected ||
+                    sending
+                  }
+                  className="h-11 w-11 flex-shrink-0 rounded-xl bg-[#F33B7D] text-white flex items-center justify-center hover:bg-[#E83270] disabled:opacity-50 transition"
+                >
+                  <Send size={20} />
+                </button>
+              )}
+
+            </div>
+
+            <p className="text-[10px] text-gray-400 mt-2 px-1">
+              Press Enter to send • Shift + Enter for
+              a new line
+            </p>
+
+          </div>
+
+        </div>
       </div>
     </PageLayout>
   );
