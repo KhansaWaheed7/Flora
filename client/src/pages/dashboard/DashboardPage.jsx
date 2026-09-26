@@ -349,11 +349,12 @@ export default function DashboardPage() {
   const [latestNotifications, setLatestNotifications] = useState([]);
   const [cyclesData, setCyclesData] = useState([]);
   const [pcosAssessments, setPcosAssessments] = useState([]);
-const [pregnancyData, setPregnancyData] = useState(null);
-const cycleTrackingPaused = !!pregnancyData?.pregnancy;
+  const [pregnancyData, setPregnancyData] = useState(null);
+  const cycleTrackingPaused = !!pregnancyData?.pregnancy;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [hasCycleData, setHasCycleData] = useState(false);
+  const [cycleNeedsNewEntry, setCycleNeedsNewEntry] = useState(false);
   const [hoveredAction, setHoveredAction] = useState(null);
 
   useEffect(() => {
@@ -408,10 +409,22 @@ const cycleTrackingPaused = !!pregnancyData?.pregnancy;
         // Populate the dashboard notifications panel on first load
         setLatestNotifications(normalizeNotifications(notificationsRes));
 
-        // Check if we have any cycle data
+        // Determine if the backend says a new cycle entry is required.
+        // This is what distinguishes "old cycles exist but tracking is stale"
+        // (e.g. right after pregnancy ends) from "we have live cycle data".
+        const requiresNewCycle =
+          dashboard?.prediction?.requiresNewCycle === true ||
+          dashboard?.prediction?.reason === "needs_new_cycle";
+
+        setCycleNeedsNewEntry(requiresNewCycle);
+
+        // Check if we have any *live* cycle data.
+        // Note: cycles.length > 0 alone is not enough — those could be old
+        // cycles that don't apply anymore (e.g. after pregnancy tracking ends).
         const hasData =
-          (Array.isArray(cycles) && cycles.length > 0) ||
-          (dashboard && (dashboard.latestCycle || dashboard.prediction));
+          !requiresNewCycle &&
+          ((Array.isArray(cycles) && cycles.length > 0) ||
+            (dashboard && (dashboard.latestCycle || dashboard.prediction)));
         setHasCycleData(hasData);
       } catch (err) {
         setError("Could not load data");
@@ -487,24 +500,34 @@ const cycleTrackingPaused = !!pregnancyData?.pregnancy;
     }
 
     if (cycleTrackingPaused) {
-  // Cycle tracking is paused because pregnancy is active
-  stats[0].value = "Paused";
-  stats[0].unit = "";
-  stats[0].sub = "Pregnancy tracking";
+      // Cycle tracking is paused because pregnancy is active
+      stats[0].value = "Paused";
+      stats[0].unit = "";
+      stats[0].sub = "Pregnancy tracking";
 
-  stats[1].value = "Paused";
-  stats[1].unit = "";
-  stats[1].sub = "Pregnancy tracking";
-} else if (!hasCycleData) {
-  // No cycle data state
-  stats[0].value = "No data";
-  stats[0].unit = "";
-  stats[0].sub = "Log your period";
+      stats[1].value = "Paused";
+      stats[1].unit = "";
+      stats[1].sub = "Pregnancy tracking";
+    } else if (cycleNeedsNewEntry) {
+      // Pregnancy ended and the user needs to log a fresh period
+      // to start a new cycle before predictions make sense again.
+      stats[0].value = "No tracking";
+      stats[0].unit = "";
+      stats[0].sub = "Log your new period";
 
-  stats[1].value = "No data";
-  stats[1].unit = "";
-  stats[1].sub = "Log your period";
-} else {
+      stats[1].value = "No tracking";
+      stats[1].unit = "";
+      stats[1].sub = "Log your new period";
+    } else if (!hasCycleData) {
+      // No cycle data state (new user)
+      stats[0].value = "No data";
+      stats[0].unit = "";
+      stats[0].sub = "Log your period";
+
+      stats[1].value = "No data";
+      stats[1].unit = "";
+      stats[1].sub = "Log your period";
+    } else {
       // Update Next Period
       if (predictionData?.nextPeriod) {
         const daysUntil = Math.ceil(
@@ -557,7 +580,7 @@ const cycleTrackingPaused = !!pregnancyData?.pregnancy;
 
   // Compute cycle pie data
   const getCyclePieData = () => {
-    if (!hasCycleData) {
+    if (cycleTrackingPaused || cycleNeedsNewEntry || !hasCycleData) {
       // Show empty state with greyed out pie
       return [{ name: "No Data", value: 1, color: "#E5E7EB" }];
     }
@@ -734,14 +757,25 @@ const cycleTrackingPaused = !!pregnancyData?.pregnancy;
   // Get user-friendly cycle phase labels and days
   const getCyclePhases = () => {
     if (cycleTrackingPaused) {
-  return [
-    { label: "Menstrual Phase", days: "Paused", color: "#D1D5DB" },
-    { label: "Follicular Phase", days: "Paused", color: "#D1D5DB" },
-    { label: "Fertile Window", days: "Paused", color: "#D1D5DB" },
-    { label: "Ovulation", days: "Paused", color: "#D1D5DB" },
-    { label: "Luteal Phase", days: "Paused", color: "#D1D5DB" },
-  ];
-}
+      return [
+        { label: "Menstrual Phase", days: "Paused", color: "#D1D5DB" },
+        { label: "Follicular Phase", days: "Paused", color: "#D1D5DB" },
+        { label: "Fertile Window", days: "Paused", color: "#D1D5DB" },
+        { label: "Ovulation", days: "Paused", color: "#D1D5DB" },
+        { label: "Luteal Phase", days: "Paused", color: "#D1D5DB" },
+      ];
+    }
+
+    if (cycleNeedsNewEntry) {
+      return [
+        { label: "Menstrual Phase", days: "Log new period", color: "#D1D5DB" },
+        { label: "Follicular Phase", days: "Log new period", color: "#D1D5DB" },
+        { label: "Fertile Window", days: "Log new period", color: "#D1D5DB" },
+        { label: "Ovulation", days: "Log new period", color: "#D1D5DB" },
+        { label: "Luteal Phase", days: "Log new period", color: "#D1D5DB" },
+      ];
+    }
+
     if (!hasCycleData || !ovulationDay) {
       return [
         { label: "Menstrual Phase", days: "Log to track", color: "#D1D5DB" },
@@ -843,34 +877,43 @@ const cycleTrackingPaused = !!pregnancyData?.pregnancy;
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
               {cycleTrackingPaused ? (
-  <>
-    <p className="font-display text-sm font-semibold text-[#8F8C8C]">
-      Paused
-    </p>
-    <p className="mt-0.5 text-[10px] text-[#B8AEB2]">
-      Pregnancy tracking
-    </p>
-  </>
-) : hasCycleData ? (
-  <>
-    <p className="text-xs text-[#8F8C8C]">Day</p>
-    <p className="font-display text-2xl font-semibold text-[#0D0D0D]">
-      {dashboardData?.prediction?.currentPhase?.cycleDay ||
-        predictionData?.currentPhase?.cycleDay ||
-        "-"}
-    </p>
-    <p className="text-xs text-[#8F8C8C]">of {cycleLength}</p>
-  </>
-) : (
-  <>
-    <p className="font-display text-sm font-semibold text-[#8F8C8C]">
-      No data
-    </p>
-    <p className="mt-0.5 text-[10px] text-[#B8AEB2]">
-      Log your period
-    </p>
-  </>
-)}
+                <>
+                  <p className="font-display text-sm font-semibold text-[#8F8C8C]">
+                    Paused
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-[#B8AEB2]">
+                    Pregnancy tracking
+                  </p>
+                </>
+              ) : cycleNeedsNewEntry ? (
+                <>
+                  <p className="font-display text-sm font-semibold text-[#8F8C8C]">
+                    No tracking
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-[#B8AEB2]">
+                    Log your new period
+                  </p>
+                </>
+              ) : hasCycleData ? (
+                <>
+                  <p className="text-xs text-[#8F8C8C]">Day</p>
+                  <p className="font-display text-2xl font-semibold text-[#0D0D0D]">
+                    {dashboardData?.prediction?.currentPhase?.cycleDay ||
+                      predictionData?.currentPhase?.cycleDay ||
+                      "-"}
+                  </p>
+                  <p className="text-xs text-[#8F8C8C]">of {cycleLength}</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-display text-sm font-semibold text-[#8F8C8C]">
+                    No data
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-[#B8AEB2]">
+                    Log your period
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
@@ -893,29 +936,47 @@ const cycleTrackingPaused = !!pregnancyData?.pregnancy;
           </div>
 
           {cycleTrackingPaused && (
-  <div className="mt-4 rounded-xl bg-[#FEE4EB] p-3 text-center">
-    <p className="text-sm font-bold text-[#F33B7D]">
-      Cycle Tracking Paused
-    </p>
-    <p className="mt-1 text-xs text-[#3D3939]">
-      Cycle tracking is paused while pregnancy is being tracked.
-    </p>
-  </div>
-)}
+            <div className="mt-4 rounded-xl bg-[#FEE4EB] p-3 text-center">
+              <p className="text-sm font-bold text-[#F33B7D]">
+                Cycle Tracking Paused
+              </p>
+              <p className="mt-1 text-xs text-[#3D3939]">
+                Cycle tracking is paused while pregnancy is being tracked.
+              </p>
+            </div>
+          )}
 
-{!cycleTrackingPaused && hasCycleData && currentPhase && (
-  <div className="mt-4 rounded-xl bg-[#FEE4EB] p-3 text-center">
-    <p className="text-sm font-bold text-[#F33B7D]">{currentPhase}</p>
-  </div>
-)}
+          {!cycleTrackingPaused && cycleNeedsNewEntry && (
+            <div className="mt-4 rounded-2xl border border-[#F0DCE4] bg-[#FFF7FA] p-4">
+              <h3 className="text-sm font-semibold text-[#0D0D0D]">
+                Start a new cycle
+              </h3>
+              <p className="mt-1 text-xs text-[#8F8C8C]">
+                Your pregnancy tracking has ended. Please enter your latest
+                period details to start menstrual cycle tracking again.
+              </p>
+              <Link
+                to="/cycle-tracker/log"
+                className="mt-3 inline-flex rounded-full bg-[#F33B7D] px-4 py-2 text-xs font-semibold text-white hover:bg-[#d92b6b] transition-colors"
+              >
+                Log New Period
+              </Link>
+            </div>
+          )}
 
-{!cycleTrackingPaused && !hasCycleData && (
-  <div className="mt-4 rounded-xl bg-[#FEE4EB] p-3 text-center">
-    <p className="text-xs text-[#3D3939]">
-      Log your first period to start tracking your cycle.
-    </p>
-  </div>
-)}
+          {!cycleTrackingPaused && !cycleNeedsNewEntry && hasCycleData && currentPhase && (
+            <div className="mt-4 rounded-xl bg-[#FEE4EB] p-3 text-center">
+              <p className="text-sm font-bold text-[#F33B7D]">{currentPhase}</p>
+            </div>
+          )}
+
+          {!cycleTrackingPaused && !cycleNeedsNewEntry && !hasCycleData && (
+            <div className="mt-4 rounded-xl bg-[#FEE4EB] p-3 text-center">
+              <p className="text-xs text-[#3D3939]">
+                Log your first period to start tracking your cycle.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Health Insights */}

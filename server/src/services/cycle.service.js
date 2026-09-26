@@ -40,15 +40,26 @@ const createCycle = async (userId, data) => {
     );
   }
 
-  // Find the most recent completed cycle
-  const previousCycle = await Cycle.findOne({
-    user: userId,
-    periodEnd: { $ne: null },
-  }).sort({
-    periodStart: -1,
-  });
+  // Check whether the user needs to start a fresh cycle
+// after pregnancy tracking ended.
+const pregnancyRecord = await Pregnancy.findOne({
+  user: userId,
+}).lean();
 
-  let cycleLength = 28;
+const requiresNewCycle =
+  pregnancyRecord?.cycleTrackingResetRequired === true;
+
+// Do not use the old pre-pregnancy cycle when starting again.
+const previousCycle = requiresNewCycle
+  ? null
+  : await Cycle.findOne({
+      user: userId,
+      periodEnd: { $ne: null },
+    }).sort({
+      periodStart: -1,
+    });
+
+let cycleLength = 28;
 
   if (previousCycle) {
     cycleLength = Math.round(
@@ -94,6 +105,20 @@ const createCycle = async (userId, data) => {
     symptoms: data.symptoms || [],
     notes: data.notes || "",
   });
+
+  if (requiresNewCycle && pregnancyRecord) {
+  await Pregnancy.updateOne(
+    {
+      _id: pregnancyRecord._id,
+      user: userId,
+    },
+    {
+      $set: {
+        cycleTrackingResetRequired: false,
+      },
+    }
+  );
+}
 
   await createNotification({
     userId,
@@ -150,6 +175,20 @@ const updateCycle = async (userId, cycleId, data) => {
       "Menstrual cycle tracking is paused while your pregnancy is active."
     );
   }
+  const pregnancyRecord = await Pregnancy.findOne({
+  user: userId,
+}).lean();
+
+if (pregnancyRecord?.cycleTrackingResetRequired === true) {
+  return {
+    isTracking: false,
+    isPaused: false,
+    requiresNewCycle: true,
+    reason: "needs_new_cycle",
+    message:
+      "Pregnancy tracking has ended. Please log your latest period to start a new menstrual cycle.",
+  };
+}
 
   const cycle = await Cycle.findOne({
     _id: cycleId,

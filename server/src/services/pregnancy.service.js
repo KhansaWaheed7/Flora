@@ -57,8 +57,9 @@ if (daysDifference > 294) {
     existing.lastPeriodDate = lastPeriodDate;
     existing.dueDate = dueDate;
     existing.currentWeek = currentWeek;
-    existing.trimester = trimester;
-    existing.isActive = true;
+existing.trimester = trimester;
+existing.isActive = true;
+existing.cycleTrackingResetRequired = true;
     pregnancy = await existing.save();
 
     // Recreate/reset reminders for the newly active pregnancy.
@@ -66,12 +67,13 @@ if (daysDifference > 294) {
     await generatePregnancyReminders(pregnancy._id);
   } else {
     pregnancy = await Pregnancy.create({
-      user: userId,
-      lastPeriodDate,
-      dueDate,
-      currentWeek,
-      trimester,
-    });
+  user: userId,
+  lastPeriodDate,
+  dueDate,
+  currentWeek,
+  trimester,
+  cycleTrackingResetRequired: true,
+});
     await generatePregnancyReminders(pregnancy._id);
   }
 
@@ -243,8 +245,9 @@ const endPregnancy = async (userId) => {
   }
 
   pregnancy.isActive = false;
+pregnancy.cycleTrackingResetRequired = true;
 
-  await pregnancy.save();
+await pregnancy.save();
 
   await createNotification({
     userId,

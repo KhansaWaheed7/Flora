@@ -83,13 +83,15 @@ exports.predictCycle = asyncHandler(async (req, res) => {
   );
 });
 exports.dashboard = asyncHandler(async (req, res) => {
-  const latestCycle = await Cycle.findOne({
-    user: req.user._id,
-  }).sort({
-    periodStart: -1,
-  });
-
   const prediction = await predictCycleService(req.user._id);
+
+const latestCycle = prediction?.requiresNewCycle
+  ? null
+  : await Cycle.findOne({
+      user: req.user._id,
+    }).sort({
+      periodStart: -1,
+    });
 
   res.status(200).json(
     new ApiResponse(

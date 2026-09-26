@@ -135,7 +135,9 @@ export default function PregnancyDashboard() {
       setError("");
       await endPregnancy();
       setShowStopModal(false);
-      navigate("/pregnancy");
+      // After stopping pregnancy, send the user to log a fresh period
+      // so menstrual cycle tracking can resume.
+      navigate("/cycle-tracker/log");
     } catch (err) {
       setError(
         err?.response?.data?.message ||
@@ -298,7 +300,9 @@ export default function PregnancyDashboard() {
                   Stop Pregnancy Tracking
                 </p>
                 <p className="mt-1 max-w-xl text-xs leading-5 text-[#8F8C8C]">
-                  End your active pregnancy tracking. Your pregnancy record will be preserved, and menstrual cycle tracking will become available again.
+                  End your active pregnancy tracking. Your pregnancy record will be preserved.
+                  After stopping pregnancy tracking, you will need to enter your latest period
+                  details before menstrual cycle tracking can resume.
                 </p>
               </div>
               <button
@@ -354,7 +358,8 @@ export default function PregnancyDashboard() {
 
             <p className="mt-2 text-center text-sm leading-6 text-[#8F8C8C]">
               This will end your active pregnancy tracker. Your pregnancy record will
-              be preserved, and menstrual cycle tracking will become available again.
+              be preserved. You will need to enter your latest period details before
+              menstrual cycle tracking can resume.
             </p>
 
             <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

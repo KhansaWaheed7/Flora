@@ -37,6 +37,10 @@ const pregnancySchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    cycleTrackingResetRequired: {
+  type: Boolean,
+  default: false,
+},
   },
   {
     timestamps: true,
