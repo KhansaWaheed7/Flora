@@ -34,7 +34,6 @@ import {
   Heart,
   Droplets,
   Sun,
-  ChevronDown,
   Bot,
 } from "lucide-react";
 import {
@@ -56,6 +55,8 @@ import { getConversations } from "../../services/chat.service";
 import { getAssessmentHistory } from "../../services/pcos.service";
 import { getPregnancyDashboard, trimesterLabel } from "../../services/pregnancy.service";
 import { getNotifications } from "../../services/notification.service";
+import { getDashboardSummary } from "../../services/dashboard.service";
+import { getTipDateLabel, getTipOfTheDay } from "../../data/healthTips";
 
 // Pink-toned neutral palette (replaces the old dead-grey tones)
 //   primaryText  : #3D2A33  (deep plum-grey, softer than pure black)
@@ -106,68 +107,6 @@ const statsConfig = [
     sub: "From Doctor",
     color: "#3B82F6",
     icon: MessageCircle,
-  },
-];
-
-const insights = [
-  {
-    icon: ActivityIcon,
-    title: "Stay Active",
-    detail: "You've completed 3 workouts this week.",
-    tag: "Great",
-    tagColor: "#22C55E",
-  },
-  {
-    icon: Droplet,
-    title: "Hydration",
-    detail: "You drink 6 of 8 glasses of water daily.",
-    tag: "Good",
-    tagColor: "#3B82F6",
-  },
-  {
-    icon: Apple,
-    title: "Nutrition",
-    detail: "Keep eating more iron-rich foods.",
-    tag: "Improve",
-    tagColor: "#F59E0B",
-  },
-  {
-    icon: Moon,
-    title: "Sleep",
-    detail: "You slept 7h 25m on average.",
-    tag: "Good",
-    tagColor: "#3B82F6",
-  },
-];
-
-const recentActivity = [
-  {
-    icon: Calendar,
-    color: "#F33B7D",
-    title: "Period Logged",
-    detail: "Flow: Moderate",
-    time: "19 May 2025, 9:20 AM",
-  },
-  {
-    icon: ClipboardList,
-    color: "#A855F7",
-    title: "Report Analyzed",
-    detail: "Iron Deficiency",
-    time: "18 May 2025, 4:30 PM",
-  },
-  {
-    icon: MessageCircle,
-    color: "#22C55E",
-    title: "Chat with Dr. Ayesha",
-    detail: "Hello Doctor, I have a question...",
-    time: "18 May 2025, 10:15 AM",
-  },
-  {
-    icon: Dumbbell,
-    color: "#F59E0B",
-    title: "Workout Completed",
-    detail: "Intensity: Yoga - 30 min",
-    time: "17 May 2025, 8:45 AM",
   },
 ];
 
@@ -334,6 +273,30 @@ function getRiskLevel(risk) {
   return "Unknown";
 }
 
+
+const insightPresentation = {
+  cycle: { icon: ActivityIcon, color: "#F33B7D" },
+  pcos: { icon: ShieldCheck, color: "#A855F7" },
+  "medical-report": { icon: ClipboardList, color: "#F59E0B" },
+  consultation: { icon: MessageCircle, color: "#22C55E" },
+};
+
+const activityPresentation = {
+  cycle: { icon: Calendar, color: "#F33B7D" },
+  pcos: { icon: ShieldCheck, color: "#A855F7" },
+  "medical-report": { icon: ClipboardList, color: "#F59E0B" },
+  consultation: { icon: MessageCircle, color: "#22C55E" },
+};
+
+const getInsightTagColor = (insight) => {
+  const tag = (insight?.tag || "").toLowerCase();
+
+  if (tag.includes("high") || tag === "review") return "#F33B7D";
+  if (tag.includes("medium") || tag.includes("moderate") || tag === "pending") return "#F59E0B";
+  if (tag.includes("no data") || tag === "paused" || tag === "history") return "#A8849A";
+  return "#22C55E";
+};
+
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -349,6 +312,8 @@ export default function DashboardPage() {
   const [predictionData, setPredictionData] = useState(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [latestNotifications, setLatestNotifications] = useState([]);
+  const [healthInsights, setHealthInsights] = useState([]);
+  const [recentUserActivity, setRecentUserActivity] = useState([]);
   const [cyclesData, setCyclesData] = useState([]);
   const [pcosAssessments, setPcosAssessments] = useState([]);
   const [pregnancyData, setPregnancyData] = useState(null);
@@ -374,6 +339,7 @@ export default function DashboardPage() {
           pregnancyRes,
           conversationsRes,
           notificationsRes,
+          dashboardSummaryRes,
         ] = await Promise.all([
           getCycleDashboard().catch(() => ({ data: null })),
           getPrediction().catch(() => ({ data: null })),
@@ -382,6 +348,7 @@ export default function DashboardPage() {
           getPregnancyDashboard().catch(() => ({ data: null })),
           getConversations().catch(() => []),
           getNotifications({ limit: 6 }).catch(() => []),
+          getDashboardSummary().catch(() => ({ insights: [], recentActivity: [] })),
         ]);
 
         const dashboard = dashboardRes.data || dashboardRes || null;
@@ -389,6 +356,7 @@ export default function DashboardPage() {
         const cycles = cyclesRes.data || cyclesRes.cycles || cyclesRes || [];
         const pcos = Array.isArray(pcosRes) ? pcosRes : [];
         const pregnancy = pregnancyRes?.pregnancy ? pregnancyRes : null;
+        const dashboardSummary = dashboardSummaryRes || {};
 
         const conversations = Array.isArray(conversationsRes)
           ? conversationsRes
@@ -406,6 +374,10 @@ export default function DashboardPage() {
         setPregnancyData(pregnancy);
         setUnreadMessages(totalUnread);
         setLatestNotifications(normalizeNotifications(notificationsRes));
+        setHealthInsights(Array.isArray(dashboardSummary?.insights) ? dashboardSummary.insights : []);
+        setRecentUserActivity(
+          Array.isArray(dashboardSummary?.recentActivity) ? dashboardSummary.recentActivity : []
+        );
 
         const requiresNewCycle =
           dashboard?.prediction?.requiresNewCycle === true ||
@@ -432,16 +404,26 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user?._id || user?.role === "admin") return;
 
-    const refreshNotifications = async () => {
+    const refreshDashboard = async () => {
       try {
-        const res = await getNotifications({ limit: 6 });
-        setLatestNotifications(normalizeNotifications(res));
+        const [notificationsRes, summaryRes] = await Promise.all([
+          getNotifications({ limit: 6 }),
+          getDashboardSummary(),
+        ]);
+
+        setLatestNotifications(normalizeNotifications(notificationsRes));
+        setHealthInsights(
+          Array.isArray(summaryRes?.insights) ? summaryRes.insights : []
+        );
+        setRecentUserActivity(
+          Array.isArray(summaryRes?.recentActivity) ? summaryRes.recentActivity : []
+        );
       } catch (err) {
-        console.error("Could not refresh dashboard notifications:", err);
+        console.error("Could not refresh dashboard data:", err);
       }
     };
 
-    const interval = setInterval(refreshNotifications, 30000);
+    const interval = setInterval(refreshDashboard, 30000);
     return () => clearInterval(interval);
   }, [user?._id, user?.role]);
 
@@ -938,40 +920,61 @@ export default function DashboardPage() {
             <h2 className="font-display text-base font-semibold text-[#3D2A33]">
               Health Insights
             </h2>
-            <button className="flex items-center gap-1 text-xs font-medium text-[#A8849A] hover:text-[#F33B7D] transition-colors">
-              This Week <ChevronDown className="h-3 w-3" />
-            </button>
+            <span className="text-xs font-medium text-[#A8849A]">
+              Live from your account
+            </span>
           </div>
+
           <div className="divide-y divide-[#F5E4EC]">
-            {insights.map(({ icon: Icon, title, detail, tag, tagColor }) => (
-              <div
-                key={title}
-                className="group flex items-start gap-3 px-2 py-3 -mx-2 first:pt-0 last:pb-0 rounded-xl transition-all duration-200 hover:bg-[#FEF4F4] hover:shadow-[0_2px_8px_rgba(243,59,125,0.06)]"
-              >
-                <span
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-[#F5E4EC] transition-transform duration-200 group-hover:scale-105"
-                  style={{ backgroundColor: `${tagColor}1A`, color: tagColor }}
-                >
-                  <Icon className="h-4 w-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[#3D2A33]">
-                    {title}
-                  </p>
-                  <p className="truncate text-xs text-[#A8849A]">{detail}</p>
-                </div>
-                <span
-                  className="flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold shadow-sm ring-1 ring-[#F5E4EC]"
-                  style={{ backgroundColor: `${tagColor}1A`, color: tagColor }}
-                >
-                  {tag}
-                </span>
+            {healthInsights.length > 0 ? (
+              healthInsights.map((item) => {
+                const presentation = insightPresentation[item.type] || insightPresentation.cycle;
+                const Icon = presentation.icon;
+                const tagColor = getInsightTagColor(item);
+
+                return (
+                  <div
+                    key={item.id}
+                    className="group flex items-start gap-3 px-2 py-3 -mx-2 first:pt-0 last:pb-0 rounded-xl transition-all duration-200 hover:bg-[#FEF4F4] hover:shadow-[0_2px_8px_rgba(243,59,125,0.06)]"
+                  >
+                    <span
+                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-[#F5E4EC] transition-transform duration-200 group-hover:scale-105"
+                      style={{
+                        backgroundColor: `${presentation.color}1A`,
+                        color: presentation.color,
+                      }}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-[#3D2A33]">{item.title}</p>
+                        {item.timeLabel && (
+                          <span className="flex-shrink-0 text-[10px] text-[#C9A8B8]">
+                            {item.timeLabel}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-xs leading-5 text-[#A8849A]">{item.detail}</p>
+                    </div>
+                    <span
+                      className="flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold shadow-sm ring-1 ring-[#F5E4EC]"
+                      style={{ backgroundColor: `${tagColor}1A`, color: tagColor }}
+                    >
+                      {item.tag}
+                    </span>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="py-5 text-center text-xs text-[#C9A8B8]">
+                No health insights available yet.
               </div>
-            ))}
+            )}
           </div>
-          <button className="mt-4 w-full text-center text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors">
-            View Detailed Insights →
-          </button>
+          <p className="mt-4 text-center text-[10px] text-[#C9A8B8]">
+            Values are based on your saved cycle, screening, report and consultation data.
+          </p>
         </div>
 
         {/* Latest Notifications + Tip */}
@@ -1026,7 +1029,8 @@ export default function DashboardPage() {
 
           <div className="relative flex-1 overflow-hidden rounded-2xl bg-[#F33B7D] p-4 text-white shadow-[0_10px_24px_-4px_rgba(243,59,125,0.4)]">
             <p className="text-sm font-semibold">Tip of the Day</p>
-            <p className="mt-1 max-w-[70%] text-xs text-white/85">{insight}</p>
+            <p className="mt-1 max-w-[88%] text-xs text-white/90">{getTipOfTheDay()}</p>
+            <p className="mt-2 text-[10px] font-medium text-white/70">{getTipDateLabel()} · General health tip</p>
           </div>
         </div>
       </div>
@@ -1107,40 +1111,46 @@ export default function DashboardPage() {
                 Your latest health updates
               </p>
             </div>
-            <button className="text-xs font-semibold text-[#F33B7D] hover:text-[#d92b6b] transition-colors">
-              View All
-            </button>
+            <span className="text-xs font-medium text-[#A8849A]">Latest 4</span>
           </div>
 
           <div className="divide-y divide-[#F5E4EC]">
-            {recentActivity
-              .slice(0, 4)
-              .map(({ icon: Icon, color, title, detail, time }) => (
-                <div
-                  key={title}
-                  className="group relative flex items-center gap-4 px-3 py-3.5 -mx-3 first:pt-0 last:pb-0 rounded-xl transition-all duration-300 hover:bg-[#FEF4F4] hover:shadow-[0_2px_8px_rgba(243,59,125,0.06)] cursor-pointer"
-                >
-                  <span
-                    className="absolute left-0 top-1/2 h-8 w-0.5 -translate-y-1/2 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                    style={{ backgroundColor: color }}
-                  />
-                  <div
-                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-[#F5E4EC] transition-all duration-300 group-hover:scale-110"
-                    style={{ backgroundColor: `${color}1A`, color }}
+            {recentUserActivity.length > 0 ? (
+              recentUserActivity.slice(0, 4).map((item) => {
+                const presentation = activityPresentation[item.type] || activityPresentation.cycle;
+                const Icon = presentation.icon;
+
+                return (
+                  <Link
+                    key={item.id}
+                    to={item.link || "/dashboard"}
+                    className="group relative flex items-center gap-4 px-3 py-3.5 -mx-3 first:pt-0 last:pb-0 rounded-xl transition-all duration-300 hover:bg-[#FEF4F4] hover:shadow-[0_2px_8px_rgba(243,59,125,0.06)]"
                   >
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#3D2A33]">
-                      {title}
-                    </p>
-                    <p className="truncate text-xs text-[#A8849A]">{detail}</p>
-                  </div>
-                  <span className="flex-shrink-0 rounded-full bg-[#FDF2F7] px-2 py-0.5 text-[10px] font-medium text-[#C9A8B8] transition-colors group-hover:bg-white group-hover:text-[#A8849A]">
-                    {time}
-                  </span>
-                </div>
-              ))}
+                    <span
+                      className="absolute left-0 top-1/2 h-8 w-0.5 -translate-y-1/2 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                      style={{ backgroundColor: presentation.color }}
+                    />
+                    <div
+                      className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-[#F5E4EC] transition-all duration-300 group-hover:scale-110"
+                      style={{ backgroundColor: `${presentation.color}1A`, color: presentation.color }}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[#3D2A33]">{item.title}</p>
+                      <p className="truncate text-xs text-[#A8849A]">{item.detail}</p>
+                    </div>
+                    <span className="flex-shrink-0 rounded-full bg-[#FDF2F7] px-2 py-0.5 text-[10px] font-medium text-[#C9A8B8] transition-colors group-hover:bg-white group-hover:text-[#A8849A]">
+                      {item.timeLabel}
+                    </span>
+                  </Link>
+                );
+              })
+            ) : (
+              <div className="py-8 text-center text-xs text-[#C9A8B8]">
+                No recent activity yet. Start using the health tracker to build your activity history.
+              </div>
+            )}
           </div>
         </div>
       </div>
