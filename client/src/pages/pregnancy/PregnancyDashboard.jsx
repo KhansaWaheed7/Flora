@@ -11,6 +11,7 @@ import {
   Milestone,
   Heart,
   Plus,
+  XCircle,
 } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import {
@@ -183,8 +184,41 @@ export default function PregnancyDashboard() {
         /* CONDITION 2: ACTIVE PREGNANCY -> SHOW REGULAR DASHBOARD       */
         /* ------------------------------------------------------------- */
         <>
+          {/* Quick Actions + Stop Tracking */}
+          <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {quickActions.map(({ label, to, icon: Icon }) => (
+                <Link
+                  key={label}
+                  to={to}
+                  className="flex flex-col items-center gap-2 rounded-xl bg-[#FEF4F4] px-3 py-4 text-center transition hover:bg-[#FEE4EB]"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white">
+                    <Icon className="h-4 w-4 text-[#F33B7D]" strokeWidth={1.5} />
+                  </div>
+                  <span className="text-sm font-medium text-[#3D3939]">{label}</span>
+                </Link>
+              ))}
+
+              {/* Prominent Stop Tracking action */}
+              <button
+                type="button"
+                onClick={handleStopTracking}
+                disabled={stopping}
+                className="flex flex-col items-center gap-2 rounded-xl bg-[#F33B7D] px-3 py-4 text-center shadow-[0_14px_28px_-6px_rgba(243,59,125,0.5)] transition hover:-translate-y-0.5 hover:bg-[#E02E6D] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white">
+                  <XCircle className="h-4 w-4 text-[#F33B7D]" strokeWidth={2} />
+                </div>
+                <span className="text-sm font-semibold text-white">
+                  {stopping ? "Stopping..." : "Stop Tracking"}
+                </span>
+              </button>
+            </div>
+          </div>
+
           {/* Top summary card */}
-          <div className="rounded-2xl bg-[#FEF4F4] p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <div className="mt-4 rounded-2xl bg-[#FEF4F4] p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
             <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-3">
               <div>
                 <p className="text-xs text-[#8F8C8C]">Current Week</p>
@@ -289,48 +323,6 @@ export default function PregnancyDashboard() {
             <div className="rounded-2xl bg-[#FEF4F4] p-4 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
               <p className="text-xs font-semibold text-[#F33B7D]">Today's Tip</p>
               <p className="mt-1 text-xs text-[#3D3939]">{todaysTip}</p>
-            </div>
-          </div>
-
-          {/* Stop pregnancy tracking */}
-          <div className="mt-4 rounded-2xl border border-[#F0DCE4] bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)]">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-[#0D0D0D]">
-                  Stop Pregnancy Tracking
-                </p>
-                <p className="mt-1 max-w-xl text-xs leading-5 text-[#8F8C8C]">
-                  End your active pregnancy tracking. Your pregnancy record will be preserved.
-                  After stopping pregnancy tracking, you will need to enter your latest period
-                  details before menstrual cycle tracking can resume.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleStopTracking}
-                disabled={stopping}
-                className="shrink-0 rounded-full border border-[#E9B8C9] px-5 py-2.5 text-xs font-semibold text-[#C52F62] transition hover:bg-[#FEF4F4] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {stopping ? "Stopping..." : "Stop Tracking"}
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="mt-4 rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {quickActions.map(({ label, to, icon: Icon }) => (
-                <Link
-                  key={label}
-                  to={to}
-                  className="flex flex-col items-center gap-2 rounded-xl bg-[#FEF4F4] px-3 py-4 text-center transition hover:bg-[#FEE4EB]"
-                >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white">
-                    <Icon className="h-4 w-4 text-[#F33B7D]" strokeWidth={1.5} />
-                  </div>
-                  <span className="text-sm font-medium text-[#3D3939]">{label}</span>
-                </Link>
-              ))}
             </div>
           </div>
         </>

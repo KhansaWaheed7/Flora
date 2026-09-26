@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Send,
@@ -7,13 +7,8 @@ import {
   Check,
   History,
 } from "lucide-react";
-
 import PageLayout from "../../layouts/PageLayout";
-
-import {
-  sendGynaeMessage,
-} from "../../services/gynaeAssistant.service";
-
+import { sendGynaeMessage } from "../../services/gynaeAssistant.service";
 import womanImage from "../../assets/woman.png";
 
 const initialAssistantMessage = {
@@ -85,18 +80,16 @@ export default function GynaeAssistantPage() {
 
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [selectedOptions, setSelectedOptions] = useState([]);
-
   const [category, setCategory] = useState(null);
   const [assessment, setAssessment] = useState(null);
-
   const [answeredQuestions, setAnsweredQuestions] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
-
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Shows the polished completion summary when an assessment finishes.
-  const [showAssessmentComplete, setShowAssessmentComplete] = useState(false);
+  const [showAssessmentComplete, setShowAssessmentComplete] =
+    useState(false);
 
   const formatTime = (date = new Date()) => {
     return date.toLocaleTimeString([], {
@@ -104,7 +97,6 @@ export default function GynaeAssistantPage() {
       minute: "2-digit",
     });
   };
-
 
   // ======================================================
   // MESSAGE HELPERS
@@ -134,31 +126,27 @@ export default function GynaeAssistantPage() {
     ]);
   };
 
-
   const startNewConversation = useCallback(() => {
-  setConversationId(null);
+    setConversationId(null);
 
-  setMessages([
-    {
-      ...initialAssistantMessage,
-      id: `welcome-${Date.now()}`,
-      timestamp: formatTime(),
-    },
-  ]);
+    setMessages([
+      {
+        ...initialAssistantMessage,
+        id: `welcome-${Date.now()}`,
+        timestamp: formatTime(),
+      },
+    ]);
 
-  setCurrentQuestion(null);
-  setSelectedOptions([]);
+    setCurrentQuestion(null);
+    setSelectedOptions([]);
+    setCategory(null);
+    setAssessment(null);
+    setAnsweredQuestions(0);
+    setTotalQuestions(0);
+    setShowAssessmentComplete(false);
+    setInput("");
+  }, []);
 
-  setCategory(null);
-  setAssessment(null);
-
-  setAnsweredQuestions(0);
-  setTotalQuestions(0);
-
-  setShowAssessmentComplete(false);
-
-  setInput("");
-}, []);
   // ======================================================
   // SEND MESSAGE
   // ======================================================
@@ -178,14 +166,13 @@ export default function GynaeAssistantPage() {
     }
 
     addUserMessage(cleanMessage);
-
     setLoading(true);
 
     try {
-  const result = await sendGynaeMessage(
-    conversationId,
-    cleanMessage
-  );
+      const result = await sendGynaeMessage(
+        conversationId,
+        cleanMessage
+      );
 
       const data = result?.data;
 
@@ -382,7 +369,8 @@ export default function GynaeAssistantPage() {
         )
       : 0;
 
-  const assessmentRiskLevel = assessment?.riskLevel || "low";
+  const assessmentRiskLevel =
+    assessment?.riskLevel || "low";
 
   const assessmentRiskLabel =
     assessmentRiskLevel === "high"
@@ -408,13 +396,45 @@ export default function GynaeAssistantPage() {
       subtitle="Your AI assistant for women's gynecological and reproductive health."
     >
       {/* ==================================================
+          AI HEALTH DISCLAIMER
+      ================================================== */}
+
+      <div className="mb-4 w-full rounded-2xl bg-[#F33B7D] px-4 py-3 shadow-[0_4px_14px_rgba(243,59,125,0.35)]">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
+            <Sparkles className="h-4 w-4" />
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-white">
+              Important: Flora is an AI Health Assistant
+            </p>
+
+            <p className="mt-1 text-xs leading-5 text-white/90">
+              Flora provides AI-generated general health
+              information and guided assessments. Responses may
+              not always be accurate and are not a medical
+              diagnosis or a substitute for professional care.
+            </p>
+
+            <p className="mt-1.5 text-xs font-semibold leading-5 text-white">
+              For severe, worsening, or urgent symptoms, seek
+              professional medical care.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* ==================================================
           PAGE ACTION
       ================================================== */}
 
       <div className="mb-4 flex flex-wrap justify-end gap-3">
         <button
           type="button"
-          onClick={() => navigate("/gynae-assistant/history")}
+          onClick={() =>
+            navigate("/gynae-assistant/history")
+          }
           className="inline-flex items-center gap-2 rounded-xl border border-[#E7DDE0] bg-white px-4 py-2.5 text-xs font-semibold text-[#3D3939] transition hover:border-[#F33B7D] hover:bg-[#FEE4EB] hover:text-[#F33B7D]"
         >
           <History className="h-4 w-4" />
@@ -437,17 +457,14 @@ export default function GynaeAssistantPage() {
       ================================================== */}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
-
         {/* ==================================================
             CHAT CARD
         ================================================== */}
 
         <section className="flex min-h-[680px] min-w-0 flex-col overflow-hidden rounded-2xl bg-white shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-
           {/* Chat top bar */}
 
           <div className="flex items-center justify-between border-b border-[#F4E8EB] px-5 py-4">
-
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FEE4EB] text-[#F33B7D]">
                 <Sparkles className="h-5 w-5" />
@@ -459,7 +476,8 @@ export default function GynaeAssistantPage() {
                 </p>
 
                 <p className="text-xs text-[#8F8C8C]">
-                  General health information and guided assessments
+                  General health information and guided
+                  assessments
                 </p>
               </div>
             </div>
@@ -473,7 +491,6 @@ export default function GynaeAssistantPage() {
             >
               <Trash2 className="h-4 w-4" />
             </button>
-
           </div>
 
           {/* ==================================================
@@ -483,7 +500,6 @@ export default function GynaeAssistantPage() {
           {assessment?.result && showAssessmentComplete ? (
             <div className="flex flex-1 items-center justify-center overflow-y-auto px-4 py-8 sm:px-6">
               <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 sm:p-8">
-
                 <div className="text-center">
                   <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50 text-green-600 ring-8 ring-green-50/60">
                     <Check className="h-8 w-8" />
@@ -518,7 +534,11 @@ export default function GynaeAssistantPage() {
                       </div>
 
                       <p className="text-xs leading-5 text-[#3D3939]">
-                        Your assessment is complete. Review the summary and recommendation below, and seek professional care if your symptoms are severe, worsening, persistent, or concerning.
+                        Your assessment is complete. Review the
+                        summary and recommendation below, and seek
+                        professional care if your symptoms are
+                        severe, worsening, persistent, or
+                        concerning.
                       </p>
                     </div>
                   </div>
@@ -550,243 +570,244 @@ export default function GynaeAssistantPage() {
                       </p>
 
                       <ul className="mt-2 space-y-2">
-                        {assessment.redFlags.map((flag, index) => (
-                          <li
-                            key={index}
-                            className="flex gap-2 text-xs leading-5 text-red-700"
-                          >
-                            <span>•</span>
-                            <span>{flag}</span>
-                          </li>
-                        ))}
+                        {assessment.redFlags.map(
+                          (flag, index) => (
+                            <li
+                              key={index}
+                              className="flex gap-2 text-xs leading-5 text-red-700"
+                            >
+                              <span>•</span>
+                              <span>{flag}</span>
+                            </li>
+                          )
+                        )}
                       </ul>
                     </div>
                   )}
 
                   <div className="rounded-xl border border-[#FEE4EB] bg-[#FEF4F4] p-4">
                     <p className="text-xs leading-5 text-[#8F8C8C]">
-                      Please remember that this assessment does not provide a medical diagnosis. It is for informational purposes only.
+                      Please remember that this assessment does
+                      not provide a medical diagnosis. It is for
+                      informational purposes only.
                     </p>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => setShowAssessmentComplete(false)}
+                    onClick={() =>
+                      setShowAssessmentComplete(false)
+                    }
                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#F33B7D] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#E72F70]"
                   >
                     <Sparkles className="h-4 w-4" />
                     Back to Chat
                   </button>
                 </div>
-
               </div>
             </div>
           ) : (
             <>
-          <div className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-5">
+              <div className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-5">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex gap-3 ${
+                      message.role === "user"
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
+                  >
+                    {message.role === "assistant" && (
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#FEE4EB] text-[#F33B7D]">
+                        <Sparkles className="h-4 w-4" />
+                      </div>
+                    )}
 
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex gap-3 ${
-                  message.role === "user"
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
-              >
-
-                {message.role === "assistant" && (
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#FEE4EB] text-[#F33B7D]">
-                    <Sparkles className="h-4 w-4" />
-                  </div>
-                )}
-
-                <div
-                  className={`relative max-w-[85%] rounded-2xl px-4 py-3 sm:max-w-[70%] ${
-                    message.role === "user"
-                      ? "bg-[#FEE4EB]"
-                      : "bg-[#FEF4F4]"
-                  }`}
-                >
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="text-xs font-semibold text-[#3D3939]">
-                      {message.role === "user"
-                        ? "You"
-                        : "Flora Assistant"}
-                    </span>
-
-                    <span className="text-[10px] text-[#B8AEB2]">
-                      {message.timestamp || formatTime()}
-                    </span>
-                  </div>
-
-                  <p className="whitespace-pre-line text-sm leading-6 text-[#3D3939]">
-                    {message.content}
-                  </p>
-
-                  {message.role === "user" && (
-                    <span className="mt-1 block text-right text-[10px] font-semibold text-[#F33B7D]">
-                      ✓✓
-                    </span>
-                  )}
-                </div>
-
-              </div>
-            ))}
-
-            {/* ==================================================
-                STRUCTURED ASSESSMENT QUESTION
-            ================================================== */}
-
-            {currentQuestion && (
-              <div className="ml-0 rounded-2xl border border-[#FEE4EB] bg-white p-4 sm:ml-12 sm:p-5">
-
-                <div className="mb-4">
-                  <div className="mb-2 flex items-center gap-2">
-
-                    <span className="rounded-full bg-[#FEE4EB] px-2.5 py-1 text-[10px] font-semibold text-[#F33B7D]">
-                      Question {currentQuestionNumber} of{" "}
-                      {totalQuestions}
-                    </span>
-
-                  </div>
-
-                  <h3 className="text-sm font-semibold leading-6 text-[#0D0D0D]">
-                    {currentQuestion.text}
-                  </h3>
-
-                  <p className="mt-1 text-xs text-[#8F8C8C]">
-                    {currentQuestion.type === "multi_choice"
-                      ? "Select all options that apply, then press Continue."
-                      : "Select the option that best describes your situation."}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-
-                  {currentQuestion.options?.map((option) => {
-                    const selected =
-                      selectedOptions.includes(option.value);
-
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => handleOptionClick(option)}
-                        disabled={loading}
-                        className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-xs font-medium transition ${
-                          selected
-                            ? "border-[#F33B7D] bg-[#FEE4EB] text-[#F33B7D]"
-                            : "border-[#EDE4E6] bg-white text-[#3D3939] hover:border-[#F33B7D] hover:bg-[#FEF4F4]"
-                        } disabled:cursor-not-allowed disabled:opacity-50`}
-                      >
-                        <span
-                          className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border ${
-                            selected
-                              ? "border-[#F33B7D]"
-                              : "border-[#B8AEB2]"
-                          }`}
-                        >
-                          {selected && (
-                            <span className="h-2 w-2 rounded-full bg-[#F33B7D]" />
-                          )}
+                    <div
+                      className={`relative max-w-[85%] rounded-2xl px-4 py-3 sm:max-w-[70%] ${
+                        message.role === "user"
+                          ? "bg-[#FEE4EB]"
+                          : "bg-[#FEF4F4]"
+                      }`}
+                    >
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="text-xs font-semibold text-[#3D3939]">
+                          {message.role === "user"
+                            ? "You"
+                            : "Flora Assistant"}
                         </span>
 
-                        {option.label}
+                        <span className="text-[10px] text-[#B8AEB2]">
+                          {message.timestamp || formatTime()}
+                        </span>
+                      </div>
+
+                      <p className="whitespace-pre-line text-sm leading-6 text-[#3D3939]">
+                        {message.content}
+                      </p>
+
+                      {message.role === "user" && (
+                        <span className="mt-1 block text-right text-[10px] font-semibold text-[#F33B7D]">
+                          ✓✓
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {/* ==================================================
+                    STRUCTURED ASSESSMENT QUESTION
+                ================================================== */}
+
+                {currentQuestion && (
+                  <div className="ml-0 rounded-2xl border border-[#FEE4EB] bg-white p-4 sm:ml-12 sm:p-5">
+                    <div className="mb-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="rounded-full bg-[#FEE4EB] px-2.5 py-1 text-[10px] font-semibold text-[#F33B7D]">
+                          Question {currentQuestionNumber} of{" "}
+                          {totalQuestions}
+                        </span>
+                      </div>
+
+                      <h3 className="text-sm font-semibold leading-6 text-[#0D0D0D]">
+                        {currentQuestion.text}
+                      </h3>
+
+                      <p className="mt-1 text-xs text-[#8F8C8C]">
+                        {currentQuestion.type ===
+                        "multi_choice"
+                          ? "Select all options that apply, then press Continue."
+                          : "Select the option that best describes your situation."}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      {currentQuestion.options?.map(
+                        (option) => {
+                          const selected =
+                            selectedOptions.includes(
+                              option.value
+                            );
+
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() =>
+                                handleOptionClick(option)
+                              }
+                              disabled={loading}
+                              className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-xs font-medium transition ${
+                                selected
+                                  ? "border-[#F33B7D] bg-[#FEE4EB] text-[#F33B7D]"
+                                  : "border-[#EDE4E6] bg-white text-[#3D3939] hover:border-[#F33B7D] hover:bg-[#FEF4F4]"
+                              } disabled:cursor-not-allowed disabled:opacity-50`}
+                            >
+                              <span
+                                className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border ${
+                                  selected
+                                    ? "border-[#F33B7D]"
+                                    : "border-[#B8AEB2]"
+                                }`}
+                              >
+                                {selected && (
+                                  <span className="h-2 w-2 rounded-full bg-[#F33B7D]" />
+                                )}
+                              </span>
+
+                              {option.label}
+                            </button>
+                          );
+                        }
+                      )}
+                    </div>
+
+                    {currentQuestion.type ===
+                      "multi_choice" && (
+                      <button
+                        type="button"
+                        onClick={handleMultiChoiceSubmit}
+                        disabled={
+                          loading ||
+                          selectedOptions.length === 0
+                        }
+                        className="mt-4 rounded-xl bg-[#F33B7D] px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-[#E72F70] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Continue
                       </button>
-                    );
-                  })}
-
-                </div>
-
-                {currentQuestion.type === "multi_choice" && (
-                  <button
-                    type="button"
-                    onClick={handleMultiChoiceSubmit}
-                    disabled={
-                      loading || selectedOptions.length === 0
-                    }
-                    className="mt-4 rounded-xl bg-[#F33B7D] px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-[#E72F70] disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Continue
-                  </button>
+                    )}
+                  </div>
                 )}
 
-              </div>
-            )}
+                {/* ==================================================
+                    ASSESSMENT RESULT
+                ================================================== */}
 
-            {/* ==================================================
-                ASSESSMENT RESULT
-            ================================================== */}
+                {assessment?.result && (
+                  <div className="ml-0 rounded-2xl bg-[#FEF4F4] p-5 ring-1 ring-[#FEE4EB] sm:ml-12">
+                    <div className="mb-3 flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FEE4EB] text-[#F33B7D]">
+                        <Check className="h-4 w-4" />
+                      </div>
 
-            {assessment?.result && (
-              <div className="ml-0 rounded-2xl bg-[#FEF4F4] p-5 ring-1 ring-[#FEE4EB] sm:ml-12">
+                      <h3 className="font-display text-base font-semibold text-[#0D0D0D]">
+                        {assessment.result.title}
+                      </h3>
+                    </div>
 
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FEE4EB] text-[#F33B7D]">
-                    <Check className="h-4 w-4" />
-                  </div>
-
-                  <h3 className="font-display text-base font-semibold text-[#0D0D0D]">
-                    {assessment.result.title}
-                  </h3>
-                </div>
-
-                <p className="text-sm leading-6 text-[#3D3939]">
-                  {assessment.result.summary}
-                </p>
-
-                <div className="mt-4 rounded-xl bg-white p-4">
-                  <p className="text-xs font-semibold text-[#0D0D0D]">
-                    Recommendation
-                  </p>
-
-                  <p className="mt-1 text-xs leading-5 text-[#8F8C8C]">
-                    {assessment.result.recommendation}
-                  </p>
-                </div>
-
-                {assessment.redFlags?.length > 0 && (
-                  <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4">
-                    <p className="text-xs font-semibold text-red-700">
-                      Red flags
+                    <p className="text-sm leading-6 text-[#3D3939]">
+                      {assessment.result.summary}
                     </p>
 
-                    <ul className="mt-2 space-y-1.5">
-                      {assessment.redFlags.map((flag, index) => (
-                        <li
-                          key={index}
-                          className="flex gap-2 text-xs leading-5 text-red-700"
-                        >
-                          <span>•</span>
-                          <span>{flag}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="mt-4 rounded-xl bg-white p-4">
+                      <p className="text-xs font-semibold text-[#0D0D0D]">
+                        Recommendation
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-[#8F8C8C]">
+                        {assessment.result.recommendation}
+                      </p>
+                    </div>
+
+                    {assessment.redFlags?.length > 0 && (
+                      <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4">
+                        <p className="text-xs font-semibold text-red-700">
+                          Red flags
+                        </p>
+
+                        <ul className="mt-2 space-y-1.5">
+                          {assessment.redFlags.map(
+                            (flag, index) => (
+                              <li
+                                key={index}
+                                className="flex gap-2 text-xs leading-5 text-red-700"
+                              >
+                                <span>•</span>
+                                <span>{flag}</span>
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 )}
 
+                {/* Loading */}
+
+                {loading && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FEE4EB] text-[#F33B7D]">
+                      <Sparkles className="h-4 w-4" />
+                    </div>
+
+                    <div className="rounded-2xl bg-[#FEF4F4] px-4 py-3 text-xs text-[#8F8C8C]">
+                      Flora is thinking...
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-
-            {/* Loading */}
-
-            {loading && (
-              <div className="flex items-center gap-3">
-
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FEE4EB] text-[#F33B7D]">
-                  <Sparkles className="h-4 w-4" />
-                </div>
-
-                <div className="rounded-2xl bg-[#FEF4F4] px-4 py-3 text-xs text-[#8F8C8C]">
-                  Flora is thinking...
-                </div>
-
-              </div>
-            )}
-
-          </div>
-
             </>
           )}
 
@@ -796,54 +817,49 @@ export default function GynaeAssistantPage() {
 
           {!showAssessmentComplete && (
             <div className="border-t border-[#F4E8EB] bg-white p-4 sm:p-5">
-
               <div className="flex min-h-14 items-center gap-2 rounded-2xl border border-[#E7DDE0] bg-white px-3 transition focus-within:border-[#F33B7D]">
-
-              <input
-                value={input}
-                onChange={(event) =>
-                  setInput(event.target.value)
-                }
-                onKeyDown={(event) => {
-                  if (
-                    event.key === "Enter" &&
-                    !event.shiftKey
-                  ) {
-                    event.preventDefault();
-
-                    /*
-                     * Free-text input is always sent as normal
-                     * conversation text. Backend decides how
-                     * to handle it while preserving assessments.
-                     */
-                    handleSend();
+                <input
+                  value={input}
+                  onChange={(event) =>
+                    setInput(event.target.value)
                   }
-                }}
-                placeholder="Type your message..."
-                disabled={
-                  loading || Boolean(assessment?.result)
-                }
-                className="min-w-0 flex-1 bg-transparent px-1 py-3 text-sm text-[#3D3939] outline-none placeholder:text-[#B8AEB2] disabled:cursor-not-allowed"
-              />
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "Enter" &&
+                      !event.shiftKey
+                    ) {
+                      event.preventDefault();
 
-              <button
-                type="button"
-                onClick={() => handleSend()}
-                disabled={
-                  loading ||
-                  !input.trim() ||
-                  Boolean(assessment?.result)
-                }
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#F33B7D] text-white transition hover:bg-[#E72F70] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Send className="h-4 w-4" />
-              </button>
+                      /*
+                       * Free-text input is always sent as normal
+                       * conversation text. Backend decides how
+                       * to handle it while preserving assessments.
+                       */
+                      handleSend();
+                    }
+                  }}
+                  placeholder="Type your message..."
+                  disabled={
+                    loading || Boolean(assessment?.result)
+                  }
+                  className="min-w-0 flex-1 bg-transparent px-1 py-3 text-sm text-[#3D3939] outline-none placeholder:text-[#B8AEB2] disabled:cursor-not-allowed"
+                />
 
+                <button
+                  type="button"
+                  onClick={() => handleSend()}
+                  disabled={
+                    loading ||
+                    !input.trim() ||
+                    Boolean(assessment?.result)
+                  }
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#F33B7D] text-white transition hover:bg-[#E72F70] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
               </div>
-
             </div>
           )}
-
         </section>
 
         {/* ==================================================
@@ -851,13 +867,11 @@ export default function GynaeAssistantPage() {
         ================================================== */}
 
         <aside className="space-y-4">
-
           {/* ==================================================
               ABOUT FLORA
           ================================================== */}
 
           <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-
             <h2 className="font-display text-sm font-semibold text-[#0D0D0D]">
               About Flora
             </h2>
@@ -868,7 +882,6 @@ export default function GynaeAssistantPage() {
             </p>
 
             <div className="mt-4 space-y-3">
-
               {[
                 "Not a medical diagnosis",
                 "General information only",
@@ -887,7 +900,6 @@ export default function GynaeAssistantPage() {
                   </span>
                 </div>
               ))}
-
             </div>
 
             <img
@@ -895,7 +907,6 @@ export default function GynaeAssistantPage() {
               alt="Flora women's health"
               className="mx-auto mt-4 h-44 w-44 object-contain"
             />
-
           </div>
 
           {/* ==================================================
@@ -903,7 +914,6 @@ export default function GynaeAssistantPage() {
           ================================================== */}
 
           <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FEE4EB] text-[#F33B7D]">
                 <Sparkles className="h-4 w-4" />
@@ -922,7 +932,6 @@ export default function GynaeAssistantPage() {
               !currentQuestion &&
               !assessment?.result && (
                 <div className="mt-5">
-
                   <p className="text-[11px] text-[#8F8C8C]">
                     Status
                   </p>
@@ -938,7 +947,6 @@ export default function GynaeAssistantPage() {
                   <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#FEE4EB]">
                     <div className="h-full w-0 rounded-full bg-[#F33B7D]" />
                   </div>
-
                 </div>
               )}
 
@@ -950,7 +958,6 @@ export default function GynaeAssistantPage() {
               currentQuestion &&
               !assessment?.result && (
                 <div className="mt-5">
-
                   <p className="text-[11px] text-[#8F8C8C]">
                     Category
                   </p>
@@ -986,7 +993,6 @@ export default function GynaeAssistantPage() {
                   <p className="mt-1 text-xs text-[#8F8C8C]">
                     Assessment in progress
                   </p>
-
                 </div>
               )}
 
@@ -996,7 +1002,6 @@ export default function GynaeAssistantPage() {
 
             {assessment?.result && (
               <div className="mt-5">
-
                 <p className="text-[11px] text-[#8F8C8C]">
                   Category
                 </p>
@@ -1020,22 +1025,16 @@ export default function GynaeAssistantPage() {
                 </div>
 
                 <div className="mt-4 flex items-center gap-2 rounded-xl bg-green-50 px-3 py-2.5">
-
                   <Check className="h-4 w-4 flex-shrink-0 text-green-600" />
 
                   <span className="text-xs font-semibold text-green-700">
                     Assessment completed
                   </span>
-
                 </div>
-
               </div>
             )}
-
           </div>
-
         </aside>
-
       </div>
     </PageLayout>
   );

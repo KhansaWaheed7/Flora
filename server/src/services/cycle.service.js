@@ -298,16 +298,32 @@ const predictCycle = async (userId) => {
   }).lean();
 
   if (activePregnancy) {
-    return {
-      isPaused: true,
-      reason: "active_pregnancy",
-      message: "Menstrual cycle tracking is paused during pregnancy.",
-      pregnancyId: activePregnancy._id,
-      dueDate: activePregnancy.dueDate,
-    };
-  }
+  return {
+    isPaused: true,
+    reason: "active_pregnancy",
+    message: "Menstrual cycle tracking is paused during pregnancy.",
+    pregnancyId: activePregnancy._id,
+    dueDate: activePregnancy.dueDate,
+  };
+}
 
-  const cycles = await Cycle.find({
+// Pregnancy has ended, but the user has not logged a new period yet.
+const pregnancyRecord = await Pregnancy.findOne({
+  user: userId,
+}).lean();
+
+if (pregnancyRecord?.cycleTrackingResetRequired === true) {
+  return {
+    isTracking: false,
+    isPaused: false,
+    requiresNewCycle: true,
+    reason: "needs_new_cycle",
+    message:
+      "Pregnancy tracking has ended. Please log your latest period to start a new menstrual cycle.",
+  };
+}
+
+const cycles = await Cycle.find({
     user: userId,
   }).sort({
     periodStart: 1,
