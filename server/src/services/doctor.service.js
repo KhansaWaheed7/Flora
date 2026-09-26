@@ -11,6 +11,118 @@ const Message = require("../models/Message");
 
 const SocketEvents = require("../constants/socketEvents");
 const { createNotification } = require("./notification.service");
+
+const DEFAULT_TIMEZONE = "Asia/Karachi";
+const DAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+const normalizeSchedule = (schedule = []) => {
+  const byDay = new Map(
+    schedule.map((item) => [
+      Number(item.day),
+      {
+        day: Number(item.day),
+        enabled: Boolean(item.enabled),
+        slots: Array.isArray(item.slots) ? item.slots : [],
+      },
+    ])
+  );
+
+  return DAY_NAMES.map((name, day) => ({
+    day,
+    name,
+    enabled: byDay.get(day)?.enabled || false,
+    slots: byDay.get(day)?.slots || [],
+  }));
+};
+
+const timeToMinutes = (time) => {
+  const [hours, minutes] = String(time).split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
+const validateSchedule = (schedule) => {
+  if (!Array.isArray(schedule) || schedule.length !== 7) {
+    throw new ApiError(400, "Schedule must contain all 7 days.");
+  }
+
+  const seenDays = new Set();
+
+  for (const day of schedule) {
+    const dayNumber = Number(day.day);
+
+    if (!Number.isInteger(dayNumber) || dayNumber < 0 || dayNumber > 6) {
+      throw new ApiError(400, "Invalid schedule day.");
+    }
+
+    if (seenDays.has(dayNumber)) {
+      throw new ApiError(400, "Each day can only appear once.");
+    }
+    seenDays.add(dayNumber);
+
+    if (!Array.isArray(day.slots)) {
+      throw new ApiError(400, `Invalid time slots for ${DAY_NAMES[dayNumber]}.`);
+    }
+
+    const normalizedSlots = day.slots.map((slot) => ({
+      start: String(slot.start || ""),
+      end: String(slot.end || ""),
+    }));
+
+    for (const slot of normalizedSlots) {
+      if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(slot.start) ||
+          !/^([01]\d|2[0-3]):[0-5]\d$/.test(slot.end)) {
+        throw new ApiError(400, `Invalid time format for ${DAY_NAMES[dayNumber]}.`);
+      }
+
+      if (timeToMinutes(slot.start) >= timeToMinutes(slot.end)) {
+        throw new ApiError(400, `End time must be after start time on ${DAY_NAMES[dayNumber]}.`);
+      }
+    }
+
+    const sorted = [...normalizedSlots].sort(
+      (a, b) => timeToMinutes(a.start) - timeToMinutes(b.start)
+    );
+
+    for (let i = 1; i < sorted.length; i += 1) {
+      if (timeToMinutes(sorted[i].start) < timeToMinutes(sorted[i - 1].end)) {
+        throw new ApiError(400, `Schedule slots overlap on ${DAY_NAMES[dayNumber]}.`);
+      }
+    }
+
+    if (day.enabled && normalizedSlots.length === 0) {
+      throw new ApiError(400, `${DAY_NAMES[dayNumber]} must have at least one time slot.`);
+    }
+  }
+
+  return schedule
+    .sort((a, b) => Number(a.day) - Number(b.day))
+    .map((day) => ({
+      day: Number(day.day),
+      enabled: Boolean(day.enabled),
+      slots: day.slots.map((slot) => ({
+        start: String(slot.start),
+        end: String(slot.end),
+      })),
+    }));
+};
+
+const getTodayInTimezone = (timeZone = DEFAULT_TIMEZONE) => {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "long",
+  });
+  const weekday = formatter.format(new Date());
+  return DAY_NAMES.indexOf(weekday);
+};
+
 // =========================================
 // Dashboard Summary
 // =========================================
@@ -75,6 +187,20 @@ const getDashboard = async (doctorId) => {
     })
     .limit(5);
 
+  const doctor = await User.findById(doctorId)
+    .select("weeklySchedule scheduleTimezone")
+    .lean();
+
+  const schedule = normalizeSchedule(doctor?.weeklySchedule || []);
+  const timezone = doctor?.scheduleTimezone || DEFAULT_TIMEZONE;
+  const todayDay = getTodayInTimezone(timezone);
+  const todaySchedule = schedule.find((item) => item.day === todayDay) || {
+    day: todayDay,
+    name: DAY_NAMES[todayDay],
+    enabled: false,
+    slots: [],
+  };
+
   return {
     pendingRequests,
     activePatients,
@@ -83,6 +209,9 @@ const getDashboard = async (doctorId) => {
     unreadMessages,
     activeChats: activePatients,
     recentPatients,
+    schedule,
+    todaySchedule,
+    scheduleTimezone: timezone,
   };
 };
 
@@ -294,6 +423,54 @@ const closeConsultation = async (doctorId, chatId) => {
   return chat;
 };
 
+
+// =========================================
+// Doctor Schedule
+// =========================================
+
+const getDoctorSchedule = async (doctorId) => {
+  const doctor = await User.findOne({
+    _id: doctorId,
+    role: "doctor",
+  }).select("weeklySchedule scheduleTimezone");
+
+  if (!doctor) {
+    throw new ApiError(404, "Doctor profile not found.");
+  }
+
+  const schedule = normalizeSchedule(doctor.weeklySchedule || []);
+  const timezone = doctor.scheduleTimezone || DEFAULT_TIMEZONE;
+  const todayDay = getTodayInTimezone(timezone);
+
+  return {
+    schedule,
+    todaySchedule: schedule.find((item) => item.day === todayDay),
+    scheduleTimezone: timezone,
+  };
+};
+
+const updateDoctorSchedule = async (doctorId, schedule, scheduleTimezone = DEFAULT_TIMEZONE) => {
+  const doctor = await User.findOne({
+    _id: doctorId,
+    role: "doctor",
+  });
+
+  if (!doctor) {
+    throw new ApiError(404, "Doctor profile not found.");
+  }
+
+  const normalized = validateSchedule(schedule);
+
+  doctor.weeklySchedule = normalized;
+  doctor.scheduleTimezone = scheduleTimezone || DEFAULT_TIMEZONE;
+  await doctor.save();
+
+  return {
+    schedule: normalizeSchedule(normalized),
+    scheduleTimezone: doctor.scheduleTimezone,
+  };
+};
+
 // =========================================
 // Get Doctor Profile
 // =========================================
@@ -303,7 +480,7 @@ const getDoctorProfile = async (doctorId) => {
     _id: doctorId,
     role: "doctor",
   }).select(
-    "fullName email phone age profilePicture specialization hospital yearsOfExperience bio areasOfExpertise languages city consultationFee doctorVerification"
+    "fullName email phone age profilePicture specialization hospital yearsOfExperience bio areasOfExpertise languages city consultationFee doctorVerification weeklySchedule scheduleTimezone"
   );
 
   if (!doctor) {
@@ -330,6 +507,8 @@ const getDoctorProfile = async (doctorId) => {
     consultationFee: doctor.consultationFee,
 
     verificationStatus: doctor.doctorVerification?.status || "pending",
+    weeklySchedule: normalizeSchedule(doctor.weeklySchedule || []),
+    scheduleTimezone: doctor.scheduleTimezone || DEFAULT_TIMEZONE,
   };
 };
 
@@ -417,6 +596,8 @@ const updateDoctorProfile = async (doctorId, data) => {
     consultationFee: doctor.consultationFee,
 
     verificationStatus: doctor.doctorVerification?.status || "pending",
+    weeklySchedule: normalizeSchedule(doctor.weeklySchedule || []),
+    scheduleTimezone: doctor.scheduleTimezone || DEFAULT_TIMEZONE,
   };
 };
 
@@ -571,4 +752,6 @@ module.exports = {
   updateDoctorProfile,
   uploadDoctorAvatar,
   removeDoctorAvatar,
+  getDoctorSchedule,
+  updateDoctorSchedule,
 };

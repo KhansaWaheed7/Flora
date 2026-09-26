@@ -30,7 +30,7 @@ export default function DoctorProfile() {
   const fetchProfile = async () => {
     try {
       const data = await getDoctorProfile();
-      setProfile(data.data);
+      setProfile(data);
     } catch (error) {
       console.error("Doctor profile fetch error:", error);
     } finally {

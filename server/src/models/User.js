@@ -281,6 +281,50 @@ consultationFee: {
   min: 0,
   default: null,
 },
+
+// =========================================
+// Doctor Weekly Availability
+// =========================================
+// Stored on the doctor so the same schedule can be used by
+// the doctor portal and shown to patients.
+weeklySchedule: {
+  type: [
+    {
+      day: {
+        type: Number,
+        min: 0,
+        max: 6,
+        required: true,
+      },
+      enabled: {
+        type: Boolean,
+        default: false,
+      },
+      slots: {
+        type: [
+          {
+            start: {
+              type: String,
+              match: /^([01]\d|2[0-3]):[0-5]\d$/,
+            },
+            end: {
+              type: String,
+              match: /^([01]\d|2[0-3]):[0-5]\d$/,
+            },
+          },
+        ],
+        default: [],
+      },
+    },
+  ],
+  default: [],
+},
+
+scheduleTimezone: {
+  type: String,
+  default: "Asia/Karachi",
+  trim: true,
+},
   },
   {
     timestamps: true,

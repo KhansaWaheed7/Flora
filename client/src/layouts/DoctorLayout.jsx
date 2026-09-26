@@ -1,15 +1,21 @@
-
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import DoctorSidebar from "../components/doctor/DoctorSidebar";
 import DoctorHeader from "../components/doctor/DoctorHeader";
 
 import { useAuth } from "../context/AuthContext";
-
 import {
   getDoctorDashboard,
   getDoctorProfile,
 } from "../services/doctorPortal.service";
+import { getNotifications } from "../services/notification.service";
+
+const normalizeNotifications = (response) => {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  if (Array.isArray(response?.notifications)) return response.notifications;
+  return [];
+};
 
 export default function DoctorLayout({
   children,
@@ -19,51 +25,66 @@ export default function DoctorLayout({
   onSearchChange,
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const { user, setUser } = useAuth();
-
   const [counts, setCounts] = useState({});
+  const [notifications, setNotifications] = useState([]);
 
-  /*
-   * IMPORTANT:
-   * Start with the user already stored in localStorage.
-   * This means the header can show the existing profile picture
-   * immediately instead of waiting for the API.
-   */
   const [doctorProfile, setDoctorProfile] = useState(() => {
     try {
       const storedUser = localStorage.getItem("user");
-
-      if (storedUser) {
-        return JSON.parse(storedUser);
-      }
+      if (storedUser) return JSON.parse(storedUser);
     } catch (error) {
       console.error("Failed to read stored doctor profile:", error);
     }
-
     return null;
   });
 
-  /*
-   * Fetch sidebar counts whenever the layout/page changes.
-   */
+  const loadDoctorData = async () => {
+    try {
+      const [dashboard, notificationResponse] = await Promise.all([
+        getDoctorDashboard(),
+        getNotifications({ limit: 6 }),
+      ]);
+
+      const latestNotifications = normalizeNotifications(notificationResponse);
+
+      setNotifications(latestNotifications);
+      setCounts((prev) => ({
+        ...prev,
+        pendingRequests: dashboard?.pendingRequests || 0,
+        closedConsultations: dashboard?.closedConsultations || 0,
+        activePatients: dashboard?.activePatients || 0,
+        unreadMessages: dashboard?.unreadMessages || 0,
+        notificationCount: latestNotifications.filter((item) => !item.read).length,
+      }));
+    } catch {
+      // Header badges are non-critical.
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
 
-    const fetchCounts = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getDoctorDashboard();
-
+        const dashboard = await getDoctorDashboard();
         if (!cancelled) {
           setCounts((prev) => ({
             ...prev,
-            pendingRequests: data.pendingRequests,
-            closedConsultations: data.closedConsultations,
-            activePatients: data.activePatients,
-            unreadMessages: data.unreadMessages,
-            notificationCount:
-              (data.pendingRequests || 0) +
-              (data.unreadMessages || 0),
+            pendingRequests: dashboard.pendingRequests,
+            closedConsultations: dashboard.closedConsultations,
+            activePatients: dashboard.activePatients,
+            unreadMessages: dashboard.unreadMessages,
+          }));
+        }
+
+        const notificationResponse = await getNotifications({ limit: 6 });
+        if (!cancelled) {
+          const latest = normalizeNotifications(notificationResponse);
+          setNotifications(latest);
+          setCounts((prev) => ({
+            ...prev,
+            notificationCount: latest.filter((item) => !item.read).length,
           }));
         }
       } catch {
@@ -71,60 +92,32 @@ export default function DoctorLayout({
       }
     };
 
-    fetchCounts();
+    fetchData();
+
+    const interval = setInterval(() => {
+      if (!cancelled) loadDoctorData();
+    }, 30000);
 
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
   }, [title]);
 
-  /*
-   * Fetch the latest doctor profile.
-   *
-   * This runs in the background.
-   * The header DOES NOT wait for it because doctorProfile
-   * already starts with the cached localStorage user.
-   */
   useEffect(() => {
     let cancelled = false;
 
     const fetchProfile = async () => {
       try {
         const response = await getDoctorProfile();
-
         if (cancelled) return;
 
-        const latestProfile = response.data;
+        const latestProfile = response;
+        setDoctorProfile((prev) => ({ ...prev, ...latestProfile }));
 
-        /*
-         * Update local DoctorLayout profile.
-         */
-        setDoctorProfile((prev) => ({
-          ...prev,
-          ...latestProfile,
-        }));
-
-        /*
-         * Update AuthContext user as well.
-         */
-        const updatedUser = {
-          ...user,
-          ...latestProfile,
-        };
-
+        const updatedUser = { ...user, ...latestProfile };
         setUser(updatedUser);
-
-        /*
-         * Save latest profile to localStorage.
-         *
-         * This is the important part:
-         * On the next route change, the profile picture
-         * is already available immediately.
-         */
-        localStorage.setItem(
-          "user",
-          JSON.stringify(updatedUser)
-        );
+        localStorage.setItem("user", JSON.stringify(updatedUser));
       } catch (error) {
         console.error("Doctor profile fetch error:", error);
       }
@@ -137,12 +130,6 @@ export default function DoctorLayout({
     };
   }, []);
 
-  /*
-   * Merge AuthContext user and cached/fresh doctor profile.
-   *
-   * doctorProfile is preferred because it contains
-   * the latest profilePicture.
-   */
   const headerUser = {
     ...(user || {}),
     ...(doctorProfile || {}),
@@ -164,7 +151,8 @@ export default function DoctorLayout({
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           user={headerUser}
-          notificationCount={counts.notificationCount}
+          notificationCount={counts.notificationCount || 0}
+          notifications={notifications}
           showSearch={showSearch}
           onSearchChange={onSearchChange}
         />

@@ -8,6 +8,20 @@ const { emitToUser } = require("../socket/services/socketEmitter");
 const SocketEvents = require("../constants/socketEvents");
 const { createNotification } = require("./notification.service");
 
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+const normalizePublicSchedule = (schedule = []) =>
+  DAY_NAMES.map((name, day) => {
+    const item = schedule.find((entry) => Number(entry.day) === day);
+    return {
+      day,
+      name,
+      enabled: Boolean(item?.enabled),
+      slots: Array.isArray(item?.slots) ? item.slots : [],
+    };
+  });
+
+
 // =========================================
 // Create Consultation Request
 // =========================================
@@ -126,7 +140,7 @@ const getAvailableDoctors = async (patientId) => {
     isEmailVerified: true,
   })
     .select(
-      "fullName specialization hospital yearsOfExperience profilePicture city consultationFee qualifications areasOfExpertise languages bio doctorVerification"
+      "fullName specialization hospital yearsOfExperience profilePicture city consultationFee qualifications areasOfExpertise languages bio doctorVerification weeklySchedule scheduleTimezone"
     )
     .sort({
       fullName: 1,
@@ -163,6 +177,8 @@ const getAvailableDoctors = async (patientId) => {
 
     verificationStatus:
       doctor.doctorVerification?.status || null,
+    weeklySchedule: normalizePublicSchedule(doctor.weeklySchedule || []),
+    scheduleTimezone: doctor.scheduleTimezone || "Asia/Karachi",
   }));
 
   return doctorsWithChatStatus;
@@ -257,6 +273,10 @@ const getConversations = async (userId) => {
 // Get Doctor Profile for an Existing Consultation
 // =========================================
 
+// =========================================
+// Get Doctor Profile for an Existing Consultation
+// =========================================
+
 const getDoctorProfileForConsultation = async (patientId, chatId) => {
   const chat = await Chat.findOne({
     _id: chatId,
@@ -271,31 +291,71 @@ const getDoctorProfileForConsultation = async (patientId, chatId) => {
     _id: chat.doctor,
     role: "doctor",
   }).select(
-    "fullName email phone profilePicture specialization hospital yearsOfExperience bio areasOfExpertise languages city consultationFee doctorVerification"
+    "fullName email phone profilePicture specialization hospital yearsOfExperience bio areasOfExpertise languages city consultationFee doctorVerification weeklySchedule scheduleTimezone"
   );
 
   if (!doctor) {
     throw new ApiError(404, "Doctor profile not found.");
   }
 
+  // Normalize the doctor's weekly schedule so all 7 days
+  // are always returned, including unavailable days.
+  const DAY_NAMES = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+
+  const scheduleMap = new Map(
+    (doctor.weeklySchedule || []).map((item) => [
+      Number(item.day),
+      {
+        day: Number(item.day),
+        enabled: Boolean(item.enabled),
+        slots: Array.isArray(item.slots) ? item.slots : [],
+      },
+    ])
+  );
+
+  const weeklySchedule = DAY_NAMES.map((name, day) => ({
+    day,
+    name,
+    enabled: scheduleMap.get(day)?.enabled || false,
+    slots: scheduleMap.get(day)?.slots || [],
+  }));
+
   return {
     chatId: chat._id,
     consultationStatus: chat.status,
+
     _id: doctor._id,
     fullName: doctor.fullName,
     email: doctor.email,
     phone: doctor.phone,
     profilePicture: doctor.profilePicture,
+
     specialization: doctor.specialization,
     hospital: doctor.hospital,
     yearsOfExperience: doctor.yearsOfExperience,
+
     qualifications: doctor.doctorVerification?.qualifications || [],
+
     bio: doctor.bio,
     areasOfExpertise: doctor.areasOfExpertise || [],
     languages: doctor.languages || [],
     city: doctor.city,
     consultationFee: doctor.consultationFee,
-    verificationStatus: doctor.doctorVerification?.status || "pending",
+
+    verificationStatus:
+      doctor.doctorVerification?.status || "pending",
+
+    // Doctor availability
+    weeklySchedule,
+    scheduleTimezone: doctor.scheduleTimezone || "Asia/Karachi",
   };
 };
 

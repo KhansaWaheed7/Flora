@@ -218,7 +218,7 @@ export default function DoctorEditProfile() {
 
       const response = await getDoctorProfile();
 
-      const data = response?.data || {};
+      const data = response || {};
 
       const doctor = data?.user || data?.doctor || data;
 

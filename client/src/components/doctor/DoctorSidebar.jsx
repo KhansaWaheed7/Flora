@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   MessageCircle,
   CalendarDays,
+  Bell,
   User,
   Settings,
   LifeBuoy,
@@ -74,6 +75,7 @@ export default function DoctorSidebar({
       badge: counts.unreadMessages,
     },
     { icon: CalendarDays, label: "Schedule", path: "/doctor/schedule" },
+    { icon: Bell, label: "Notifications", path: "/doctor/notifications", badge: counts.notificationCount },
     { icon: User, label: "Profile", path: "/doctor/profile" },
     { icon: Settings, label: "Settings", path: "/doctor/settings" },
   ];

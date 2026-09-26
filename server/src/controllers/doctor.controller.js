@@ -13,6 +13,8 @@ const {
   updateDoctorProfile,
   uploadDoctorAvatar,
   removeDoctorAvatar,
+  getDoctorSchedule,
+  updateDoctorSchedule,
 } = require("../services/doctor.service");
 
 const { getPatientProfileForConsultation } = require("../services/chat.service");
@@ -95,6 +97,31 @@ exports.getPatientProfileForConsultation = asyncHandler(async (req, res) => {
 
   res.status(200).json(
     new ApiResponse(200, "Patient profile fetched successfully.", profile)
+  );
+});
+
+
+// =========================================
+// Doctor Schedule
+// =========================================
+
+exports.getDoctorSchedule = asyncHandler(async (req, res) => {
+  const schedule = await getDoctorSchedule(req.user.id);
+
+  res.status(200).json(
+    new ApiResponse(200, "Doctor schedule fetched successfully.", schedule)
+  );
+});
+
+exports.updateDoctorSchedule = asyncHandler(async (req, res) => {
+  const schedule = await updateDoctorSchedule(
+    req.user.id,
+    req.body.schedule,
+    req.body.scheduleTimezone
+  );
+
+  res.status(200).json(
+    new ApiResponse(200, "Doctor schedule updated successfully.", schedule)
   );
 });
 

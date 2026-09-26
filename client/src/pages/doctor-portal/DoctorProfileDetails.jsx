@@ -33,7 +33,7 @@ export default function DoctorProfileDetails() {
         setError("");
 
         const response = await getDoctorProfile();
-        setProfile(response.data);
+        setProfile(response);
       } catch (err) {
         console.error("Failed to load doctor profile:", err);
         setError(

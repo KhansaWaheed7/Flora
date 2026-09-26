@@ -1,89 +1,265 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { CheckCircle2, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  BadgeCheck,
+  Briefcase,
+  Building2,
+  CalendarX2,
+  Coins,
+  GraduationCap,
+  MapPin,
+  Mail,
+  MessageSquareText,
+  Phone,
+  Stethoscope,
+  XCircle,
+} from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
+import { getConsultationDoctorProfile, closePatientConsultation } from "../../services/chat.service";
 
 function Avatar({ name, image }) {
-  if (image) {
-    return (
-      <img
-        src={image}
-        alt={name}
-        className="h-12 w-12 flex-shrink-0 rounded-full object-cover"
-      />
-    );
-  }
+  const [imageError, setImageError] = useState(false);
   const initials = (name || "Dr")
     .split(" ")
     .map((n) => n[0])
     .slice(0, 2)
-    .join("");
+    .join("")
+    .toUpperCase();
+
+  if (image && !imageError) {
+    return (
+      <img
+        src={image}
+        alt={name || "Doctor"}
+        onError={() => setImageError(true)}
+        className="h-28 w-28 rounded-full object-cover ring-4 ring-[#FEE4EB]"
+      />
+    );
+  }
+
   return (
-    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#F33B7D] text-sm font-semibold text-white">
+    <div className="flex h-28 w-28 items-center justify-center rounded-full bg-[#F33B7D] text-3xl font-semibold text-white ring-4 ring-[#FEE4EB]">
       {initials}
     </div>
   );
 }
 
-export default function ConsultationRequestConfirmation() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { chat, doctor } = location.state || {};
-
-  if (!doctor) {
-    return (
-      <PageLayout title="Request Sent" subtitle="">
-        <div className="mx-auto max-w-md rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-          No request data found.
+function DetailItem({ icon: Icon, label, value }) {
+  if (value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0)) return null;
+  return (
+    <div className="rounded-xl bg-[#FEF4F4] p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white">
+          <Icon className="h-5 w-5 text-[#F33B7D]" />
         </div>
-      </PageLayout>
+        <div className="min-w-0">
+          <p className="text-xs text-[#B8AEB2]">{label}</p>
+          <p className="mt-1 break-words text-sm font-medium text-[#0D0D0D]">{value}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WeeklySchedule({ schedule = [] }) {
+  const hasAny = Array.isArray(schedule) && schedule.length > 0;
+
+  if (!hasAny) {
+    return (
+      <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+        <div className="mb-5">
+          <h2 className="font-display text-xl font-semibold text-[#0D0D0D]">
+            Weekly Schedule
+          </h2>
+          <p className="mt-1 text-sm text-[#8F8C8C]">
+            The doctor's availability for the week.
+          </p>
+        </div>
+
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FEE4EB]">
+            <CalendarX2 className="h-6 w-6 text-[#F33B7D]" />
+          </span>
+          <p className="mt-3 text-sm font-medium text-[#0D0D0D]">
+            No weekly schedule set
+          </p>
+          <p className="mt-1 text-xs text-[#8F8C8C]">
+            This doctor hasn't published their availability yet.
+          </p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <PageLayout title="Consultation Request" subtitle="">
-      <div className="mx-auto max-w-md">
-        <div className="rounded-2xl bg-white p-8 text-center shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle2 className="h-8 w-8 text-green-500" />
-          </div>
-          <h2 className="mt-4 font-display text-lg font-semibold text-[#0D0D0D]">
-            Request Sent!
-          </h2>
-          <p className="mt-2 text-sm text-[#8F8C8C]">
-            Your consultation request has been sent successfully. The doctor
-            will review your request and respond shortly.
-          </p>
+    <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+      <div className="mb-5">
+        <h2 className="font-display text-xl font-semibold text-[#0D0D0D]">
+          Weekly Schedule
+        </h2>
+        <p className="mt-1 text-sm text-[#8F8C8C]">
+          The doctor's availability for the week.
+        </p>
+      </div>
 
-          <div className="mt-6 flex items-center gap-3 rounded-xl bg-[#FEF4F4] p-4 text-left">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {schedule.map((day) => {
+          const hasSchedule =
+            day.enabled &&
+            Array.isArray(day.slots) &&
+            day.slots.length > 0;
+
+          return (
+            <div
+              key={day.day}
+              className={`flex flex-col rounded-2xl p-3 ring-1 transition ${
+                hasSchedule
+                  ? "bg-gradient-to-br from-[#FEE4EB] to-[#FCE4EB] ring-[#F8C9DA]"
+                  : "bg-[#FDF6F8] ring-[#F5E4EC]"
+              }`}
+            >
+              {/* Day name */}
+              <div className="mb-2 flex items-center justify-between">
+                <p
+                  className={`text-xs font-bold uppercase tracking-wide ${
+                    hasSchedule ? "text-[#F33B7D]" : "text-[#C9A8B8]"
+                  }`}
+                >
+                  {day.name?.slice(0, 3) || "—"}
+                </p>
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    hasSchedule ? "bg-[#F33B7D]" : "bg-[#E8D5DD]"
+                  }`}
+                />
+              </div>
+
+              {/* Slots */}
+              {hasSchedule ? (
+                <div className="flex flex-1 flex-col gap-1.5">
+                  {day.slots.map((slot, index) => (
+                    <span
+                      key={`${day.day}-${index}`}
+                      className="rounded-lg bg-white/80 px-2 py-1 text-[10px] font-semibold text-[#F33B7D] shadow-sm"
+                    >
+                      {slot.start} – {slot.end}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-auto text-[10px] font-medium text-[#C9A8B8]">
+                  Not available
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function ConsultationDoctorProfile() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [doctor, setDoctor] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [closing, setClosing] = useState(false);
+  const [error, setError] = useState("");
+  const [closeError, setCloseError] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const data = await getConsultationDoctorProfile(id);
+        setDoctor(data);
+      } catch (err) {
+        setError(err?.response?.data?.message || "Could not load doctor profile.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [id]);
+
+  const handleClose = async () => {
+    if (!window.confirm("Are you sure you want to close this consultation?")) return;
+    try {
+      setClosing(true);
+      setCloseError("");
+      await closePatientConsultation(id);
+      navigate(`/chat/${id}/closed`, { replace: true });
+    } catch (err) {
+      setCloseError(err?.response?.data?.message || "Could not close the consultation.");
+    } finally {
+      setClosing(false);
+    }
+  };
+
+  if (loading) {
+    return <PageLayout title="Doctor Profile" backTo={`/chat/${id}`}><div className="flex min-h-[60vh] items-center justify-center"><p className="text-sm text-[#8F8C8C]">Loading doctor profile...</p></div></PageLayout>;
+  }
+
+  if (error || !doctor) {
+    return <PageLayout title="Doctor Profile" backTo={`/chat/${id}`}><div className="mx-auto max-w-lg rounded-2xl bg-red-50 p-5 text-center text-sm text-red-600">{error || "Doctor not found."}</div></PageLayout>;
+  }
+
+  const active = doctor.consultationStatus === "active";
+
+  return (
+    <PageLayout title="Doctor Profile" backTo={`/chat/${id}`}>
+      <div className="mx-auto max-w-4xl space-y-5">
+        <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
             <Avatar name={doctor.fullName} image={doctor.profilePicture} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-[#0D0D0D]">
-                Dr. {doctor.fullName}
-              </p>
-              <p className="truncate text-xs text-[#8F8C8C]">
-                {doctor.specialization || "General Physician"}
-              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                <h1 className="font-display text-2xl font-semibold text-[#0D0D0D]">{doctor.fullName}</h1>
+                {doctor.verificationStatus === "verified" && <BadgeCheck className="h-5 w-5 text-[#F33B7D]" />}
+              </div>
+              <p className="mt-1 text-base font-medium text-[#F33B7D]">{doctor.specialization || "General Physician"}</p>
+              <p className="mt-2 text-sm text-[#8F8C8C]">Consultation status: <span className="font-semibold capitalize">{doctor.consultationStatus}</span></p>
             </div>
-            <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-600">
-              <Clock className="h-3 w-3" /> Pending
-            </span>
-          </div>
-
-          <div className="mt-6 flex gap-3">
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="flex-1 rounded-full border border-[#F0DCE4] bg-white px-4 py-3 text-sm font-semibold text-[#3D3939] transition hover:bg-[#FEF4F4]"
-            >
-              Back to Dashboard
-            </button>
-            <button
-              onClick={() => navigate("/chat/my-consultations")}
-              className="flex-1 rounded-full bg-[#F33B7D] px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_-6px_rgba(243,59,125,0.5)] transition hover:-translate-y-0.5"
-            >
-              View My Consultations
-            </button>
           </div>
         </div>
+
+        <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <h2 className="text-xl font-semibold text-[#0D0D0D]">Doctor Details</h2>
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <DetailItem icon={Stethoscope} label="Specialization" value={doctor.specialization} />
+            <DetailItem icon={Building2} label="Hospital / Clinic" value={doctor.hospital} />
+            <DetailItem icon={Briefcase} label="Experience" value={doctor.yearsOfExperience != null ? `${doctor.yearsOfExperience} years` : null} />
+            <DetailItem icon={MapPin} label="City" value={doctor.city} />
+            <DetailItem icon={Mail} label="Email" value={doctor.email} />
+            <DetailItem icon={Phone} label="Phone" value={doctor.phone} />
+            <DetailItem icon={Coins} label="Consultation Fee" value={doctor.consultationFee != null ? `PKR ${doctor.consultationFee}` : null} />
+          </div>
+        </div>
+
+        {doctor.qualifications?.length > 0 && (
+          <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+            <div className="flex items-center gap-3"><GraduationCap className="h-5 w-5 text-[#F33B7D]" /><h2 className="text-xl font-semibold">Qualifications</h2></div>
+            <div className="mt-4 space-y-3">
+              {doctor.qualifications.map((q, i) => <div key={i} className="rounded-xl bg-[#FEF4F4] p-4"><p className="font-semibold">{q.degree || "Qualification"}</p><p className="text-sm text-[#8F8C8C]">{q.institution || ""}{q.completionYear ? ` • ${q.completionYear}` : ""}</p></div>)}
+            </div>
+          </div>
+        )}
+
+        {doctor.areasOfExpertise?.length > 0 && (
+          <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5"><h2 className="text-xl font-semibold">Areas of Expertise</h2><div className="mt-4 flex flex-wrap gap-2">{doctor.areasOfExpertise.map((x, i) => <span key={i} className="rounded-full bg-[#FEF4F4] px-3 py-1.5 text-sm">{x}</span>)}</div></div>
+        )}
+
+        {doctor.languages?.length > 0 && (
+          <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5"><div className="flex items-center gap-3"><MessageSquareText className="h-5 w-5 text-[#F33B7D]" /><h2 className="text-xl font-semibold">Languages</h2></div><div className="mt-4 flex flex-wrap gap-2">{doctor.languages.map((x, i) => <span key={i} className="rounded-full bg-[#FEF4F4] px-3 py-1.5 text-sm">{x}</span>)}</div></div>
+        )}
+
+        <WeeklySchedule schedule={doctor.weeklySchedule || []} />
+
+        {doctor.bio && <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5"><h2 className="text-xl font-semibold">About the Doctor</h2><p className="mt-4 rounded-xl bg-[#FEF4F4] p-5 text-sm leading-7 text-[#5F5A5D]">{doctor.bio}</p></div>}
+
+        {closeError && <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{closeError}</div>}
+        {active && <button disabled={closing} onClick={handleClose} className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-5 py-3 text-sm font-semibold text-red-600 ring-1 ring-red-100 hover:bg-red-100 disabled:opacity-60"><XCircle className="h-4 w-4" />{closing ? "Closing consultation..." : "Close Consultation"}</button>}
       </div>
     </PageLayout>
   );

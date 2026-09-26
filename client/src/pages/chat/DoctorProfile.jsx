@@ -6,10 +6,12 @@ import {
   Briefcase,
   BriefcaseMedical,
   Building2,
+  CalendarX2,
+  Coins,
   GraduationCap,
-  Languages,
   MapPin,
   MessageCircle,
+  MessageSquareText,
   Stethoscope,
 } from "lucide-react";
 
@@ -58,6 +60,105 @@ function DetailItem({ icon: Icon, label, children }) {
             {children}
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function WeeklySchedule({ schedule = [] }) {
+  const hasAny =
+    Array.isArray(schedule) && schedule.length > 0;
+
+  if (!hasAny) {
+    return (
+      <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+        <div className="mb-5">
+          <h2 className="font-display text-xl font-semibold text-[#0D0D0D]">
+            Weekly Schedule
+          </h2>
+          <p className="mt-1 text-sm text-[#8F8C8C]">
+            The doctor's availability for the week.
+          </p>
+        </div>
+
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FEE4EB]">
+            <CalendarX2 className="h-6 w-6 text-[#F33B7D]" />
+          </span>
+          <p className="mt-3 text-sm font-medium text-[#0D0D0D]">
+            No weekly schedule set
+          </p>
+          <p className="mt-1 text-xs text-[#8F8C8C]">
+            This doctor hasn't published their availability yet.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+      <div className="mb-5">
+        <h2 className="font-display text-xl font-semibold text-[#0D0D0D]">
+          Weekly Schedule
+        </h2>
+        <p className="mt-1 text-sm text-[#8F8C8C]">
+          The doctor's availability for the week.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {schedule.map((day) => {
+          const hasSchedule =
+            day.enabled &&
+            Array.isArray(day.slots) &&
+            day.slots.length > 0;
+
+          return (
+            <div
+              key={day.day}
+              className={`flex flex-col rounded-2xl p-3 ring-1 transition ${
+                hasSchedule
+                  ? "bg-gradient-to-br from-[#FEE4EB] to-[#FCE4EB] ring-[#F8C9DA]"
+                  : "bg-[#FDF6F8] ring-[#F5E4EC]"
+              }`}
+            >
+              {/* Day name */}
+              <div className="mb-2 flex items-center justify-between">
+                <p
+                  className={`text-xs font-bold uppercase tracking-wide ${
+                    hasSchedule ? "text-[#F33B7D]" : "text-[#C9A8B8]"
+                  }`}
+                >
+                  {day.name?.slice(0, 3) || "—"}
+                </p>
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    hasSchedule ? "bg-[#F33B7D]" : "bg-[#E8D5DD]"
+                  }`}
+                />
+              </div>
+
+              {/* Slots */}
+              {hasSchedule ? (
+                <div className="flex flex-1 flex-col gap-1.5">
+                  {day.slots.map((slot, index) => (
+                    <span
+                      key={`${day.day}-${index}`}
+                      className="rounded-lg bg-white/80 px-2 py-1 text-[10px] font-semibold text-[#F33B7D] shadow-sm"
+                    >
+                      {slot.start} – {slot.end}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-auto text-[10px] font-medium text-[#C9A8B8]">
+                  Not available
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -328,6 +429,12 @@ export default function DoctorProfile() {
         </div>
 
         {/* =========================================
+            Weekly Schedule
+        ========================================= */}
+
+        <WeeklySchedule schedule={doctor.weeklySchedule || []} />
+
+        {/* =========================================
             Consultation Fee
         ========================================= */}
 
@@ -337,14 +444,23 @@ export default function DoctorProfile() {
             <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-                <div>
-                  <h2 className="font-display text-xl font-semibold text-[#0D0D0D]">
-                    Consultation Fee
-                  </h2>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FEE4EB]">
+                    <Coins
+                      size={20}
+                      className="text-[#F33B7D]"
+                    />
+                  </div>
 
-                  <p className="mt-1 text-sm text-[#8F8C8C]">
-                    Fee for a consultation with this doctor.
-                  </p>
+                  <div>
+                    <h2 className="font-display text-xl font-semibold text-[#0D0D0D]">
+                      Consultation Fee
+                    </h2>
+
+                    <p className="mt-1 text-sm text-[#8F8C8C]">
+                      Fee for a consultation with this doctor.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="rounded-xl bg-[#FEE4EB] px-5 py-3 text-center">
@@ -467,7 +583,7 @@ export default function DoctorProfile() {
           <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FEE4EB]">
-                <Languages
+                <MessageSquareText
                   size={19}
                   className="text-[#F33B7D]"
                 />

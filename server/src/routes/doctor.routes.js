@@ -19,6 +19,8 @@ const {
   uploadDoctorAvatar,
   removeDoctorAvatar,
   getPatientProfileForConsultation,
+  getDoctorSchedule,
+  updateDoctorSchedule,
 } = require("../controllers/doctor.controller");
 
 const {
@@ -60,6 +62,24 @@ router.delete(
   protect,
   authorize(ROLES.DOCTOR),
   removeDoctorAvatar
+);
+
+// =========================================
+// Doctor Schedule
+// =========================================
+
+router.get(
+  "/schedule",
+  protect,
+  authorize(ROLES.DOCTOR),
+  getDoctorSchedule
+);
+
+router.put(
+  "/schedule",
+  protect,
+  authorize(ROLES.DOCTOR),
+  updateDoctorSchedule
 );
 
 // =========================================

@@ -10,6 +10,7 @@ import {
 
 import PageLayout from "../../layouts/PageLayout";
 import { getAvailableDoctors } from "../../services/chat.service";
+import DoctorAvailability from "../../components/doctor/DoctorAvailability";
 
 function Avatar({ name, image, onClick }) {
   if (image) {
@@ -192,6 +193,21 @@ export default function FindDoctor() {
                     )}
 
                 </div>
+
+                {doctor.weeklySchedule?.some((day) => day.enabled && day.slots?.length > 0) && (
+                  <div className="mt-3 rounded-xl bg-[#FEF4F4] px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-[#B8AEB2]">
+                      Weekly availability
+                    </p>
+                    <p className="mt-1 text-xs text-[#5F5A5D]">
+                      {doctor.weeklySchedule
+                        .filter((day) => day.enabled && day.slots?.length)
+                        .slice(0, 2)
+                        .map((day) => `${day.name}: ${day.slots[0].start}–${day.slots[0].end}`)
+                        .join(" • ")}
+                    </p>
+                  </div>
+                )}
 
                 {/* View Profile Button */}
                 <button

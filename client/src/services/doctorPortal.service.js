@@ -74,12 +74,12 @@ export const getConversations = async () => {
 
 export const getDoctorProfile = async () => {
   const response = await api.get("/doctor/profile");
-  return response.data;
+  return response.data.data;
 };
 
 export const updateDoctorProfile = async (data) => {
   const response = await api.patch("/doctor/profile", data);
-  return response.data;
+  return response.data.data;
 };
 
 // =========================================
@@ -104,5 +104,19 @@ export const removeDoctorAvatar = async () => {
 };
 export const getPatientProfileForConsultation = async (chatId) => {
   const response = await api.get(`/doctor/chat/${chatId}/patient-profile`);
+  return response.data.data;
+};
+
+
+export const getDoctorSchedule = async () => {
+  const response = await api.get("/doctor/schedule");
+  return response.data.data;
+};
+
+export const updateDoctorSchedule = async (schedule, scheduleTimezone = "Asia/Karachi") => {
+  const response = await api.put("/doctor/schedule", {
+    schedule,
+    scheduleTimezone,
+  });
   return response.data.data;
 };
