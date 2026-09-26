@@ -57,7 +57,14 @@ import { getAssessmentHistory } from "../../services/pcos.service";
 import { getPregnancyDashboard, trimesterLabel } from "../../services/pregnancy.service";
 import { getNotifications } from "../../services/notification.service";
 
-// Keep static stats structure but we'll update values dynamically
+// Pink-toned neutral palette (replaces the old dead-grey tones)
+//   primaryText  : #3D2A33  (deep plum-grey, softer than pure black)
+//   secondaryText: #A8849A  (muted mauve-pink for labels/subtext)
+//   tertiaryText : #C9A8B8  (soft rose for hints/units)
+//   placeholder  : #D9BFCB  (blush for empty states)
+//   divider      : #F5E4EC  (warm pink divider)
+//   softFill     : #FDF2F7  (very light pink for backgrounds)
+
 const statsConfig = [
   {
     label: "Next Period",
@@ -102,7 +109,6 @@ const statsConfig = [
   },
 ];
 
-// Keep static insights
 const insights = [
   {
     icon: ActivityIcon,
@@ -134,7 +140,6 @@ const insights = [
   },
 ];
 
-// Keep static recent activity
 const recentActivity = [
   {
     icon: Calendar,
@@ -166,7 +171,6 @@ const recentActivity = [
   },
 ];
 
-// Keep static reminders
 const reminders = [
   {
     title: "Doctor Appointment",
@@ -194,7 +198,6 @@ const reminders = [
   },
 ];
 
-// Enhanced Quick Actions with matching background colors
 const quickActions = [
   {
     icon: Calendar,
@@ -295,7 +298,7 @@ function Sparkline({ color }) {
 
 function StatCard({ label, value, unit, sub, color, icon: Icon }) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+    <div className="rounded-2xl bg-white p-4 shadow-[0_4px_14px_rgba(243,59,125,0.06)] ring-1 ring-[#F5E4EC]">
       <div className="flex items-center gap-2">
         <span
           className="flex h-7 w-7 items-center justify-center rounded-lg"
@@ -303,13 +306,13 @@ function StatCard({ label, value, unit, sub, color, icon: Icon }) {
         >
           <Icon className="h-3.5 w-3.5" />
         </span>
-        <p className="text-xs text-[#8F8C8C]">{label}</p>
+        <p className="text-xs text-[#A8849A]">{label}</p>
       </div>
-      <p className="mt-2 font-display text-xl font-semibold text-[#0D0D0D]">
+      <p className="mt-2 font-display text-xl font-semibold text-[#3D2A33]">
         {value}
-        {unit && <span className="ml-0.5 text-sm font-normal text-[#B8AEB2]">{unit}</span>}
+        {unit && <span className="ml-0.5 text-sm font-normal text-[#C9A8B8]">{unit}</span>}
       </p>
-      <p className="mt-0.5 text-xs text-[#B8AEB2]">{sub}</p>
+      <p className="mt-0.5 text-xs text-[#C9A8B8]">{sub}</p>
       <Sparkline color={color} />
     </div>
   );
@@ -335,7 +338,6 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // FIRST: Redirect admin users immediately
   useEffect(() => {
     if (user?.role === "admin") {
       navigate("/admin/dashboard", { replace: true });
@@ -358,14 +360,12 @@ export default function DashboardPage() {
   const [hoveredAction, setHoveredAction] = useState(null);
 
   useEffect(() => {
-    // Don't fetch data if user is admin (they'll be redirected anyway)
     if (user?.role === "admin") {
       return;
     }
 
     const loadData = async () => {
       try {
-        // Load all data in parallel
         const [
           dashboardRes,
           predictionRes,
@@ -390,7 +390,6 @@ export default function DashboardPage() {
         const pcos = Array.isArray(pcosRes) ? pcosRes : [];
         const pregnancy = pregnancyRes?.pregnancy ? pregnancyRes : null;
 
-        // Process conversations for unread count
         const conversations = Array.isArray(conversationsRes)
           ? conversationsRes
           : [];
@@ -406,21 +405,14 @@ export default function DashboardPage() {
         setPcosAssessments(pcos);
         setPregnancyData(pregnancy);
         setUnreadMessages(totalUnread);
-        // Populate the dashboard notifications panel on first load
         setLatestNotifications(normalizeNotifications(notificationsRes));
 
-        // Determine if the backend says a new cycle entry is required.
-        // This is what distinguishes "old cycles exist but tracking is stale"
-        // (e.g. right after pregnancy ends) from "we have live cycle data".
         const requiresNewCycle =
           dashboard?.prediction?.requiresNewCycle === true ||
           dashboard?.prediction?.reason === "needs_new_cycle";
 
         setCycleNeedsNewEntry(requiresNewCycle);
 
-        // Check if we have any *live* cycle data.
-        // Note: cycles.length > 0 alone is not enough — those could be old
-        // cycles that don't apply anymore (e.g. after pregnancy tracking ends).
         const hasData =
           !requiresNewCycle &&
           ((Array.isArray(cycles) && cycles.length > 0) ||
@@ -437,14 +429,12 @@ export default function DashboardPage() {
     loadData();
   }, [user?.role]);
 
-  // Keep the dashboard notification panel fresh without a full page refresh.
   useEffect(() => {
     if (!user?._id || user?.role === "admin") return;
 
     const refreshNotifications = async () => {
       try {
         const res = await getNotifications({ limit: 6 });
-        // Use the same normalizer so wrapped payloads don't get dropped
         setLatestNotifications(normalizeNotifications(res));
       } catch (err) {
         console.error("Could not refresh dashboard notifications:", err);
@@ -455,31 +445,25 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, [user?._id, user?.role]);
 
-  // Get latest PCOS assessment
   const getLatestPCOS = () => {
     if (!pcosAssessments || pcosAssessments.length === 0) {
       return null;
     }
-    // Sort by createdAt descending and get the latest
     const sorted = [...pcosAssessments].sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
     );
     return sorted[0];
   };
 
-  // Compute dynamic stats
   const getStats = () => {
     const stats = [...statsConfig];
 
-    // Update Unread Messages
     stats[4].value = unreadMessages;
     stats[4].sub = unreadMessages === 1 ? "Unread Message" : "Unread Messages";
 
-    // Update Pregnancy stat
     if (pregnancyData?.pregnancy) {
       const { currentWeek, trimester } = pregnancyData.pregnancy;
 
-      // Format the pregnancy display
       const weeksDisplay = currentWeek ? `${currentWeek} Weeks` : "No Data";
       const trimesterDisplay = trimester
         ? trimesterLabel[trimester] || "Unknown"
@@ -488,19 +472,16 @@ export default function DashboardPage() {
       stats[3].value = weeksDisplay;
       stats[3].sub = trimesterDisplay;
 
-      // Update color based on trimester
       if (trimester === 1) stats[3].color = "#22C55E";
       else if (trimester === 2) stats[3].color = "#F59E0B";
       else if (trimester === 3) stats[3].color = "#F33B7D";
     } else {
-      // No pregnancy data
       stats[3].value = "Not Tracking";
       stats[3].sub = "Start tracking";
-      stats[3].color = "#8F8C8C";
+      stats[3].color = "#C9A8B8";
     }
 
     if (cycleTrackingPaused) {
-      // Cycle tracking is paused because pregnancy is active
       stats[0].value = "Paused";
       stats[0].unit = "";
       stats[0].sub = "Pregnancy tracking";
@@ -509,8 +490,6 @@ export default function DashboardPage() {
       stats[1].unit = "";
       stats[1].sub = "Pregnancy tracking";
     } else if (cycleNeedsNewEntry) {
-      // Pregnancy ended and the user needs to log a fresh period
-      // to start a new cycle before predictions make sense again.
       stats[0].value = "No tracking";
       stats[0].unit = "";
       stats[0].sub = "Log your new period";
@@ -519,7 +498,6 @@ export default function DashboardPage() {
       stats[1].unit = "";
       stats[1].sub = "Log your new period";
     } else if (!hasCycleData) {
-      // No cycle data state (new user)
       stats[0].value = "No data";
       stats[0].unit = "";
       stats[0].sub = "Log your period";
@@ -528,7 +506,6 @@ export default function DashboardPage() {
       stats[1].unit = "";
       stats[1].sub = "Log your period";
     } else {
-      // Update Next Period
       if (predictionData?.nextPeriod) {
         const daysUntil = Math.ceil(
           (new Date(predictionData.nextPeriod) - Date.now()) /
@@ -541,7 +518,6 @@ export default function DashboardPage() {
         stats[0].sub = "Log your period";
       }
 
-      // Update Cycle Day
       if (dashboardData?.prediction?.currentPhase?.cycleDay) {
         const cycleDay = dashboardData.prediction.currentPhase.cycleDay;
         const cycleLength = dashboardData.prediction?.averageCycleLength || 28;
@@ -561,7 +537,6 @@ export default function DashboardPage() {
       }
     }
 
-    // Update PCOS Risk
     const latestPCOS = getLatestPCOS();
     if (latestPCOS) {
       const risk = getRiskLevel(latestPCOS.risk);
@@ -572,17 +547,15 @@ export default function DashboardPage() {
     } else {
       stats[2].value = "No Data";
       stats[2].sub = "Take assessment";
-      stats[2].color = "#8F8C8C";
+      stats[2].color = "#C9A8B8";
     }
 
     return stats;
   };
 
-  // Compute cycle pie data
   const getCyclePieData = () => {
     if (cycleTrackingPaused || cycleNeedsNewEntry || !hasCycleData) {
-      // Show empty state with greyed out pie
-      return [{ name: "No Data", value: 1, color: "#E5E7EB" }];
+      return [{ name: "No Data", value: 1, color: "#F3DCE7" }];
     }
 
     const cycleDay =
@@ -604,11 +577,9 @@ export default function DashboardPage() {
     ];
   };
 
-  // Get period length from user data
   const getPeriodLength = () => {
-    if (!hasCycleData) return 5; // Default if no data
+    if (!hasCycleData) return 5;
 
-    // Try to get from prediction
     if (predictionData?.periodLength) {
       return predictionData.periodLength;
     }
@@ -616,7 +587,6 @@ export default function DashboardPage() {
       return dashboardData.prediction.periodLength;
     }
 
-    // Try to get from latest cycle
     if (cyclesData.length > 0) {
       const latestCycle = cyclesData[cyclesData.length - 1];
       if (latestCycle?.periodLength) {
@@ -624,18 +594,15 @@ export default function DashboardPage() {
       }
     }
 
-    return 5; // Default if not found
+    return 5;
   };
 
-  // Get ovulation day - calculate it properly from cycle data
   const getOvulationDay = () => {
     if (!hasCycleData) return null;
 
-    // If we have a prediction with ovulation date, use it
     if (predictionData?.ovulation) {
       const ovDate = new Date(predictionData.ovulation);
       const day = ovDate.getDate();
-      // Validate the ovulation day is reasonable
       if (day >= 10 && day <= 20) {
         return day;
       }
@@ -648,25 +615,20 @@ export default function DashboardPage() {
       }
     }
 
-    // Calculate from cycle length - ovulation typically occurs 14 days before period
     const cycleLength =
       dashboardData?.prediction?.averageCycleLength ||
       predictionData?.averageCycleLength ||
       28;
 
-    // Standard calculation: ovulation day = cycle length - 14
     const calculatedOvulation = cycleLength - 14;
 
-    // Ensure it's within a reasonable range (day 10-20 for most women)
     if (calculatedOvulation >= 10 && calculatedOvulation <= 20) {
       return calculatedOvulation;
     }
 
-    // Default to day 14 for a standard 28-day cycle
     return 14;
   };
 
-  // Get current phase name with proper formatting
   const getCurrentPhase = () => {
     if (!hasCycleData) {
       return null;
@@ -678,7 +640,6 @@ export default function DashboardPage() {
 
     if (!phase) return null;
 
-    // Ensure "Phase" is appended if not already present
     const phaseLower = phase.toLowerCase();
     if (
       phaseLower === "menstrual" ||
@@ -686,7 +647,6 @@ export default function DashboardPage() {
       phaseLower === "luteal" ||
       phaseLower === "ovulation"
     ) {
-      // For ovulation, it's already a phase name without needing "Phase"
       if (phaseLower === "ovulation") {
         return "Ovulation";
       }
@@ -696,7 +656,6 @@ export default function DashboardPage() {
     return phase;
   };
 
-  // Get insight
   const getInsight = () => {
     if (!hasCycleData) {
       return "Start logging your periods to get personalized health insights.";
@@ -709,34 +668,29 @@ export default function DashboardPage() {
     return insights[0] || "Log your next period to keep predictions accurate.";
   };
 
-  // Get dynamic cycle history data
   const getCycleHistoryData = () => {
     if (!cyclesData || cyclesData.length === 0) {
       return [];
     }
 
-    // Sort cycles by periodStart date (oldest to newest)
     const sortedCycles = [...cyclesData]
       .filter((c) => c.periodStart)
       .sort((a, b) => new Date(a.periodStart) - new Date(b.periodStart));
 
-    // Take the last 6 cycles or all if less than 6
     const lastSixCycles = sortedCycles.slice(-6);
 
-    // Transform cycle data for the chart
     return lastSixCycles.map((cycle) => {
       const startDate = new Date(cycle.periodStart);
       const month = startDate.toLocaleDateString("en-US", { month: "short" });
 
-      // Calculate ovulation day from cycle length
       const cycleLength = cycle.cycleLength || 28;
-      const ovulationDay = cycleLength - 14; // Typical ovulation calculation
+      const ovulationDay = cycleLength - 14;
 
       return {
         month: month,
         period: cycle.periodLength || 5,
         cycle: cycleLength,
-        ovulation: Math.max(10, Math.min(20, ovulationDay)), // Clamp between 10-20
+        ovulation: Math.max(10, Math.min(20, ovulationDay)),
       };
     });
   };
@@ -754,35 +708,34 @@ export default function DashboardPage() {
   const currentPhase = getCurrentPhase();
   const latestPCOS = getLatestPCOS();
 
-  // Get user-friendly cycle phase labels and days
   const getCyclePhases = () => {
     if (cycleTrackingPaused) {
       return [
-        { label: "Menstrual Phase", days: "Paused", color: "#D1D5DB" },
-        { label: "Follicular Phase", days: "Paused", color: "#D1D5DB" },
-        { label: "Fertile Window", days: "Paused", color: "#D1D5DB" },
-        { label: "Ovulation", days: "Paused", color: "#D1D5DB" },
-        { label: "Luteal Phase", days: "Paused", color: "#D1D5DB" },
+        { label: "Menstrual Phase", days: "Paused", color: "#EBD0DC" },
+        { label: "Follicular Phase", days: "Paused", color: "#EBD0DC" },
+        { label: "Fertile Window", days: "Paused", color: "#EBD0DC" },
+        { label: "Ovulation", days: "Paused", color: "#EBD0DC" },
+        { label: "Luteal Phase", days: "Paused", color: "#EBD0DC" },
       ];
     }
 
     if (cycleNeedsNewEntry) {
       return [
-        { label: "Menstrual Phase", days: "Log new period", color: "#D1D5DB" },
-        { label: "Follicular Phase", days: "Log new period", color: "#D1D5DB" },
-        { label: "Fertile Window", days: "Log new period", color: "#D1D5DB" },
-        { label: "Ovulation", days: "Log new period", color: "#D1D5DB" },
-        { label: "Luteal Phase", days: "Log new period", color: "#D1D5DB" },
+        { label: "Menstrual Phase", days: "Log new period", color: "#EBD0DC" },
+        { label: "Follicular Phase", days: "Log new period", color: "#EBD0DC" },
+        { label: "Fertile Window", days: "Log new period", color: "#EBD0DC" },
+        { label: "Ovulation", days: "Log new period", color: "#EBD0DC" },
+        { label: "Luteal Phase", days: "Log new period", color: "#EBD0DC" },
       ];
     }
 
     if (!hasCycleData || !ovulationDay) {
       return [
-        { label: "Menstrual Phase", days: "Log to track", color: "#D1D5DB" },
-        { label: "Follicular Phase", days: "Log to track", color: "#D1D5DB" },
-        { label: "Fertile Window", days: "Log to track", color: "#D1D5DB" },
-        { label: "Ovulation", days: "Log to track", color: "#D1D5DB" },
-        { label: "Luteal Phase", days: "Log to track", color: "#D1D5DB" },
+        { label: "Menstrual Phase", days: "Log to track", color: "#EBD0DC" },
+        { label: "Follicular Phase", days: "Log to track", color: "#EBD0DC" },
+        { label: "Fertile Window", days: "Log to track", color: "#EBD0DC" },
+        { label: "Ovulation", days: "Log to track", color: "#EBD0DC" },
+        { label: "Luteal Phase", days: "Log to track", color: "#EBD0DC" },
       ];
     }
 
@@ -815,7 +768,7 @@ export default function DashboardPage() {
       {
         label: "Luteal Phase",
         days: `Day ${lutealStart} - ${lutealEnd}`,
-        color: "#D1D5DB",
+        color: "#EBD0DC",
       },
     ];
   };
@@ -826,7 +779,7 @@ export default function DashboardPage() {
     return (
       <DashboardLayout subtitle="Here's your personalized health overview.">
         <div className="flex items-center justify-center py-12">
-          <p className="text-sm text-[#8F8C8C]">Loading your health data...</p>
+          <p className="text-sm text-[#A8849A]">Loading your health data...</p>
         </div>
       </DashboardLayout>
     );
@@ -844,9 +797,9 @@ export default function DashboardPage() {
       {/* Middle Section */}
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Cycle Overview */}
-        <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+        <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(243,59,125,0.06)] ring-1 ring-[#F5E4EC]">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
+            <h2 className="font-display text-base font-semibold text-[#3D2A33]">
               Cycle Overview
             </h2>
             <Link
@@ -878,38 +831,38 @@ export default function DashboardPage() {
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
               {cycleTrackingPaused ? (
                 <>
-                  <p className="font-display text-sm font-semibold text-[#8F8C8C]">
+                  <p className="font-display text-sm font-semibold text-[#A8849A]">
                     Paused
                   </p>
-                  <p className="mt-0.5 text-[10px] text-[#B8AEB2]">
+                  <p className="mt-0.5 text-[10px] text-[#C9A8B8]">
                     Pregnancy tracking
                   </p>
                 </>
               ) : cycleNeedsNewEntry ? (
                 <>
-                  <p className="font-display text-sm font-semibold text-[#8F8C8C]">
+                  <p className="font-display text-sm font-semibold text-[#A8849A]">
                     No tracking
                   </p>
-                  <p className="mt-0.5 text-[10px] text-[#B8AEB2]">
+                  <p className="mt-0.5 text-[10px] text-[#C9A8B8]">
                     Log your new period
                   </p>
                 </>
               ) : hasCycleData ? (
                 <>
-                  <p className="text-xs text-[#8F8C8C]">Day</p>
-                  <p className="font-display text-2xl font-semibold text-[#0D0D0D]">
+                  <p className="text-xs text-[#A8849A]">Day</p>
+                  <p className="font-display text-2xl font-semibold text-[#3D2A33]">
                     {dashboardData?.prediction?.currentPhase?.cycleDay ||
                       predictionData?.currentPhase?.cycleDay ||
                       "-"}
                   </p>
-                  <p className="text-xs text-[#8F8C8C]">of {cycleLength}</p>
+                  <p className="text-xs text-[#A8849A]">of {cycleLength}</p>
                 </>
               ) : (
                 <>
-                  <p className="font-display text-sm font-semibold text-[#8F8C8C]">
+                  <p className="font-display text-sm font-semibold text-[#A8849A]">
                     No data
                   </p>
-                  <p className="mt-0.5 text-[10px] text-[#B8AEB2]">
+                  <p className="mt-0.5 text-[10px] text-[#C9A8B8]">
                     Log your period
                   </p>
                 </>
@@ -928,9 +881,9 @@ export default function DashboardPage() {
                     className="h-2 w-2 rounded-full"
                     style={{ backgroundColor: color }}
                   />
-                  <span className="text-[#3D3939]">{label}</span>
+                  <span className="text-[#3D2A33]">{label}</span>
                 </div>
-                <span className="text-[#B8AEB2]">{days}</span>
+                <span className="text-[#C9A8B8]">{days}</span>
               </div>
             ))}
           </div>
@@ -940,7 +893,7 @@ export default function DashboardPage() {
               <p className="text-sm font-bold text-[#F33B7D]">
                 Cycle Tracking Paused
               </p>
-              <p className="mt-1 text-xs text-[#3D3939]">
+              <p className="mt-1 text-xs text-[#3D2A33]">
                 Cycle tracking is paused while pregnancy is being tracked.
               </p>
             </div>
@@ -948,10 +901,10 @@ export default function DashboardPage() {
 
           {!cycleTrackingPaused && cycleNeedsNewEntry && (
             <div className="mt-4 rounded-2xl border border-[#F0DCE4] bg-[#FFF7FA] p-4">
-              <h3 className="text-sm font-semibold text-[#0D0D0D]">
+              <h3 className="text-sm font-semibold text-[#3D2A33]">
                 Start a new cycle
               </h3>
-              <p className="mt-1 text-xs text-[#8F8C8C]">
+              <p className="mt-1 text-xs text-[#A8849A]">
                 Your pregnancy tracking has ended. Please enter your latest
                 period details to start menstrual cycle tracking again.
               </p>
@@ -972,7 +925,7 @@ export default function DashboardPage() {
 
           {!cycleTrackingPaused && !cycleNeedsNewEntry && !hasCycleData && (
             <div className="mt-4 rounded-xl bg-[#FEE4EB] p-3 text-center">
-              <p className="text-xs text-[#3D3939]">
+              <p className="text-xs text-[#3D2A33]">
                 Log your first period to start tracking your cycle.
               </p>
             </div>
@@ -980,32 +933,35 @@ export default function DashboardPage() {
         </div>
 
         {/* Health Insights */}
-        <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+        <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_-6px_rgba(243,59,125,0.10),0_2px_6px_rgba(0,0,0,0.04)] ring-1 ring-[#F5E4EC]">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
+            <h2 className="font-display text-base font-semibold text-[#3D2A33]">
               Health Insights
             </h2>
-            <button className="flex items-center gap-1 text-xs font-medium text-[#8F8C8C] hover:text-[#3D3939] transition-colors">
+            <button className="flex items-center gap-1 text-xs font-medium text-[#A8849A] hover:text-[#F33B7D] transition-colors">
               This Week <ChevronDown className="h-3 w-3" />
             </button>
           </div>
-          <div className="space-y-4">
+          <div className="divide-y divide-[#F5E4EC]">
             {insights.map(({ icon: Icon, title, detail, tag, tagColor }) => (
-              <div key={title} className="flex items-start gap-3">
+              <div
+                key={title}
+                className="group flex items-start gap-3 px-2 py-3 -mx-2 first:pt-0 last:pb-0 rounded-xl transition-all duration-200 hover:bg-[#FEF4F4] hover:shadow-[0_2px_8px_rgba(243,59,125,0.06)]"
+              >
                 <span
-                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-[#F5E4EC] transition-transform duration-200 group-hover:scale-105"
                   style={{ backgroundColor: `${tagColor}1A`, color: tagColor }}
                 >
                   <Icon className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[#0D0D0D]">
+                  <p className="text-sm font-semibold text-[#3D2A33]">
                     {title}
                   </p>
-                  <p className="truncate text-xs text-[#8F8C8C]">{detail}</p>
+                  <p className="truncate text-xs text-[#A8849A]">{detail}</p>
                 </div>
                 <span
-                  className="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                  className="flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold shadow-sm ring-1 ring-[#F5E4EC]"
                   style={{ backgroundColor: `${tagColor}1A`, color: tagColor }}
                 >
                   {tag}
@@ -1020,9 +976,9 @@ export default function DashboardPage() {
 
         {/* Latest Notifications + Tip */}
         <div className="flex flex-col gap-4">
-          <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <div className="rounded-2xl bg-white p-5 shadow-[0_8px_24px_-6px_rgba(243,59,125,0.10),0_2px_6px_rgba(0,0,0,0.04)] ring-1 ring-[#F5E4EC]">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
+              <h2 className="font-display text-base font-semibold text-[#3D2A33]">
                 Latest Notifications
               </h2>
               <Link
@@ -1033,32 +989,35 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            <div className="space-y-3">
+            <div className="divide-y divide-[#F5E4EC]">
               {latestNotifications.length > 0 ? (
                 latestNotifications.slice(0, 5).map((notification) => (
                   <Link
                     key={notification._id}
                     to={notification.link || "/notifications"}
-                    className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-[#FEF4F4]"
+                    className="group relative flex items-center gap-3 px-2 py-3 -mx-2 first:pt-0 last:pb-0 rounded-xl transition-all duration-200 hover:bg-[#FEF4F4] hover:shadow-[0_2px_8px_rgba(243,59,125,0.06)]"
                   >
-                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
+                    {!notification.read && (
+                      <span className="absolute left-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#F33B7D] shadow-[0_0_0_3px_rgba(243,59,125,0.15)]" />
+                    )}
+                    <span className="ml-2 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D] shadow-sm ring-1 ring-[#F5E4EC] transition-transform duration-200 group-hover:scale-105">
                       <Bell className="h-4 w-4" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[#0D0D0D]">
+                      <p className="truncate text-sm font-semibold text-[#3D2A33]">
                         {notification.title}
                       </p>
-                      <p className="truncate text-xs text-[#8F8C8C]">
+                      <p className="truncate text-xs text-[#A8849A]">
                         {notification.message}
                       </p>
                     </div>
                     {!notification.read && (
-                      <span className="h-2 w-2 flex-shrink-0 rounded-full bg-[#F33B7D]" />
+                      <span className="h-2 w-2 flex-shrink-0 rounded-full bg-[#F33B7D] shadow-[0_0_0_3px_rgba(243,59,125,0.15)]" />
                     )}
                   </Link>
                 ))
               ) : (
-                <div className="py-5 text-center text-xs text-[#8F8C8C]">
+                <div className="py-5 text-center text-xs text-[#C9A8B8]">
                   No notifications yet.
                 </div>
               )}
@@ -1075,12 +1034,12 @@ export default function DashboardPage() {
       {/* Quick Actions + Recent Activity - Enhanced Layout */}
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Quick Actions - Now spans 2 columns */}
-        <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 lg:col-span-2">
+        <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(243,59,125,0.06)] ring-1 ring-[#F5E4EC] lg:col-span-2">
           <div className="mb-5">
-            <h2 className="font-display text-lg font-semibold text-[#0D0D0D]">
+            <h2 className="font-display text-lg font-semibold text-[#3D2A33]">
               Quick Actions
             </h2>
-            <p className="text-sm text-[#8F8C8C]">
+            <p className="text-sm text-[#A8849A]">
               Manage your health with one tap
             </p>
           </div>
@@ -1100,7 +1059,6 @@ export default function DashboardPage() {
                   onMouseLeave={() => setHoveredAction(null)}
                 >
                   <div className="relative flex flex-col items-start gap-2.5">
-                    {/* Icon - background turns dark pink on hover */}
                     <div
                       className="flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-300 shadow-sm"
                       style={{
@@ -1118,15 +1076,13 @@ export default function DashboardPage() {
                       />
                     </div>
 
-                    {/* Content */}
                     <div className="w-full">
-                      <p className="text-sm font-semibold text-[#0D0D0D] group-hover:text-[#F33B7D] transition-colors">
+                      <p className="text-sm font-semibold text-[#3D2A33] group-hover:text-[#F33B7D] transition-colors">
                         {label}
                       </p>
-                      <p className="text-xs text-[#8F8C8C]">{description}</p>
+                      <p className="text-xs text-[#A8849A]">{description}</p>
                     </div>
 
-                    {/* Arrow indicator on hover */}
                     <div className="absolute right-3 top-3 opacity-0 transition-all duration-300 group-hover:opacity-100">
                       <ChevronRight
                         className="h-4 w-4"
@@ -1141,13 +1097,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Activity - Spans 1 column */}
-        <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+        <div className="rounded-2xl bg-white p-6 shadow-[0_8px_24px_-6px_rgba(243,59,125,0.10),0_2px_6px_rgba(0,0,0,0.04)] ring-1 ring-[#F5E4EC]">
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <h2 className="font-display text-lg font-semibold text-[#0D0D0D]">
+              <h2 className="font-display text-lg font-semibold text-[#3D2A33]">
                 Recent Activity
               </h2>
-              <p className="text-sm text-[#8F8C8C]">
+              <p className="text-sm text-[#A8849A]">
                 Your latest health updates
               </p>
             </div>
@@ -1156,27 +1112,31 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="divide-y divide-[#F5E4EC]">
             {recentActivity
               .slice(0, 4)
               .map(({ icon: Icon, color, title, detail, time }) => (
                 <div
                   key={title}
-                  className="group flex items-center gap-4 rounded-xl p-3 transition-all duration-300 hover:bg-[#FEF4F4] cursor-pointer"
+                  className="group relative flex items-center gap-4 px-3 py-3.5 -mx-3 first:pt-0 last:pb-0 rounded-xl transition-all duration-300 hover:bg-[#FEF4F4] hover:shadow-[0_2px_8px_rgba(243,59,125,0.06)] cursor-pointer"
                 >
+                  <span
+                    className="absolute left-0 top-1/2 h-8 w-0.5 -translate-y-1/2 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    style={{ backgroundColor: color }}
+                  />
                   <div
-                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all duration-300 group-hover:scale-110"
+                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-[#F5E4EC] transition-all duration-300 group-hover:scale-110"
                     style={{ backgroundColor: `${color}1A`, color }}
                   >
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#0D0D0D]">
+                    <p className="text-sm font-semibold text-[#3D2A33]">
                       {title}
                     </p>
-                    <p className="truncate text-xs text-[#8F8C8C]">{detail}</p>
+                    <p className="truncate text-xs text-[#A8849A]">{detail}</p>
                   </div>
-                  <span className="flex-shrink-0 text-[10px] text-[#B8AEB2] group-hover:text-[#8F8C8C] transition-colors">
+                  <span className="flex-shrink-0 rounded-full bg-[#FDF2F7] px-2 py-0.5 text-[10px] font-medium text-[#C9A8B8] transition-colors group-hover:bg-white group-hover:text-[#A8849A]">
                     {time}
                   </span>
                 </div>
@@ -1187,17 +1147,17 @@ export default function DashboardPage() {
 
       {/* Cycle History + Premium Banner */}
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 lg:col-span-2">
+        <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(243,59,125,0.06)] ring-1 ring-[#F5E4EC] lg:col-span-2">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
+            <h2 className="font-display text-base font-semibold text-[#3D2A33]">
               Cycle History{" "}
-              <span className="font-normal text-[#8F8C8C]">
+              <span className="font-normal text-[#A8849A]">
                 {cycleHistoryData.length > 0
                   ? `(Last ${Math.min(cycleHistoryData.length, 6)} Cycles)`
                   : "(No data yet)"}
               </span>
             </h2>
-            <div className="flex items-center gap-3 text-[10px] text-[#8F8C8C]">
+            <div className="flex items-center gap-3 text-[10px] text-[#A8849A]">
               <span className="flex items-center gap-1">
                 <span className="h-2 w-2 rounded-full bg-[#F33B7D]" /> Period
                 Days
@@ -1214,7 +1174,7 @@ export default function DashboardPage() {
           </div>
 
           {cycleHistoryData.length === 0 ? (
-            <div className="flex h-48 items-center justify-center text-sm text-[#8F8C8C]">
+            <div className="flex h-48 items-center justify-center text-sm text-[#A8849A]">
               No cycle data available yet. Start logging your cycles to see your
               history.
             </div>
@@ -1222,15 +1182,15 @@ export default function DashboardPage() {
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={cycleHistoryData}>
-                  <CartesianGrid vertical={false} stroke="#F5EAEF" />
+                  <CartesianGrid vertical={false} stroke="#F5E4EC" />
                   <XAxis
                     dataKey="month"
-                    tick={{ fontSize: 11, fill: "#8F8C8C" }}
+                    tick={{ fontSize: 11, fill: "#A8849A" }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 11, fill: "#8F8C8C" }}
+                    tick={{ fontSize: 11, fill: "#A8849A" }}
                     axisLine={false}
                     tickLine={false}
                   />

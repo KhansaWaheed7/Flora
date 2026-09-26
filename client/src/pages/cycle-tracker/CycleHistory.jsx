@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Edit3, Trash2, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { Edit3, Trash2, ChevronLeft, ChevronRight, CalendarDays, AlertTriangle, X } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import {
   getCycles,
@@ -63,6 +63,107 @@ function eachDay(start, end) {
   return days;
 }
 
+// Custom overlay confirmation modal — replaces window.confirm
+function ConfirmDeleteModal({ open, cycleLabel, onCancel, onConfirm, deleting }) {
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKey = (e) => {
+      if (e.key === "Escape" && !deleting) onCancel();
+    };
+
+    document.addEventListener("keydown", handleKey);
+    // Prevent background scroll while modal is open
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open, deleting, onCancel]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-cycle-title"
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-[#3D2A33]/40 backdrop-blur-sm animate-[fadeIn_0.15s_ease-out]"
+        onClick={() => !deleting && onCancel()}
+      />
+
+      {/* Card */}
+      <div className="relative z-10 w-full max-w-sm rounded-3xl bg-white p-6 shadow-[0_24px_60px_-12px_rgba(243,59,125,0.35)] ring-1 ring-[#F5E4EC] animate-[popIn_0.18s_ease-out]">
+        <button
+          onClick={() => !deleting && onCancel()}
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-[#C9A8B8] transition hover:bg-[#FEF4F4] hover:text-[#F33B7D]"
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FEE4EB] text-[#F33B7D] shadow-[0_8px_20px_-6px_rgba(243,59,125,0.35)]">
+          <AlertTriangle className="h-7 w-7" />
+        </div>
+
+        <h3
+          id="delete-cycle-title"
+          className="mt-4 text-center font-display text-lg font-semibold text-[#3D2A33]"
+        >
+          Delete this cycle?
+        </h3>
+
+        <p className="mt-2 text-center text-sm text-[#A8849A]">
+          {cycleLabel ? (
+            <>
+              You're about to delete the cycle entry for{" "}
+              <span className="font-semibold text-[#3D2A33]">{cycleLabel}</span>.
+              This action can't be undone.
+            </>
+          ) : (
+            "This action can't be undone."
+          )}
+        </p>
+
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={deleting}
+            className="flex-1 rounded-full border border-[#F5E4EC] bg-white px-4 py-2.5 text-sm font-semibold text-[#3D2A33] transition hover:bg-[#FEF4F4] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={deleting}
+            className="flex-1 rounded-full bg-[#F33B7D] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_-8px_rgba(243,59,125,0.6)] transition hover:bg-[#d92b6b] disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {deleting ? "Deleting..." : "Delete"}
+          </button>
+        </div>
+      </div>
+
+      {/* Keyframes (scoped via inline style tag so no tailwind config change is needed) */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes popIn {
+          from { opacity: 0; transform: scale(0.95) translateY(6px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function CycleHistory() {
   const [searchParams] = useSearchParams();
   const [view, setView] = useState(
@@ -77,6 +178,10 @@ export default function CycleHistory() {
     d.setDate(1);
     return d;
   });
+
+  // Delete confirmation modal state
+  const [confirmTarget, setConfirmTarget] = useState(null); // { id, label } | null
+  const [deleting, setDeleting] = useState(false);
 
   const loadCycles = async () => {
     setLoading(true);
@@ -103,14 +208,27 @@ export default function CycleHistory() {
     loadCycles();
   }, []);
 
-  const handleDelete = async (e, id) => {
+  // Open the custom overlay instead of window.confirm
+  const handleDelete = (e, cycle) => {
     e.preventDefault();
-    if (!window.confirm("Delete this cycle entry?")) return;
+    e.stopPropagation();
+    setConfirmTarget({
+      id: cycle._id,
+      label: formatRange(cycle.periodStart, cycle.periodEnd),
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!confirmTarget) return;
+    setDeleting(true);
     try {
-      await deleteCycle(id);
-      setCycles((prev) => prev.filter((c) => c._id !== id));
+      await deleteCycle(confirmTarget.id);
+      setCycles((prev) => prev.filter((c) => c._id !== confirmTarget.id));
+      setConfirmTarget(null);
     } catch (err) {
       alert("Failed to delete. Try again.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -122,13 +240,13 @@ export default function CycleHistory() {
     >
       <div className="mx-auto max-w-3xl">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1 rounded-full bg-white p-1 shadow-[0_2px_8px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <div className="flex items-center gap-1 rounded-full bg-white p-1 shadow-[0_2px_8px_rgba(0,0,0,0.04)] ring-1 ring-[#F5E4EC]">
             <button
               onClick={() => setView("calendar")}
               className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                 view === "calendar"
                   ? "bg-[#FEE4EB] text-[#F33B7D]"
-                  : "text-[#8F8C8C]"
+                  : "text-[#A8849A]"
               }`}
             >
               Calendar
@@ -136,20 +254,20 @@ export default function CycleHistory() {
             <button
               onClick={() => setView("list")}
               className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                view === "list" ? "bg-[#F33B7D] text-white" : "text-[#8F8C8C]"
+                view === "list" ? "bg-[#F33B7D] text-white" : "text-[#A8849A]"
               }`}
             >
               List
             </button>
           </div>
 
-          <select className="rounded-xl border border-[#F0DCE4] bg-white px-3 py-2 text-xs font-medium text-[#3D3939] outline-none">
+          <select className="rounded-xl border border-[#F0DCE4] bg-white px-3 py-2 text-xs font-medium text-[#3D2A33] outline-none">
             <option>Sort: Latest</option>
             <option>Sort: Oldest</option>
           </select>
         </div>
 
-        {loading && <p className="text-sm text-[#8F8C8C]">Loading...</p>}
+        {loading && <p className="text-sm text-[#A8849A]">Loading...</p>}
         {error && (
           <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
             {error}
@@ -168,7 +286,7 @@ export default function CycleHistory() {
         {!loading && !error && view === "list" && (
           <>
             {cycles.length === 0 && (
-              <div className="rounded-2xl bg-white p-8 text-center text-sm text-[#8F8C8C] shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <div className="rounded-2xl bg-white p-8 text-center text-sm text-[#A8849A] shadow-[0_4px_14px_rgba(243,59,125,0.06)] ring-1 ring-[#F5E4EC]">
                 No cycles logged yet.
               </div>
             )}
@@ -185,38 +303,39 @@ export default function CycleHistory() {
                   <Link
                     key={cycle._id}
                     to={`/cycle-tracker/${cycle._id}`}
-                    className="block rounded-2xl bg-white p-4 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(243,59,125,0.1)]"
+                    className="block rounded-2xl bg-white p-4 shadow-[0_4px_14px_rgba(243,59,125,0.06)] ring-1 ring-[#F5E4EC] transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(243,59,125,0.1)]"
                   >
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-[#0D0D0D]">
+                      <p className="text-sm font-semibold text-[#3D2A33]">
                         {formatRange(cycle.periodStart, cycle.periodEnd)}
                       </p>
                       <div className="flex items-center gap-3">
                         <Link
                           to={`/cycle-tracker/${cycle._id}/edit`}
                           onClick={(e) => e.stopPropagation()}
-                          className="text-[#8F8C8C] hover:text-[#F33B7D]"
+                          className="text-[#A8849A] hover:text-[#F33B7D]"
                         >
                           <Edit3 className="h-4 w-4" />
                         </Link>
                         <button
-                          onClick={(e) => handleDelete(e, cycle._id)}
-                          className="text-[#8F8C8C] hover:text-red-500"
+                          onClick={(e) => handleDelete(e, cycle)}
+                          className="text-[#A8849A] hover:text-red-500"
+                          aria-label="Delete cycle"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-[#8F8C8C]">
+                    <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-[#A8849A]">
                       <span>
                         Cycle Length{" "}
-                        <span className="font-semibold text-[#0D0D0D]">
+                        <span className="font-semibold text-[#3D2A33]">
                           {cycle.cycleLength ?? "-"} Days
                         </span>
                       </span>
                       <span>
                         Period Length{" "}
-                        <span className="font-semibold text-[#0D0D0D]">
+                        <span className="font-semibold text-[#3D2A33]">
                           {cycle.periodLength ?? "-"} Days
                         </span>
                       </span>
@@ -227,7 +346,7 @@ export default function CycleHistory() {
                             <span key={s}>{symptomEmoji[s] || "🔸"}</span>
                           ))}
                           {extra > 0 && (
-                            <span className="text-[#B8AEB2]">+{extra}</span>
+                            <span className="text-[#C9A8B8]">+{extra}</span>
                           )}
                         </span>
                       )}
@@ -239,13 +358,22 @@ export default function CycleHistory() {
 
             <button
               onClick={() => setView("calendar")}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-[#F0DCE4] bg-white px-6 py-3 text-sm font-semibold text-[#3D3939] transition hover:bg-[#FEF4F4]"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-[#F0DCE4] bg-white px-6 py-3 text-sm font-semibold text-[#3D2A33] transition hover:bg-[#FEF4F4]"
             >
               <CalendarDays className="h-4 w-4" /> View Calendar
             </button>
           </>
         )}
       </div>
+
+      {/* Overlay delete confirmation */}
+      <ConfirmDeleteModal
+        open={!!confirmTarget}
+        cycleLabel={confirmTarget?.label}
+        deleting={deleting}
+        onCancel={() => !deleting && setConfirmTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </PageLayout>
   );
 }
@@ -260,19 +388,17 @@ function CalendarGrid({ cycles, prediction, monthCursor, setMonthCursor }) {
   // Build lookup sets so each day only needs an O(1) check
   const periodDays = new Set();
 
-cycles.forEach((c) => {
-  if (!c.periodStart) return;
+  cycles.forEach((c) => {
+    if (!c.periodStart) return;
 
-  const start = new Date(c.periodStart);
+    const start = new Date(c.periodStart);
 
-  const end = c.periodEnd
-    ? new Date(c.periodEnd)
-    : new Date();
+    const end = c.periodEnd ? new Date(c.periodEnd) : new Date();
 
-  eachDay(start, end).forEach((d) => {
-    periodDays.add(dayKey(d));
+    eachDay(start, end).forEach((d) => {
+      periodDays.add(dayKey(d));
+    });
   });
-});
 
   const predictedPeriodDays = new Set();
   if (prediction?.nextPeriod) {
@@ -306,26 +432,24 @@ cycles.forEach((c) => {
     year: "numeric",
   });
 
-  const goPrevMonth = () =>
-    setMonthCursor(new Date(year, month - 1, 1));
-  const goNextMonth = () =>
-    setMonthCursor(new Date(year, month + 1, 1));
+  const goPrevMonth = () => setMonthCursor(new Date(year, month - 1, 1));
+  const goNextMonth = () => setMonthCursor(new Date(year, month + 1, 1));
 
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5 sm:p-5">
+    <div className="rounded-2xl bg-white p-4 shadow-[0_4px_14px_rgba(243,59,125,0.06)] ring-1 ring-[#F5E4EC] sm:p-5">
       <div className="mb-4 flex items-center justify-between">
         <button
           onClick={goPrevMonth}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#3D3939] hover:bg-[#FEE4EB] hover:text-[#F33B7D]"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#3D2A33] hover:bg-[#FEE4EB] hover:text-[#F33B7D]"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <p className="font-display text-sm font-semibold text-[#0D0D0D]">
+        <p className="font-display text-sm font-semibold text-[#3D2A33]">
           {monthLabel}
         </p>
         <button
           onClick={goNextMonth}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#3D3939] hover:bg-[#FEE4EB] hover:text-[#F33B7D]"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#3D2A33] hover:bg-[#FEE4EB] hover:text-[#F33B7D]"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -333,7 +457,7 @@ cycles.forEach((c) => {
 
       <div className="grid grid-cols-7 gap-y-2 text-center">
         {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-          <div key={i} className="text-xs font-medium text-[#B8AEB2]">
+          <div key={i} className="text-xs font-medium text-[#C9A8B8]">
             {d}
           </div>
         ))}
@@ -362,9 +486,9 @@ cycles.forEach((c) => {
           } else if (isFertile) {
             cellClass += " bg-[#F3E8FF] text-[#7E22CE]";
           } else if (isToday) {
-            cellClass += " ring-2 ring-[#F33B7D] text-[#0D0D0D]";
+            cellClass += " ring-2 ring-[#F33B7D] text-[#3D2A33]";
           } else {
-            cellClass += " text-[#3D3939]";
+            cellClass += " text-[#3D2A33]";
           }
 
           return (
@@ -375,7 +499,7 @@ cycles.forEach((c) => {
         })}
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#F0DCE4] pt-4 text-xs text-[#8F8C8C]">
+      <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#F0DCE4] pt-4 text-xs text-[#A8849A]">
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-[#F33B7D]" /> Period
         </span>
