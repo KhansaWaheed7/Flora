@@ -14,7 +14,6 @@ import {
   Ruler,
   Clock,
   ShieldCheck,
-  History,
   Smartphone,
   Download,
   Trash2,
@@ -148,17 +147,6 @@ const handleDeleteAccount = async () => {
     },
   ];
 
-  const securityRows = [
-    {
-      icon: History,
-      label: "Login Activity",
-      value: "See recent activity",
-      onClick: () => {
-        /* Navigate to login activity */
-      },
-    },
-  ];
-
   return (
     <DashboardLayout
       title="Account Settings"
@@ -177,19 +165,8 @@ const handleDeleteAccount = async () => {
           </div>
         </div>
 
-        {/* Security + Data & Privacy */}
+        {/* Data & Privacy */}
         <div className="flex flex-col gap-4">
-          <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-            <h2 className="mb-2 font-display text-base font-semibold text-[#0D0D0D]">
-              Security
-            </h2>
-            <div className="divide-y divide-[#F5EAEF]">
-              {securityRows.map((row) => (
-                <Row key={row.label} {...row} />
-              ))}
-            </div>
-          </div>
-
           <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
             <h2 className="mb-2 font-display text-base font-semibold text-[#0D0D0D]">
               Data & Privacy
@@ -204,12 +181,12 @@ const handleDeleteAccount = async () => {
                 }}
               />
               <Row
-  icon={Trash2}
-  label="Delete Account"
-  value="Permanently delete your account"
-  danger
-  onClick={() => setShowDeleteModal(true)}
-/>
+                icon={Trash2}
+                label="Delete Account"
+                value="Permanently delete your account"
+                danger
+                onClick={() => setShowDeleteModal(true)}
+              />
             </div>
           </div>
         </div>

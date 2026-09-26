@@ -1,10 +1,36 @@
-
-import { Menu, Search, Bell, User, Settings, LogOut } from "lucide-react";
+import { Menu, Bell, User, Settings, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Avatar from "../common/Avatar";
 import { logout } from "../../utils/auth";
+
+/* Helper: pink circle with initials fallback */
+function getInitials(name = "") {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "D";
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function DoctorAvatar({ user, size = "h-9 w-9 text-sm" }) {
+  const name = user?.fullName || user?.name || "Doctor";
+  const image = user?.profilePicture || user?.avatar || "";
+
+  // If there is a valid image, use the shared Avatar component
+  if (image && image.trim() !== "") {
+    return <Avatar name={name} image={image} size={size} />;
+  }
+
+  // Otherwise, render a pink circle with initials
+  return (
+    <div
+      className={`flex flex-shrink-0 items-center justify-center rounded-full bg-[#FCE4EB] font-bold text-[#F33B7D] ring-1 ring-[#F0DCE4] ${size}`}
+    >
+      {getInitials(name)}
+    </div>
+  );
+}
 
 export default function DoctorHeader({
   title,
@@ -13,8 +39,6 @@ export default function DoctorHeader({
   setSidebarOpen,
   user,
   notificationCount = 0,
-  showSearch = true,
-  onSearchChange,
 }) {
   const navigate = useNavigate();
 
@@ -62,20 +86,6 @@ export default function DoctorHeader({
 
       {/* Right side */}
       <div className="flex items-center gap-3">
-        {/* Search */}
-        {showSearch && (
-          <div className="relative hidden sm:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8F8C8C]" />
-
-            <input
-              type="text"
-              placeholder="Search patients..."
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              className="w-56 rounded-xl border border-[#F0DCE4] bg-white py-2 pl-9 pr-3 text-sm text-[#3D3939] placeholder:text-[#B8B4B4] focus:border-[#F33B7D] focus:outline-none focus:ring-1 focus:ring-[#F33B7D]"
-            />
-          </div>
-        )}
-
         {/* Notifications */}
         <div className="relative z-30">
           <button
@@ -177,11 +187,7 @@ export default function DoctorHeader({
             }}
             className="flex items-center gap-2 rounded-xl p-1 transition hover:bg-white"
           >
-            <Avatar
-              name={user?.fullName || user?.name || "Doctor"}
-              image={user?.profilePicture || user?.avatar || ""}
-              size="h-9 w-9 text-sm"
-            />
+            <DoctorAvatar user={user} size="h-9 w-9 text-sm" />
 
             <span className="hidden max-w-[150px] truncate text-sm font-medium text-[#0D0D0D] sm:inline">
               {user?.fullName || user?.name || "Doctor"}
@@ -194,11 +200,7 @@ export default function DoctorHeader({
               {/* Doctor info */}
               <div className="border-b border-[#F0DCE4] px-3 py-3">
                 <div className="flex items-center gap-3">
-                  <Avatar
-                    name={user?.fullName || user?.name || "Doctor"}
-                    image={user?.profilePicture || user?.avatar || ""}
-                    size="h-10 w-10 text-sm"
-                  />
+                  <DoctorAvatar user={user} size="h-10 w-10 text-sm" />
 
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-[#0D0D0D]">

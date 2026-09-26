@@ -551,25 +551,35 @@ export default function ChatWithDoctor() {
                 size={16}
                 className="transition-transform group-hover:-translate-x-0.5"
               />
-            
+
             </button>
 
-            <Avatar
-              name={doctorName}
-              image={doctorImage}
-              size="h-11 w-11"
-            />
+            {/* Clickable doctor: avatar + name → profile */}
+            <button
+              type="button"
+              onClick={() =>
+                navigate(`/chat/${id}/doctor-profile`)
+              }
+              className="group flex items-center gap-3 rounded-xl -mx-2 px-2 py-1.5 text-left transition hover:bg-[#FFF1F6] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F33B7D]/40 active:scale-[0.98]"
+              title="View doctor profile"
+            >
+              <Avatar
+                name={doctorName}
+                image={doctorImage}
+                size="h-11 w-11"
+              />
 
-            <div>
-              <h2 className="font-semibold text-[#2F292B]">
-                {doctorName}
-              </h2>
+              <div>
+                <h2 className="font-semibold text-[#2F292B] transition group-hover:text-[#F33B7D]">
+                  {doctorName}
+                </h2>
 
-              <p className="text-xs text-gray-500">
-                {doctor?.specialization ||
-                  "Gynecologist"}
-              </p>
-            </div>
+                <p className="text-xs text-gray-500">
+                  {doctor?.specialization ||
+                    "Gynecologist"}
+                </p>
+              </div>
+            </button>
 
           </div>
 

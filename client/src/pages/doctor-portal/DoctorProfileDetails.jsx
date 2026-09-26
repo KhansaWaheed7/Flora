@@ -9,11 +9,12 @@ import {
   Building2,
   BriefcaseMedical,
   GraduationCap,
-  Languages,
+  Speech,
   BadgeCheck,
   Stethoscope,
   Clock3,
-  IndianRupee,
+  Coins,
+  Camera,
 } from "lucide-react";
 
 import DoctorLayout from "../../layouts/DoctorLayout";
@@ -175,12 +176,21 @@ export default function DoctorProfileDetails() {
         {/* Main Profile Card */}
         <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            {/* Avatar */}
-            <Avatar
-              src={profile.profilePicture}
-              name={profile.fullName}
-              size="xl"
-            />
+            {/* Avatar with camera edit button */}
+            <div className="relative shrink-0">
+              <Avatar
+                src={profile.profilePicture}
+                name={profile.fullName}
+                size="h-20 w-20 text-lg"
+              />
+
+              <Link
+                to="/doctor/profile/edit"
+                className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#F33B7D] text-white shadow-[0_4px_10px_rgba(243,59,125,0.4)]"
+              >
+                <Camera className="h-3.5 w-3.5" />
+              </Link>
+            </div>
 
             {/* Basic Information */}
             <div className="flex-1">
@@ -296,7 +306,7 @@ export default function DoctorProfileDetails() {
             <div className="rounded-xl bg-[#FEF4F4] p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white">
-                  <IndianRupee size={19} className="text-[#F33B7D]" />
+                  <Coins size={19} className="text-[#F33B7D]" />
                 </div>
 
                 <div>
@@ -444,7 +454,7 @@ export default function DoctorProfileDetails() {
         <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FEE4EB]">
-              <Languages size={19} className="text-[#F33B7D]" />
+              <Speech size={19} className="text-[#F33B7D]" />
             </div>
 
             <div>

@@ -10,7 +10,7 @@ import {
   Building2,
   BriefcaseMedical,
   MapPin,
-  Languages,
+  Speech,
   BadgeCheck,
   UserCog,
   ShieldCheck,
@@ -394,7 +394,7 @@ export default function DoctorProfile() {
               Languages
             </h2>
 
-            <Languages className="h-5 w-5 text-[#F33B7D]" />
+            <Speech className="h-5 w-5 text-[#F33B7D]" />
           </div>
 
           {profile?.languages?.length > 0 ? (

@@ -13,16 +13,19 @@ import { useAuth } from "../../context/AuthContext";
 import {
   ArrowLeft,
   Camera,
-  Plus,
-  Trash2,
   ShieldCheck,
   Stethoscope,
   Building2,
   BriefcaseMedical,
-  Phone,
   User,
-  GraduationCap,
   BadgeCheck,
+  FileText,
+  Briefcase,
+  Speech,
+  Plus,
+  X,
+  Coins,
+  MapPin,
 } from "lucide-react";
 
 // =========================================
@@ -41,6 +44,131 @@ function Field({ label, ...props }) {
         className="w-full rounded-xl border border-[#F0DCE4] bg-white px-3 py-2.5 text-sm text-[#0D0D0D] outline-none placeholder:text-[#B8AEB2] transition focus:border-[#F33B7D] focus:ring-1 focus:ring-[#F33B7D]/20"
       />
     </label>
+  );
+}
+
+// =========================================
+// Reusable Textarea
+// =========================================
+
+function TextArea({ label, hint, ...props }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-medium text-[#3D3939]">
+        {label}
+      </span>
+
+      <textarea
+        {...props}
+        rows={5}
+        className="w-full resize-none rounded-xl border border-[#F0DCE4] bg-white px-3 py-2.5 text-sm leading-6 text-[#0D0D0D] outline-none placeholder:text-[#B8AEB2] transition focus:border-[#F33B7D] focus:ring-1 focus:ring-[#F33B7D]/20"
+      />
+
+      {hint && (
+        <span className="mt-1 block text-[10px] text-[#B8AEB2]">
+          {hint}
+        </span>
+      )}
+    </label>
+  );
+}
+
+// =========================================
+// Reusable Tag Input
+// =========================================
+
+function TagInput({
+  label,
+  placeholder,
+  tags,
+  onAdd,
+  onRemove,
+  emptyText,
+}) {
+  const [input, setInput] = useState("");
+
+  const commit = () => {
+    const value = input.trim();
+
+    if (!value) return;
+
+    const exists = tags.some(
+      (t) => t.toLowerCase() === value.toLowerCase()
+    );
+
+    if (!exists) onAdd(value);
+
+    setInput("");
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      commit();
+    } else if (e.key === "Backspace" && !input && tags.length > 0) {
+      onRemove(tags.length - 1);
+    }
+  };
+
+  return (
+    <div>
+      <span className="mb-1.5 block text-xs font-medium text-[#3D3939]">
+        {label}
+      </span>
+
+      {tags.length > 0 ? (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {tags.map((tag, index) => (
+            <span
+              key={`${tag}-${index}`}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#FEE4EB] px-3 py-1.5 text-xs font-medium text-[#F33B7D]"
+            >
+              {tag}
+
+              <button
+                type="button"
+                onClick={() => onRemove(index)}
+                className="flex h-4 w-4 items-center justify-center rounded-full transition hover:bg-[#F33B7D]/10"
+                title={`Remove ${tag}`}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="mb-3 text-xs text-[#B8AEB2]">{emptyText}</p>
+      )}
+
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className="flex-1 rounded-xl border border-[#F0DCE4] bg-white px-3 py-2.5 text-sm text-[#0D0D0D] outline-none placeholder:text-[#B8AEB2] transition focus:border-[#F33B7D] focus:ring-1 focus:ring-[#F33B7D]/20"
+        />
+
+        <button
+          type="button"
+          onClick={commit}
+          disabled={!input.trim()}
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl px-4 text-xs font-semibold transition ${
+            input.trim()
+              ? "bg-[#F33B7D] text-white hover:-translate-y-0.5 hover:shadow-[0_8px_16px_-4px_rgba(243,59,125,0.4)]"
+              : "cursor-not-allowed bg-[#FEE4EB] text-[#F33B7D]/40"
+          }`}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add
+        </button>
+      </div>
+
+      <p className="mt-1.5 text-[10px] text-[#B8AEB2]">
+        Press Enter or comma to add. Backspace on empty input removes the last.
+      </p>
+    </div>
   );
 }
 
@@ -66,10 +194,14 @@ export default function DoctorEditProfile() {
     specialization: "",
     hospital: "",
     yearsOfExperience: "",
+    consultationFee: "",
+    city: "",
     profilePicture: "",
+    bio: "",
   });
 
-  const [qualifications, setQualifications] = useState([]);
+  const [areasOfExpertise, setAreasOfExpertise] = useState([]);
+  const [languages, setLanguages] = useState([]);
 
   // =========================================
   // Fetch Doctor Profile
@@ -86,8 +218,6 @@ export default function DoctorEditProfile() {
 
       const response = await getDoctorProfile();
 
-      // Backend ApiResponse structure:
-      // response.data = actual doctor profile
       const data = response?.data || {};
 
       const doctor = data?.user || data?.doctor || data;
@@ -103,11 +233,24 @@ export default function DoctorEditProfile() {
           doctor?.yearsOfExperience !== null
             ? doctor.yearsOfExperience
             : "",
+        consultationFee:
+          doctor?.consultationFee !== undefined &&
+          doctor?.consultationFee !== null
+            ? doctor.consultationFee
+            : "",
+        city: doctor?.city || "",
         profilePicture: doctor?.profilePicture || "",
+        bio: doctor?.bio || "",
       });
 
-      setQualifications(
-        doctor?.doctorVerification?.qualifications || []
+      setAreasOfExpertise(
+        Array.isArray(doctor?.areasOfExpertise)
+          ? doctor.areasOfExpertise
+          : []
+      );
+
+      setLanguages(
+        Array.isArray(doctor?.languages) ? doctor.languages : []
       );
     } catch (err) {
       console.error("Doctor profile fetch error:", err);
@@ -127,7 +270,6 @@ export default function DoctorEditProfile() {
 
       if (!file) return;
 
-      // Frontend validation
       const allowedTypes = [
         "image/jpeg",
         "image/png",
@@ -160,24 +302,10 @@ export default function DoctorEditProfile() {
 
       data.append("avatar", file);
 
-      console.log(
-        "Uploading doctor avatar:",
-        file.name,
-        file.type,
-        file.size
-      );
-
       const res = await uploadDoctorAvatar(data);
 
-      console.log(
-        "Doctor avatar upload response:",
-        res
-      );
-
       const avatarUrl =
-        res?.data?.avatar ||
-        res?.data ||
-        "";
+        res?.data?.avatar || res?.data || "";
 
       setFormData((prev) => ({
         ...prev,
@@ -189,11 +317,8 @@ export default function DoctorEditProfile() {
       );
 
       await fetchProfile();
-      
-      // Refresh user context after avatar upload
       await refreshUser();
 
-      // Reset file input so same image can be selected again
       e.target.value = "";
     } catch (err) {
       console.error(
@@ -233,8 +358,6 @@ export default function DoctorEditProfile() {
       );
 
       await fetchProfile();
-      
-      // Refresh user context after avatar removal
       await refreshUser();
     } catch (err) {
       console.error(
@@ -269,42 +392,24 @@ export default function DoctorEditProfile() {
   };
 
   // =========================================
-  // Qualification Handlers
+  // Tag Handlers
   // =========================================
 
-  const addQualification = () => {
-    setQualifications((prev) => [
-      ...prev,
-      {
-        degree: "",
-        institution: "",
-        completionYear: "",
-      },
-    ]);
-  };
+  const addArea = (value) =>
+    setAreasOfExpertise((prev) => [...prev, value]);
 
-  const removeQualification = (index) => {
-    setQualifications((prev) =>
+  const removeArea = (index) =>
+    setAreasOfExpertise((prev) =>
       prev.filter((_, i) => i !== index)
     );
-  };
 
-  const handleQualificationChange = (
-    index,
-    field,
-    value
-  ) => {
-    setQualifications((prev) =>
-      prev.map((qualification, i) =>
-        i === index
-          ? {
-              ...qualification,
-              [field]: value,
-            }
-          : qualification
-      )
+  const addLanguage = (value) =>
+    setLanguages((prev) => [...prev, value]);
+
+  const removeLanguage = (index) =>
+    setLanguages((prev) =>
+      prev.filter((_, i) => i !== index)
     );
-  };
 
   // =========================================
   // Save Profile
@@ -318,22 +423,6 @@ export default function DoctorEditProfile() {
       setSaved(false);
       setError("");
 
-      const cleanedQualifications = qualifications
-        .filter(
-          (qualification) =>
-            qualification.degree?.trim() ||
-            qualification.institution?.trim() ||
-            qualification.completionYear
-        )
-        .map((qualification) => ({
-          degree: qualification.degree?.trim() || "",
-          institution:
-            qualification.institution?.trim() || "",
-          completionYear: qualification.completionYear
-            ? Number(qualification.completionYear)
-            : undefined,
-        }));
-
       await updateDoctorProfile({
         fullName: formData.fullName,
         phone: formData.phone,
@@ -342,17 +431,18 @@ export default function DoctorEditProfile() {
         yearsOfExperience: formData.yearsOfExperience
           ? Number(formData.yearsOfExperience)
           : null,
-        doctorVerification: {
-          qualifications: cleanedQualifications,
-        },
+        consultationFee: formData.consultationFee
+          ? Number(formData.consultationFee)
+          : null,
+        city: formData.city.trim(),
+        bio: formData.bio.trim(),
+        areasOfExpertise: areasOfExpertise.map((a) => a.trim()).filter(Boolean),
+        languages: languages.map((l) => l.trim()).filter(Boolean),
       });
 
       setSaved(true);
 
-      // Refresh data from backend
       await fetchProfile();
-      
-      // Refresh user context after profile update
       await refreshUser();
 
       setTimeout(() => {
@@ -649,7 +739,7 @@ export default function DoctorEditProfile() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field
                   label="Specialization"
                   name="specialization"
@@ -676,10 +766,28 @@ export default function DoctorEditProfile() {
                   onChange={handleChange}
                   placeholder="e.g. 5"
                 />
+
+                <Field
+                  label="Consultation Fee (PKR)"
+                  name="consultationFee"
+                  type="number"
+                  min="0"
+                  value={formData.consultationFee}
+                  onChange={handleChange}
+                  placeholder="e.g. 2000"
+                />
+
+                <Field
+                  label="Location (City)"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  placeholder="e.g. Lahore"
+                />
               </div>
 
               {/* Information cards */}
-              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                 <div className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] p-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#F33B7D]">
                     <Stethoscope className="h-4 w-4" />
@@ -724,127 +832,132 @@ export default function DoctorEditProfile() {
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* =====================================
-                Qualifications
-            ===================================== */}
-
-            <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
-                    <GraduationCap className="h-4 w-4" />
+                <div className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] p-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#F33B7D]">
+                    <Coins className="h-4 w-4" />
                   </span>
 
                   <div>
-                    <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
-                      Qualifications
-                    </h2>
-
-                    <p className="text-xs text-[#B8AEB2]">
-                      Add your academic and professional qualifications
+                    <p className="text-xs font-semibold text-[#0D0D0D]">
+                      Consultation Fee
+                    </p>
+                    <p className="text-[10px] text-[#B8AEB2]">
+                      Per appointment
                     </p>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={addQualification}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#FEE4EB] px-3.5 py-2 text-xs font-semibold text-[#F33B7D] transition hover:bg-[#FCE4EB]"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Add Qualification
-                </button>
+                <div className="flex items-center gap-3 rounded-xl bg-[#FEF4F4] p-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-[#F33B7D]">
+                    <MapPin className="h-4 w-4" />
+                  </span>
+
+                  <div>
+                    <p className="text-xs font-semibold text-[#0D0D0D]">
+                      Location
+                    </p>
+                    <p className="text-[10px] text-[#B8AEB2]">
+                      Your city
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* =====================================
+                Areas of Expertise
+            ===================================== */}
+
+            <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <div className="mb-5 flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
+                  <Briefcase className="h-4 w-4" />
+                </span>
+
+                <div>
+                  <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
+                    Areas of Expertise
+                  </h2>
+
+                  <p className="text-xs text-[#B8AEB2]">
+                    Add the areas you specialize in (e.g. PCOS, Fertility, High-Risk Pregnancy)
+                  </p>
+                </div>
               </div>
 
-              {qualifications.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-[#F0DCE4] bg-[#FFF9FA] px-5 py-8 text-center">
-                  <GraduationCap className="mx-auto h-7 w-7 text-[#F33B7D]" />
+              <TagInput
+                label="Your Areas of Expertise"
+                placeholder="e.g. PCOS Management"
+                tags={areasOfExpertise}
+                onAdd={addArea}
+                onRemove={removeArea}
+                emptyText="No areas of expertise added yet."
+              />
+            </div>
 
-                  <p className="mt-2 text-sm font-medium text-[#3D3939]">
-                    No qualifications added
-                  </p>
+            {/* =====================================
+                Languages
+            ===================================== */}
 
-                  <p className="mt-1 text-xs text-[#B8AEB2]">
-                    Add your degrees and institutions to strengthen your
-                    professional profile.
+            <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <div className="mb-5 flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
+                  <Speech className="h-4 w-4" />
+                </span>
+
+                <div>
+                  <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
+                    Languages
+                  </h2>
+
+                  <p className="text-xs text-[#B8AEB2]">
+                    Add the languages you can consult in (e.g. English, Urdu)
                   </p>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {qualifications.map((qualification, index) => (
-                    <div
-                      key={index}
-                      className="rounded-xl bg-[#FEF4F4] p-4"
-                    >
-                      <div className="mb-3 flex items-center justify-between">
-                        <p className="text-xs font-semibold text-[#3D3939]">
-                          Qualification {index + 1}
-                        </p>
+              </div>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            removeQualification(index)
-                          }
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#F33B7D] transition hover:bg-white"
-                          title="Remove qualification"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+              <TagInput
+                label="Languages You Speak"
+                placeholder="e.g. Urdu"
+                tags={languages}
+                onAdd={addLanguage}
+                onRemove={removeLanguage}
+                emptyText="No languages added yet."
+              />
+            </div>
 
-                      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                        <Field
-                          label="Degree"
-                          value={qualification.degree || ""}
-                          onChange={(e) =>
-                            handleQualificationChange(
-                              index,
-                              "degree",
-                              e.target.value
-                            )
-                          }
-                          placeholder="e.g. MBBS"
-                        />
+            {/* =====================================
+                About / Bio
+            ===================================== */}
 
-                        <Field
-                          label="Institution"
-                          value={qualification.institution || ""}
-                          onChange={(e) =>
-                            handleQualificationChange(
-                              index,
-                              "institution",
-                              e.target.value
-                            )
-                          }
-                          placeholder="e.g. Aga Khan University"
-                        />
+            <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <div className="mb-5 flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D]">
+                  <FileText className="h-4 w-4" />
+                </span>
 
-                        <Field
-                          label="Completion Year"
-                          type="number"
-                          min="1900"
-                          max={new Date().getFullYear()}
-                          value={
-                            qualification.completionYear || ""
-                          }
-                          onChange={(e) =>
-                            handleQualificationChange(
-                              index,
-                              "completionYear",
-                              e.target.value
-                            )
-                          }
-                          placeholder="e.g. 2022"
-                        />
-                      </div>
-                    </div>
-                  ))}
+                <div>
+                  <h2 className="font-display text-base font-semibold text-[#0D0D0D]">
+                    About Me
+                  </h2>
+
+                  <p className="text-xs text-[#B8AEB2]">
+                    A short professional introduction patients will see
+                    on your profile
+                  </p>
                 </div>
-              )}
+              </div>
+
+              <TextArea
+                label="Professional Bio"
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                placeholder="Write a short introduction about yourself and your medical experience..."
+                maxLength={600}
+                hint={`${formData.bio.length}/600 characters`}
+              />
             </div>
           </div>
         </div>
