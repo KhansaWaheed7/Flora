@@ -16,7 +16,7 @@ const createDoctor = async () => {
     const existingDoctor = await User.findOne({ email });
 
     if (existingDoctor) {
-      console.log("❌ A user with this email already exists:", email);
+      console.log("A user with this email already exists:", email);
       process.exit(0);
     }
 
@@ -32,9 +32,6 @@ const createDoctor = async () => {
 
       accountStatus: "active",
 
-      // Skip the email-verification + admin-approval flow so this
-      // account can log in immediately - this is for local dev/testing
-      // only, never do this via the public /auth/register endpoint.
       isEmailVerified: true,
       doctorApprovalStatus: "approved",
 
@@ -45,7 +42,7 @@ const createDoctor = async () => {
 
     });
 
-    console.log("✅ Doctor created successfully.");
+    console.log("Doctor created successfully.");
     console.log(`Email: ${doctor.email}`);
     console.log(`Password: ${process.env.DOCTOR_PASSWORD || "Doctor@123"}`);
 
@@ -53,7 +50,7 @@ const createDoctor = async () => {
 
   } catch (error) {
 
-    console.error("❌ Failed to create doctor.");
+    console.error("Failed to create doctor.");
     console.error(error);
 
     process.exit(1);

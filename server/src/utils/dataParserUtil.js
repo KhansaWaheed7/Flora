@@ -1,30 +1,5 @@
-/**
- * Medical Report Data Parser
- *
- * Supports:
- * - Colon format:
- *     Hemoglobin: 13.5 g/dL
- *
- * - Structured laboratory table rows:
- *     Hemoglobin 10.8 g/dL 12.0–15.5 g/dL LOW / ABNORMAL
- *
- * - Qualitative results:
- *     Protein Negative Negative Normal
- *
- * - Report-provided reference ranges
- * - Report-provided status
- * - Hard-coded reference ranges as fallback
- * - Previously unknown/new test names
- */
-
 class DataParserUtil {
-  /**
-   * Fallback reference ranges.
-   *
-   * IMPORTANT:
-   * These are only used when the uploaded report does NOT
-   * provide a reference range.
-   */
+ 
   static REFERENCE_RANGES = {
     hemoglobin: {
       min: 12,
@@ -162,9 +137,7 @@ class DataParserUtil {
   return this.removeDuplicates(results);
 }
 
-  /**
-   * Parse one line.
-   */
+
   static parseLine(line) {
   if (this.isHeaderOrMetadata(line)) {
     return null;
@@ -194,9 +167,7 @@ class DataParserUtil {
   return null;
 }
 
-  /**
-   * Detect lines that aren't laboratory results.
-   */
+
   static isHeaderOrMetadata(line) {
     const normalized = line.toLowerCase();
 
@@ -233,11 +204,7 @@ class DataParserUtil {
     return ignored.some((value) => normalized.startsWith(value));
   }
 
-  /**
-   * Parse:
-   *
-   * Hemoglobin 10.8 g/dL 12.0–15.5 g/dL LOW / ABNORMAL
-   */
+
   static parseStructuredRow(line) {
   const normalized = line
     .replace(/\|/g, " ")
@@ -248,9 +215,8 @@ class DataParserUtil {
     return null;
   }
 
-  // ---------------------------------------------------------
+
   // 1. Extract status from the row
-  // ---------------------------------------------------------
 
   const status = this.extractStatus(normalized);
 
@@ -277,16 +243,8 @@ class DataParserUtil {
     content = content.replace(/\s+/g, " ").trim();
   }
 
-  // ---------------------------------------------------------
+ 
   // 2. Find the reference range
-  //
-  // Examples:
-  // 12.0–15.5 g/dL
-  // 3.5–5.0 g/dL
-  // <200 mg/dL
-  // ≥50 mg/dL
-  // >90
-  // ---------------------------------------------------------
 
   const rangePatterns = [
     /(-?\d+(?:,\d{3})?(?:\.\d+)?\s*[–—-]\s*-?\d+(?:,\d{3})?(?:\.\d+)?(?:\s*[a-zA-Zµμ/%][a-zA-Zµμ/%0-9.^²³/²-]*)?)/,
@@ -305,9 +263,7 @@ class DataParserUtil {
     }
   }
 
-  // ---------------------------------------------------------
   // 3. Reference range found
-  // ---------------------------------------------------------
 
   if (referenceMatch) {
     const referenceRange = referenceMatch[1].trim();
@@ -321,9 +277,8 @@ class DataParserUtil {
       return null;
     }
 
-    // -------------------------------------------------------
+  
     // Extract the FIRST numeric value from the test section
-    // -------------------------------------------------------
 
     const valueMatch = beforeReference.match(
       /(-?\d+(?:,\d{3})?(?:\.\d+)?)\s*([a-zA-Zµμ/%][a-zA-Zµμ/%0-9.^²³/²-]*)?/
@@ -341,7 +296,7 @@ class DataParserUtil {
       valueMatch[2] || this.extractUnit(referenceRange)
     );
 
-    // Test name is everything before the numeric value
+
     const testName = beforeReference
       .slice(0, valueMatch.index)
       .trim();
@@ -357,24 +312,12 @@ class DataParserUtil {
     const parsedRange =
       this.parseReferenceRange(referenceRange);
 
-    // -------------------------------------------------------
-    // Determine final status
-    // -------------------------------------------------------
 
+    // Determine final status
+ 
     let finalStatus = status;
 
-    /*
-     * If the report explicitly says:
-     *
-     * LOW
-     * HIGH
-     * NORMAL
-     * ABNORMAL
-     *
-     * trust the report.
-     *
-     * Otherwise calculate from its reference range.
-     */
+
 
     if (!finalStatus && parsedRange) {
       finalStatus = this.determineStatus(
@@ -398,13 +341,8 @@ class DataParserUtil {
     };
   }
 
-  // ---------------------------------------------------------
+
   // 4. No reference range
-  //
-  // Try qualitative results such as:
-  //
-  // Protein Negative Negative Normal
-  // ---------------------------------------------------------
 
   const qualitativeResult =
     this.parseQualitativeRow(normalized);
@@ -413,20 +351,12 @@ class DataParserUtil {
     return qualitativeResult;
   }
 
-  // ---------------------------------------------------------
+
   // 5. No reference range
-  //
-  // Allow generic numeric result to continue through parser.
-  // ---------------------------------------------------------
 
   return this.parseUnknownResult(normalized);
 }
 
-  /**
-   * Parse:
-   *
-   * Hemoglobin: 13.5 g/dL
-   */
   static parseColonFormat(line) {
     const match = line.match(/^(.+?)\s*:\s*(.+)$/);
 
@@ -494,13 +424,7 @@ class DataParserUtil {
     .replace(/\s+/g, " ")
     .trim();
 
-  /*
-   * Example:
-   *
-   * Vitamin B12 350 pg/mL
-   * CRP 4.2 mg/L
-   * Some New Test 12.5 units
-   */
+
 
   const valueMatch = this.extractValue(normalized);
 
@@ -516,10 +440,7 @@ class DataParserUtil {
     return null;
   }
 
-  /*
-   * Avoid accidentally treating ordinary sentences
-   * containing numbers as laboratory tests.
-   */
+
   if (this.looksLikeSentence(testName)) {
     return null;
   }
@@ -575,13 +496,7 @@ static looksLikeSentence(text) {
     normalized.startsWith(indicator)
   );
 }
-  /**
-   * Handle qualitative rows such as:
-   *
-   * Protein Negative Negative Normal
-   * Glucose Negative Negative Normal
-   * Appearance Clear Clear Normal
-   */
+
   static parseQualitativeRow(line) {
     const tokens = line.split(/\s+/);
 
@@ -624,15 +539,6 @@ static looksLikeSentence(text) {
       content = line.slice(0, statusIndex).trim();
     }
 
-    /*
-     * Common qualitative format:
-     *
-     * Protein Negative Negative
-     *
-     * Test = Protein
-     * Value = Negative
-     * Reference = Negative
-     */
     const qualitativeMatch = content.match(
       /^(.+?)\s+(Negative|Positive|Clear|Cloudy|Trace|Present|Absent)\s+(.+)$/i
     );
@@ -659,16 +565,6 @@ static looksLikeSentence(text) {
     };
   }
 
-  /**
-   * Extract numeric value and unit.
-   *
-   * Examples:
-   *
-   * 10.8 g/dL
-   * 33.2%
-   * 7,800 /µL
-   * 105 mL/min/1.73m²
-   */
   static extractValue(text) {
   if (!text) {
     return null;
@@ -720,9 +616,7 @@ static normalizeUnit(unit) {
   return aliases[key] || normalized;
 }
 
-  /**
-   * Extract unit from a text fragment.
-   */
+ 
   static extractUnit(text) {
     const match = text.match(
       /-?\d+(?:,\d{3})*(?:\.\d+)?\s*([a-zA-Zµμ/%][a-zA-Zµμ/%0-9.^²³/²-]*)/
@@ -731,9 +625,7 @@ static normalizeUnit(unit) {
     return match ? match[1] : null;
   }
 
-  /**
-   * Extract report status.
-   */
+
   static extractStatus(text) {
     const normalized = text.toLowerCase();
 
@@ -777,15 +669,7 @@ static normalizeUnit(unit) {
     return null;
   }
 
-  /**
-   * Parse:
-   *
-   * 12.0–15.5 g/dL
-   * 0.4–4.0 mIU/L
-   * >90
-   * <200 mg/dL
-   * ≥50 mg/dL
-   */
+
   static parseReferenceRange(range) {
   if (!range) {
     return null;
@@ -797,9 +681,7 @@ static normalizeUnit(unit) {
     .replace(/—/g, "-")
     .trim();
 
-  // Example:
-  // 12.0-15.5
-  // 3.5-5.0
+
   const between = normalized.match(
     /(-?\d+(?:,\d{3})?(?:\.\d+)?)\s*-\s*(-?\d+(?:,\d{3})?(?:\.\d+)?)/
   );
@@ -812,9 +694,7 @@ static normalizeUnit(unit) {
     };
   }
 
-  // Example:
-  // >90
-  // ≥50
+ 
   const minimum = normalized.match(
     /(?:≥|>)\s*(-?\d+(?:,\d{3})?(?:\.\d+)?)/
   );
@@ -826,9 +706,7 @@ static normalizeUnit(unit) {
     };
   }
 
-  // Example:
-  // <200
-  // ≤150
+
   const maximum = normalized.match(
     /(?:≤|<)\s*(-?\d+(?:,\d{3})?(?:\.\d+)?)/
   );
@@ -843,9 +721,6 @@ static normalizeUnit(unit) {
   return null;
 }
 
-  /**
-   * Determine status from numeric result + reference range.
-   */
   static determineStatus(value, range, unit = null) {
   if (typeof value !== "number" || !range) {
     return "unknown";
@@ -857,15 +732,7 @@ static normalizeUnit(unit) {
     ? unit.toLowerCase()
     : "";
 
-  /*
-   * Some reports express WBC / platelets in thousands.
-   *
-   * Example:
-   * 7.2 thousand/µL
-   *
-   * becomes:
-   * 7200 /µL
-   */
+
   if (
     normalizedUnit.includes("thousand") &&
     range.max &&
@@ -901,9 +768,7 @@ static normalizeUnit(unit) {
   return "unknown";
 }
 
-  /**
-   * Find fallback range.
-   */
+
   static findReferenceRange(testName) {
   const normalized = testName
     .toLowerCase()
@@ -930,9 +795,7 @@ static normalizeUnit(unit) {
   return null;
 }
 
-  /**
-   * Format fallback range for storage.
-   */
+
   static formatFallbackRange(range) {
     if (!range) {
       return null;
@@ -945,9 +808,7 @@ static normalizeUnit(unit) {
     return `${range.min}–${range.max} ${range.unit || ""}`.trim();
   }
 
-  /**
-   * Normalize test names.
-   */
+ 
   static normalizeTestName(name) {
   return name
     .replace(/\|/g, "")
@@ -955,10 +816,7 @@ static normalizeUnit(unit) {
     .trim();
 }
 
-  /**
-   * Basic protection against interpreting arbitrary prose
-   * as a laboratory test.
-   */
+
   static looksLikeTestName(name) {
     if (!name || name.length < 2 || name.length > 100) {
       return false;
@@ -992,9 +850,7 @@ static normalizeUnit(unit) {
     return /[a-zA-Z]/.test(name);
   }
 
-  /**
-   * Remove duplicate test entries.
-   */
+
   static removeDuplicates(results) {
     const seen = new Map();
 
@@ -1008,11 +864,7 @@ static normalizeUnit(unit) {
 
     return Array.from(seen.values());
   }
-  /**
- * Find abnormal results.
- *
- * Keeps compatibility with MedicalReportController.
- */
+
 static findAbnormalResults(results) {
   if (!Array.isArray(results)) {
     return [];

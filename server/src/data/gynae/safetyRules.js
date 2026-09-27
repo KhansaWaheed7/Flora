@@ -1,10 +1,9 @@
 const evaluateSafety = (category, answers = {}) => {
   const redFlags = [];
 
-  // ======================================================
+ 
   // MISSED PERIOD
-  // ======================================================
-
+ 
   if (category === "missed_period") {
     if (
       ["severe", "very_severe"].includes(
@@ -50,9 +49,7 @@ const evaluateSafety = (category, answers = {}) => {
     }
   }
 
-  // ======================================================
   // PELVIC PAIN
-  // ======================================================
 
   if (category === "pelvic_pain") {
     if (
@@ -101,9 +98,8 @@ const evaluateSafety = (category, answers = {}) => {
     }
   }
 
-  // ======================================================
+
   // VAGINAL DISCHARGE
-  // ======================================================
 
   if (category === "vaginal_discharge") {
     if (
@@ -137,9 +133,8 @@ const evaluateSafety = (category, answers = {}) => {
     }
   }
 
-  // ======================================================
+
   // PAINFUL PERIOD
-  // ======================================================
 
   if (category === "painful_period") {
     if (
@@ -183,9 +178,7 @@ const evaluateSafety = (category, answers = {}) => {
     }
   }
 
-  // ======================================================
   // ABNORMAL BLEEDING
-  // ======================================================
 
   if (category === "abnormal_bleeding") {
     if (
@@ -229,9 +222,8 @@ const evaluateSafety = (category, answers = {}) => {
     }
   }
 
-  // ======================================================
+
   // URINARY SYMPTOMS
-  // ======================================================
 
   if (category === "urinary_symptoms") {
     if (answers.blood_in_urine === "yes") {
@@ -250,9 +242,7 @@ const evaluateSafety = (category, answers = {}) => {
     }
   }
 
-  // ======================================================
   // PREGNANCY CONCERN
-  // ======================================================
 
   if (category === "pregnancy_concern") {
     if (
@@ -276,9 +266,8 @@ const evaluateSafety = (category, answers = {}) => {
     }
   }
 
-  // ======================================================
+
   // RISK LEVEL
-  // ======================================================
 
   let riskLevel = "low";
 

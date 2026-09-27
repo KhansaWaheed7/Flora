@@ -85,9 +85,8 @@ exports.getClosedConsultations = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Patient Profile for a Consultation
-// =========================================
 
 exports.getPatientProfileForConsultation = asyncHandler(async (req, res) => {
   const profile = await getPatientProfileForConsultation(
@@ -101,9 +100,7 @@ exports.getPatientProfileForConsultation = asyncHandler(async (req, res) => {
 });
 
 
-// =========================================
 // Doctor Schedule
-// =========================================
 
 exports.getDoctorSchedule = asyncHandler(async (req, res) => {
   const schedule = await getDoctorSchedule(req.user.id);
@@ -125,9 +122,8 @@ exports.updateDoctorSchedule = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Doctor Profile
-// =========================================
 
 exports.getDoctorProfile = asyncHandler(async (req, res) => {
   const profile = await getDoctorProfile(req.user.id);
@@ -141,9 +137,7 @@ exports.getDoctorProfile = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
 // Update Doctor Profile
-// =========================================
 
 exports.updateDoctorProfile = asyncHandler(async (req, res) => {
   const profile = await updateDoctorProfile(
@@ -160,9 +154,8 @@ exports.updateDoctorProfile = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Upload Doctor Profile Picture
-// =========================================
 
 exports.uploadDoctorAvatar = asyncHandler(async (req, res) => {
   const avatar = await uploadDoctorAvatar(
@@ -181,9 +174,8 @@ exports.uploadDoctorAvatar = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Remove Doctor Profile Picture
-// =========================================
 
 exports.removeDoctorAvatar = asyncHandler(async (req, res) => {
   const avatar = await removeDoctorAvatar(req.user.id);

@@ -50,14 +50,12 @@ const fileFilter = (req, file, cb) => {
     return cb(null, true);
   }
 
-  // Some systems/browsers send files as application/octet-stream.
-  // In that case, validate using the file extension.
   if (
     file.mimetype === "application/octet-stream" &&
     allowedExtensions.includes(fileExt)
   ) {
     console.log(
-      `⚠️ Generic MIME type detected (${file.mimetype}), accepted based on extension: ${fileExt}`
+      `Generic MIME type detected (${file.mimetype}), accepted based on extension: ${fileExt}`
     );
 
     return cb(null, true);

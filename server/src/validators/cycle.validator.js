@@ -38,8 +38,7 @@ const updateCycleSchema = z
   })
   .refine(
     (data) => {
-      // If either date is missing, let the service
-      // handle the existing database value.
+      
       if (!data.periodStart || !data.periodEnd) {
         return true;
       }

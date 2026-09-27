@@ -12,9 +12,7 @@ const {
 } = require("../services/adminVerification.service");
 
 
-// =========================================
 // Get Pending Doctors
-// =========================================
 
 exports.getPendingDoctors = asyncHandler(
   async (req, res) => {
@@ -32,9 +30,8 @@ exports.getPendingDoctors = asyncHandler(
   }
 );
 
-// =========================================
+
 // Get Doctor Details
-// =========================================
 
 exports.getDoctorVerificationDetails =
   asyncHandler(async (req, res) => {
@@ -56,9 +53,7 @@ exports.getDoctorVerificationDetails =
     );
   });
 
-// =========================================
 // Approve Doctor
-// =========================================
 
 exports.approveDoctor = asyncHandler(
   async (req, res) => {
@@ -81,9 +76,8 @@ exports.approveDoctor = asyncHandler(
   }
 );
 
-// =========================================
+
 // Reject Doctor
-// =========================================
 
 exports.rejectDoctor = asyncHandler(
   async (req, res) => {
@@ -114,9 +108,8 @@ exports.rejectDoctor = asyncHandler(
     );
   }
 );
-// =========================================
+
 // Suspend Doctor
-// =========================================
 
 exports.suspendDoctor = asyncHandler(
   async (req, res) => {
@@ -140,9 +133,8 @@ exports.suspendDoctor = asyncHandler(
     );
   }
 );
-// =========================================
+
 // Delete Document
-// =========================================
 
 exports.deleteDoctorDocument =
   asyncHandler(async (req, res) => {

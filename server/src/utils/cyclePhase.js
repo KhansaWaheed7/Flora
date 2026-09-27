@@ -26,11 +26,7 @@ const getCyclePhase = ({
     };
   }
 
-  /*
-   * IMPORTANT:
-   * If there is no period end date, the current period
-   * is still in progress.
-   */
+  
   if (!periodEnd) {
     return {
       phase: "Menstrual",

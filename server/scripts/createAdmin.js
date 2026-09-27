@@ -16,7 +16,7 @@ const createAdmin = async () => {
     });
 
     if (existingAdmin) {
-      console.log("❌ Admin already exists.");
+      console.log("Admin already exists.");
       process.exit(0);
     }
 
@@ -38,14 +38,14 @@ const createAdmin = async () => {
 
     });
 
-    console.log("✅ Admin created successfully.");
+    console.log("Admin created successfully.");
     console.log(`Email: ${admin.email}`);
 
     process.exit(0);
 
   } catch (error) {
 
-    console.error("❌ Failed to create admin.");
+    console.error("Failed to create admin.");
     console.error(error);
 
     process.exit(1);

@@ -14,11 +14,6 @@ class MedicalRAGUtil {
 
   /**
    * Calculate simple lexical similarity.
-   *
-   * This is intentionally lightweight for Flora's first
-   * production version. It allows us to retrieve relevant
-   * medical knowledge without requiring a separate vector
-   * database.
    */
   static similarity(testName, reference) {
     const query = this.normalize(testName);
@@ -77,9 +72,7 @@ class MedicalRAGUtil {
       .slice(0, topK);
   }
 
-  /**
-   * Build context that can be supplied to Gemini.
-   */
+ 
   /**
  * Build context that can be supplied to Gemini.
  */

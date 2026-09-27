@@ -1,8 +1,7 @@
 const mongoose = require("mongoose");
 
-// ======================================================
+
 // MESSAGE
-// ======================================================
 
 const messageSchema = new mongoose.Schema(
   {
@@ -28,9 +27,8 @@ const messageSchema = new mongoose.Schema(
   }
 );
 
-// ======================================================
+
 // ASSESSMENT
-// ======================================================
 
 const assessmentSchema = new mongoose.Schema(
   {
@@ -77,9 +75,8 @@ const assessmentSchema = new mongoose.Schema(
   }
 );
 
-// ======================================================
+
 // CONVERSATION
-// ======================================================
 
 const gynaeConversationSchema = new mongoose.Schema(
   {

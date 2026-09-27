@@ -22,9 +22,8 @@ class MedicalAIUtil {
 
     const ai = this.getClient();
 
-    // =========================================================
+ 
     // STEP 1: Extract actual tests from the uploaded report
-    // =========================================================
 
     const extractionPrompt = `
 You are Flora's medical report extraction engine.
@@ -95,15 +94,13 @@ ${extractedText}
       ? extraction.tests
       : [];
 
-    // =========================================================
+
     // STEP 2: Retrieve medical knowledge using RAG
-    // =========================================================
 
     const ragContext = MedicalRAGUtil.buildContext(extractedTests);
 
-    // =========================================================
+
     // STEP 3: Interpret tests using report + RAG
-    // =========================================================
 
     const analysisPrompt = `
 You are Flora's medical report analysis engine.

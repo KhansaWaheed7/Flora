@@ -30,11 +30,8 @@ const {
   generateAssessmentSummary,
 } = require("../data/gynae/assessmentSummary");
 
-// ======================================================
-// HELPERS
-// ======================================================
 
-// Add this helper function at the top of your controller file
+// HELPERS
 
 const generateConversationTitle = (message) => {
   // Clean and truncate the message
@@ -72,9 +69,7 @@ const isValidQuestionAnswer = (
 
   const answer = message.trim();
 
-  // ------------------------------
   // Single choice
-  // ------------------------------
 
   if (question.type === "single_choice") {
     return question.options.some(
@@ -82,9 +77,8 @@ const isValidQuestionAnswer = (
     );
   }
 
-  // ------------------------------
+
   // Multi choice
-  // ------------------------------
 
   if (question.type === "multi_choice") {
     try {
@@ -232,9 +226,7 @@ const getAssessmentQuestionPayload = (
 
 
 
-// ======================================================
 // PROCESS VALID ASSESSMENT ANSWER
-// ======================================================
 
 const processAssessmentAnswer = async (
   conversation,
@@ -246,9 +238,8 @@ const processAssessmentAnswer = async (
     message
   );
 
-  // ----------------------------------------------
+
   // Extra multi-choice validation
-  // ----------------------------------------------
 
   if (
     currentQuestion.type ===
@@ -264,9 +255,7 @@ const processAssessmentAnswer = async (
     }
   }
 
-  // ----------------------------------------------
   // Save answer
-  // ----------------------------------------------
 
   conversation.assessment.answers[
     currentQuestion.id
@@ -276,10 +265,9 @@ const processAssessmentAnswer = async (
     "assessment.answers"
   );
 
-  // ----------------------------------------------
-  // Evaluate safety
-  // ----------------------------------------------
 
+  // Evaluate safety
+ 
   const safetyResult = evaluateSafety(
     conversation.category,
     conversation.assessment.answers
@@ -295,9 +283,8 @@ const processAssessmentAnswer = async (
     "assessment.redFlags"
   );
 
-  // ----------------------------------------------
+
   // Find next question
-  // ----------------------------------------------
 
   const nextQuestion = getNextQuestion(
     conversation.category,
@@ -311,9 +298,8 @@ const processAssessmentAnswer = async (
       answer
     );
 
-  // ----------------------------------------------
+
   // Continue assessment
-  // ----------------------------------------------
 
   if (nextQuestion) {
     conversation.currentQuestion =
@@ -338,9 +324,8 @@ const processAssessmentAnswer = async (
     };
   }
 
-  // ----------------------------------------------
+
   // Assessment completed
-  // ----------------------------------------------
 
   conversation.assessment.completed =
     true;
@@ -438,9 +423,8 @@ const processAssessmentAnswer = async (
   };
 };
 
-// ======================================================
+
 // SEND MESSAGE
-// ======================================================
 
 const sendMessage = async (
   req,
@@ -453,10 +437,9 @@ const sendMessage = async (
       message,
     } = req.body;
 
-    // ----------------------------------------------
+    
     // Validate message
-    // ----------------------------------------------
-
+   
     if (
       typeof message !== "string" ||
       !message.trim()
@@ -467,9 +450,7 @@ const sendMessage = async (
       });
     }
 
-    // ----------------------------------------------
     // Get or create conversation
-    // ----------------------------------------------
 
     let conversation;
 
@@ -496,9 +477,8 @@ const sendMessage = async (
         });
     }
 
-    // ----------------------------------------------
+ 
     // Completed conversation cannot receive messages
-    // ----------------------------------------------
 
     if (
       conversation.status ===
@@ -513,9 +493,8 @@ const sendMessage = async (
 
     const cleanMessage = message.trim();
 
-    // ----------------------------------------------
+
     // Current assessment question
-    // ----------------------------------------------
 
     const currentQuestion =
       getQuestion(
@@ -523,10 +502,6 @@ const sendMessage = async (
         conversation.currentQuestion
       );
 
-    // ----------------------------------------------
-    // If this is a valid structured answer,
-    // NEVER send it to Gemini.
-    // ----------------------------------------------
 
     if (
       currentQuestion &&
@@ -585,18 +560,15 @@ const sendMessage = async (
       }
     }
 
-    // ----------------------------------------------
+   
     // Save user message
-    // ----------------------------------------------
-
     conversation.messages.push({
       role: "user",
       content: cleanMessage,
     });
 
-    // ----------------------------------------------
+
     // Build Gemini history
-    // ----------------------------------------------
 
     const conversationHistory =
       conversation.messages
@@ -606,9 +578,8 @@ const sendMessage = async (
         )
         .join("\n");
 
-    // ----------------------------------------------
+
     // Gemini classification prompt
-    // ----------------------------------------------
 
     const prompt = `
 You are Flora, a women's gynecological health assistant.
@@ -730,18 +701,15 @@ Return ONLY valid JSON:
 }
 `;
 
-    // ----------------------------------------------
+
     // Gemini
-    // ----------------------------------------------
 
     const aiResponse =
       await generateGynaeResponse(
         prompt
       );
 
-    // ----------------------------------------------
     // Parse JSON
-    // ----------------------------------------------
 
     let result;
 
@@ -773,9 +741,8 @@ Return ONLY valid JSON:
       };
     }
 
-    // ----------------------------------------------
+
     // Validate category
-    // ----------------------------------------------
 
     const validCategories =
       Object.values(
@@ -791,13 +758,6 @@ Return ONLY valid JSON:
         GYNAE_CATEGORIES.GENERAL_GYNAE;
     }
 
-    // ----------------------------------------------
-    // IMPORTANT:
-    // Preserve active assessment.
-    //
-    // Gemini must NOT switch an assessment
-    // just because the user sent free text.
-    // ----------------------------------------------
 
     if (currentQuestion) {
       const assistantResponse =
@@ -837,9 +797,8 @@ Return ONLY valid JSON:
       });
     }
 
-    // ----------------------------------------------
+ 
     // No active assessment
-    // ----------------------------------------------
 
     const detectedCategory =
       result.category;
@@ -857,10 +816,9 @@ Return ONLY valid JSON:
       );
     }
 
-    // ----------------------------------------------
+
     // Start structured assessment
     // ONLY if this category has a question flow.
-    // ----------------------------------------------
 
     const questionFlow =
       QUESTION_FLOWS[
@@ -892,9 +850,8 @@ Return ONLY valid JSON:
       }
     }
 
-    // ----------------------------------------------
+
     // Save assistant response
-    // ----------------------------------------------
 
     conversation.messages.push({
       role: "assistant",
@@ -903,9 +860,8 @@ Return ONLY valid JSON:
 
     await conversation.save();
 
-    // ----------------------------------------------
+
     // Response
-    // ----------------------------------------------
 
     return res.status(200).json({
       success: true,
@@ -934,9 +890,8 @@ Return ONLY valid JSON:
   }
 };
 
-// ======================================================
+
 // GET CONVERSATION HISTORY
-// ======================================================
 
 const getConversationHistory = async (
   req,
@@ -966,9 +921,8 @@ const getConversationHistory = async (
   }
 };
 
-// ======================================================
+
 // GET SINGLE CONVERSATION
-// ======================================================
 
 const getConversation = async (
   req,
@@ -999,9 +953,7 @@ const getConversation = async (
   }
 };
 
-// ======================================================
 // DELETE CONVERSATION
-// ======================================================
 
 const deleteConversation = async (req, res, next) => {
   try {

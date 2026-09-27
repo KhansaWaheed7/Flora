@@ -27,9 +27,7 @@ const upload = multer({
   },
 });
 
-// =========================================
 // Document Upload
-// =========================================
 
 const handleSingleUpload = (req, res, next) => {
   upload.single("document")(req, res, (error) => {
@@ -58,9 +56,7 @@ const handleSingleUpload = (req, res, next) => {
   });
 };
 
-// =========================================
 // Avatar Upload
-// =========================================
 
 const handleAvatarUpload = (req, res, next) => {
   upload.single("avatar")(req, res, (error) => {

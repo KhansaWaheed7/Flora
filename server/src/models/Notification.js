@@ -59,7 +59,7 @@ const notificationSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Used to make event/reminder notifications idempotent.
+
     uniqueKey: {
       type: String,
       required: true,

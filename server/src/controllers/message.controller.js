@@ -8,9 +8,8 @@ const {
   getMessageAttachment,
   markMessagesAsRead,
 } = require("../services/message.service");
-// =========================================
+
 // Send Message
-// =========================================
 
 exports.sendMessage = asyncHandler(async (req, res) => {
   const validatedData = sendMessageSchema.parse(req.body);
@@ -31,9 +30,8 @@ exports.sendMessage = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Get Messages
-// =========================================
 
 exports.getMessages = asyncHandler(async (req, res) => {
   const messages = await getMessages(
@@ -50,9 +48,8 @@ exports.getMessages = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Mark Messages as Read
-// =========================================
 
 exports.markMessagesAsRead = asyncHandler(async (req, res) => {
   await markMessagesAsRead(
@@ -69,9 +66,8 @@ exports.markMessagesAsRead = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Get Message Attachment
-// =========================================
 
 exports.getMessageAttachment = asyncHandler(
   async (req, res) => {

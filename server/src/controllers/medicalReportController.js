@@ -1,4 +1,3 @@
-// server/src/controllers/medicalReportController.js
 const MedicalReport = require("../models/MedicalReport");
 const EncryptionUtil = require("../utils/encryptionUtil");
 const OCRUtil = require("../utils/ocrUtil");
@@ -9,15 +8,12 @@ const asyncHandler = require("../utils/asyncHandler");
 const { createNotification } = require("../services/notification.service");
 
 class MedicalReportController {
-  /**
-   * Upload and process medical report
-   */
+  // Upload and process medical report
   static uploadReport = asyncHandler(async (req, res) => {
     if (!req.file) {
       throw new ApiError(400, "No file provided");
     }
 
-    // FIX: Check if user exists
     if (!req.user) {
       throw new ApiError(401, "User not authenticated");
     }
@@ -84,9 +80,9 @@ class MedicalReportController {
     });
   });
 
-  /**
-   * Determine file type from MIME type
-   */
+  
+  // Determine file type from MIME type
+  
   static getFileType(mimeType) {
     if (mimeType === "application/pdf") return "pdf";
     if (mimeType.startsWith("image/")) return "image";
@@ -94,9 +90,9 @@ class MedicalReportController {
     return "unknown";
   }
 
-  /**
-   * Process report asynchronously
-   */
+  
+  //Process report asynchronously
+   
   static async processReportAsync(reportId, fileBuffer, fileType) {
     try {
       const report = await MedicalReport.findById(reportId);
@@ -192,12 +188,12 @@ report.processingStatus = "completed";
 await report.save();
 
 console.log(
-  `✅ AI + RAG analysis completed for report ${reportId}`
+  ` AI + RAG analysis completed for report ${reportId}`
 );
 
-      console.log(`✅ Report ${reportId} processing completed`);
+      console.log(`Report ${reportId} processing completed`);
     } catch (error) {
-      console.error(`❌ Error processing report ${reportId}:`, error);
+      console.error(`Error processing report ${reportId}:`, error);
       try {
         const report = await MedicalReport.findById(reportId);
         if (report) {
@@ -222,9 +218,8 @@ console.log(
     }
   }
 
-  /**
-   * Get report by ID
-   */
+ // Get report by ID
+ 
   static getReportById = asyncHandler(async (req, res) => {
     // FIX: Check if user exists
     if (!req.user) {
@@ -234,7 +229,7 @@ console.log(
     const reportId = req.params.id;
     const userId = req.user._id;
 
-    // FIX: Validate MongoDB ID format
+  
     if (!reportId.match(/^[0-9a-fA-F]{24}$/)) {
       throw new ApiError(400, "Invalid report ID format");
     }
@@ -245,7 +240,6 @@ console.log(
       throw new ApiError(404, "Report not found");
     }
 
-    // FIX: Safe comparison
     const isOwner = report.user && report.user.toString() === userId.toString();
     const isAdmin = req.user.role === "admin";
 
@@ -266,9 +260,8 @@ console.log(
     });
   });
 
-  /**
-   * Get all reports for user
-   */
+  // Get all reports for user
+  
   static getUserReports = asyncHandler(async (req, res) => {
     // FIX: Check if user exists
     if (!req.user) {
@@ -280,7 +273,6 @@ console.log(
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // FIX: Validate pagination
     if (page < 1 || limit < 1 || limit > 100) {
       throw new ApiError(400, "Invalid pagination parameters");
     }
@@ -304,9 +296,8 @@ console.log(
     });
   });
 
-  /**
-   * Download report
-   */
+  // Download report
+
   static downloadReport = asyncHandler(async (req, res) => {
     // FIX: Check if user exists
     if (!req.user) {
@@ -316,7 +307,7 @@ console.log(
     const reportId = req.params.id;
     const userId = req.user._id;
 
-    // FIX: Validate MongoDB ID format
+
     if (!reportId.match(/^[0-9a-fA-F]{24}$/)) {
       throw new ApiError(400, "Invalid report ID format");
     }
@@ -327,7 +318,6 @@ console.log(
       throw new ApiError(404, "Report not found");
     }
 
-    // FIX: Safe comparison
     const isOwner = report.user && report.user.toString() === userId.toString();
     const isAdmin = req.user.role === "admin";
 
@@ -335,7 +325,7 @@ console.log(
       throw new ApiError(403, "Unauthorized access");
     }
 
-    // FIX: Check if encrypted data exists
+    // Check if encrypted data exists
     if (!report.encryptedData) {
       throw new ApiError(500, "Report file not found");
     }
@@ -363,9 +353,8 @@ console.log(
     res.send(decryptedBuffer);
   });
 
-  /**
-   * Delete report
-   */
+  // Delete report
+
   static deleteReport = asyncHandler(async (req, res) => {
     // FIX: Check if user exists
     if (!req.user) {
@@ -375,7 +364,7 @@ console.log(
     const reportId = req.params.id;
     const userId = req.user._id;
 
-    // FIX: Validate MongoDB ID format
+  
     if (!reportId.match(/^[0-9a-fA-F]{24}$/)) {
       throw new ApiError(400, "Invalid report ID format");
     }
@@ -386,7 +375,6 @@ console.log(
       throw new ApiError(404, "Report not found");
     }
 
-    // FIX: Safe comparison
     const isOwner = report.user && report.user.toString() === userId.toString();
     const isAdmin = req.user.role === "admin";
 
@@ -402,11 +390,10 @@ console.log(
     });
   });
 
-  /**
-   * Get report summary only
-   */
+  // Get report summary only
+
   static getReportSummary = asyncHandler(async (req, res) => {
-    // FIX: Check if user exists
+
     if (!req.user) {
       throw new ApiError(401, "User not authenticated");
     }
@@ -414,7 +401,7 @@ console.log(
     const reportId = req.params.id;
     const userId = req.user._id;
 
-    // FIX: Validate MongoDB ID format
+   
     if (!reportId.match(/^[0-9a-fA-F]{24}$/)) {
       throw new ApiError(400, "Invalid report ID format");
     }
@@ -427,7 +414,7 @@ console.log(
       throw new ApiError(404, "Report not found");
     }
 
-    // FIX: Safe comparison
+  
     const isOwner = report.user && report.user.toString() === userId.toString();
     const isAdmin = req.user.role === "admin";
 
@@ -441,9 +428,8 @@ console.log(
     });
   });
 
-  /**
-   * Get processing status
-   */
+  // Get processing status
+
   static getProcessingStatus = asyncHandler(async (req, res) => {
     // FIX: Check if user exists
     if (!req.user) {
@@ -453,7 +439,6 @@ console.log(
     const reportId = req.params.id;
     const userId = req.user._id;
 
-    // FIX: Validate MongoDB ID format
     if (!reportId.match(/^[0-9a-fA-F]{24}$/)) {
       throw new ApiError(400, "Invalid report ID format");
     }
@@ -466,7 +451,7 @@ console.log(
       throw new ApiError(404, "Report not found");
     }
 
-    // FIX: Safe comparison
+
     const isOwner = report.user && report.user.toString() === userId.toString();
     const isAdmin = req.user.role === "admin";
 

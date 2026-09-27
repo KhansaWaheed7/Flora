@@ -13,9 +13,7 @@ const {
   closeConsultationAsPatient,
 } = require("../services/chat.service");
 
-// =========================================
 // Create Consultation Request
-// =========================================
 
 exports.createChat = asyncHandler(async (req, res) => {
   const validatedData = createChatSchema.parse(req.body);
@@ -35,9 +33,8 @@ exports.createChat = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Get Available Doctors
-// =========================================
 
 exports.getAvailableDoctors = asyncHandler(async (req, res) => {
   const doctors = await getAvailableDoctors(req.user.id);
@@ -51,9 +48,8 @@ exports.getAvailableDoctors = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Get Conversations
-// =========================================
 
 exports.getConversations = asyncHandler(async (req, res) => {
   const conversations = await getConversations(req.user.id);
@@ -67,9 +63,8 @@ exports.getConversations = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Get Doctor Profile for Consultation
-// =========================================
 
 exports.getDoctorProfileForConsultation = asyncHandler(async (req, res) => {
   const profile = await getDoctorProfileForConsultation(
@@ -82,9 +77,8 @@ exports.getDoctorProfileForConsultation = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Close Consultation from Patient Side
-// =========================================
 
 exports.closeConsultationAsPatient = asyncHandler(async (req, res) => {
   const chat = await closeConsultationAsPatient(
@@ -97,9 +91,8 @@ exports.closeConsultationAsPatient = asyncHandler(async (req, res) => {
   );
 });
 
-// =========================================
+
 // Get My Consultation Requests
-// =========================================
 
 exports.getMyRequests = asyncHandler(async (req, res) => {
   const requests = await getMyRequests(req.user.id);

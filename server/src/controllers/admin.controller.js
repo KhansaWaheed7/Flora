@@ -14,9 +14,7 @@ const {
   suspendDoctor,
 } = require("../services/admin.service");
 
-// =========================================
 // Get Pending Doctors
-// =========================================
 
 exports.getPendingDoctors = asyncHandler(async (req, res) => {
 
@@ -32,9 +30,7 @@ exports.getPendingDoctors = asyncHandler(async (req, res) => {
 
 });
 
-// =========================================
 // Get All Doctors
-// =========================================
 
 exports.getDoctors = asyncHandler(async (req, res) => {
 
@@ -72,9 +68,7 @@ exports.getDoctors = asyncHandler(async (req, res) => {
 
 });
 
-// =========================================
 // Approve Doctor
-// =========================================
 
 exports.approveDoctor = asyncHandler(async (req, res) => {
 
@@ -93,9 +87,7 @@ exports.approveDoctor = asyncHandler(async (req, res) => {
 
 });
 
-// =========================================
 // Reject Doctor
-// =========================================
 
 exports.rejectDoctor = asyncHandler(async (req, res) => {
 
@@ -114,9 +106,7 @@ exports.rejectDoctor = asyncHandler(async (req, res) => {
 
 });
 
-// =========================================
 // Admin Dashboard
-// =========================================
 
 exports.getDashboardStats = asyncHandler(async (req, res) => {
 
@@ -132,9 +122,8 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
 
 });
 
-// =========================================
+
 // Get All Patients
-// =========================================
 
 exports.getPatients = asyncHandler(async (req, res) => {
 
@@ -172,9 +161,7 @@ exports.getPatients = asyncHandler(async (req, res) => {
 
 });
 
-// =========================================
 // Update Patient Account Status
-// =========================================
 
 exports.updatePatientStatus = asyncHandler(
   async (req, res) => {
@@ -200,9 +187,7 @@ exports.updatePatientStatus = asyncHandler(
   }
 );
 
-// =========================================
 // Update Doctor Account Status
-// =========================================
 
 exports.updateDoctorStatus = asyncHandler(
   async (req, res) => {
@@ -255,9 +240,8 @@ exports.getAuditLogs = asyncHandler(async (req, res) => {
   );
 
 });
-// =========================================
+
 // Suspend Doctor
-// =========================================
 
 exports.suspendDoctor = asyncHandler(async (req, res) => {
   const { doctorId } = req.params;

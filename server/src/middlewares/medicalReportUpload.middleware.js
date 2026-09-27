@@ -1,4 +1,4 @@
-// server/src/middlewares/medicalReportUpload.middleware.js (UPDATED)
+
 const multer = require("multer");
 
 const ALLOWED_MIME_TYPES = [

@@ -1,7 +1,6 @@
 const ANSWER_FEEDBACK = {
-  // ======================================================
+
   // MISSED / IRREGULAR PERIOD
-  // ======================================================
 
   missed_period: {
     days_late: {
@@ -166,10 +165,9 @@ const ANSWER_FEEDBACK = {
     },
   },
 
-  // ======================================================
-  // PELVIC PAIN
-  // ======================================================
 
+  // PELVIC PAIN
+ 
   pelvic_pain: {
     pain_location: {
       lower_abdomen:
@@ -282,9 +280,8 @@ const ANSWER_FEEDBACK = {
     },
   },
 
-  // ======================================================
+
   // VAGINAL DISCHARGE
-  // ======================================================
 
   vaginal_discharge: {
     discharge_color: {
@@ -362,9 +359,8 @@ const ANSWER_FEEDBACK = {
     },
   },
 
-  // ======================================================
+
   // PAINFUL PERIOD
-  // ======================================================
 
   painful_period: {
     pain_severity: {
@@ -446,9 +442,8 @@ const ANSWER_FEEDBACK = {
     },
   },
 
-  // ======================================================
+
   // ABNORMAL BLEEDING
-  // ======================================================
 
   abnormal_bleeding: {
     bleeding_duration: {
@@ -541,9 +536,8 @@ const ANSWER_FEEDBACK = {
     },
   },
 
-  // ======================================================
+
   // URINARY SYMPTOMS
-  // ======================================================
 
   urinary_symptoms: {
     burning: {
@@ -609,9 +603,8 @@ const ANSWER_FEEDBACK = {
     },
   },
 
-  // ======================================================
+
   // PREGNANCY CONCERN
-  // ======================================================
 
   pregnancy_concern: {
     pregnancy_possibility: {
@@ -662,9 +655,8 @@ const ANSWER_FEEDBACK = {
   },
 };
 
-// ======================================================
+
 // GET ANSWER FEEDBACK
-// ======================================================
 
 const getAnswerFeedback = (category, questionId, answer) => {
   const feedback =

@@ -1,4 +1,3 @@
-// server/src/models/MedicalReport.js (UPDATED)
 const mongoose = require("mongoose");
 
 const medicalReportSchema = new mongoose.Schema(
@@ -27,7 +26,6 @@ const medicalReportSchema = new mongoose.Schema(
       required: true,
     },
 
-    // Encrypted file data (stored in DB or disk)
     encryptedData: {
       type: Buffer,
     },
@@ -115,7 +113,6 @@ const medicalReportSchema = new mongoose.Schema(
       default: "",
     },
 
-    // Which source determined the range
     referenceSource: {
       type: String,
       enum: [
@@ -152,7 +149,6 @@ const medicalReportSchema = new mongoose.Schema(
   },
 ],
 
-    // Abnormal results
     abnormalResults: [
       {
         test: {
@@ -260,7 +256,6 @@ const medicalReportSchema = new mongoose.Schema(
       default: "",
     },
 
-    // Privacy
     isPrivate: {
       type: Boolean,
       default: true,
@@ -281,7 +276,7 @@ const medicalReportSchema = new mongoose.Schema(
       },
     ],
 
-    // Metadata
+
     metadata: {
       uploadedFrom: {
         type: String,
@@ -291,7 +286,6 @@ const medicalReportSchema = new mongoose.Schema(
       userAgent: String,
     },
 
-    // Disclaimer
     disclaimer: {
       type: String,
       default:

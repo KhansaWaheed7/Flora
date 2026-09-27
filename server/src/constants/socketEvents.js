@@ -1,8 +1,6 @@
 module.exports = {
 
-  // =========================================
   // Consultation
-  // =========================================
 
   NEW_CONSULTATION_REQUEST:
     "new-consultation-request",
@@ -13,9 +11,8 @@ module.exports = {
   CONSULTATION_REJECTED:
     "consultation-rejected",
 
-  // =========================================
+
   // Chat
-  // =========================================
 
   NEW_MESSAGE:
     "new-message",

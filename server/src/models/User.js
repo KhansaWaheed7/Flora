@@ -3,9 +3,7 @@ const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
-    // =========================================
     // Basic User Information
-    // =========================================
 
     fullName: {
       type: String,
@@ -48,10 +46,7 @@ const userSchema = new mongoose.Schema(
       type: Number,
     },
 
-    // =========================================
     // Role & Account Status
-    // =========================================
-
     role: {
       type: String,
       enum: ["user", "doctor", "admin"],
@@ -64,9 +59,8 @@ const userSchema = new mongoose.Schema(
       default: "active",
     },
 
-    // =========================================
+
     // Doctor Profile
-    // =========================================
 
     specialization: {
       type: String,
@@ -85,9 +79,7 @@ const userSchema = new mongoose.Schema(
       min: 0,
     },
 
-    // =========================================
     // Doctor Verification
-    // =========================================
 
     doctorVerification: {
       status: {
@@ -196,9 +188,7 @@ const userSchema = new mongoose.Schema(
       },
     },
 
-    // =========================================
     // Email Verification
-    // =========================================
 
     isEmailVerified: {
       type: Boolean,
@@ -214,18 +204,15 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
 
-    // =========================================
-    // Authentication
-    // =========================================
 
+    // Authentication
     refreshToken: {
       type: String,
       default: "",
     },
 
-    // =========================================
+
     // Password Reset
-    // =========================================
 
     resetPasswordToken: {
       type: String,
@@ -236,22 +223,15 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
 
-    // =========================================
     // Profile
-    // =========================================
-
-    // =========================================
-// Profile
-// =========================================
 
 profilePicture: {
   type: String,
   default: "",
 },
 
-// =========================================
+
 // Doctor Public Profile
-// =========================================
 
 bio: {
   type: String,
@@ -282,11 +262,8 @@ consultationFee: {
   default: null,
 },
 
-// =========================================
 // Doctor Weekly Availability
-// =========================================
-// Stored on the doctor so the same schedule can be used by
-// the doctor portal and shown to patients.
+
 weeklySchedule: {
   type: [
     {
@@ -331,9 +308,8 @@ scheduleTimezone: {
   }
 );
 
-// =========================================
+
 // Password Hashing
-// =========================================
 
 userSchema.pre("save", async function () {
   if (!this.password) return;
@@ -343,9 +319,8 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, 10);
 });
 
-// =========================================
+
 // Password Comparison
-// =========================================
 
 userSchema.methods.comparePassword = function (password) {
   return bcrypt.compare(password, this.password);

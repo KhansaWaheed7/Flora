@@ -22,15 +22,10 @@ const {
 } = require("../services/auth.service");
 
 exports.register = asyncHandler(async (req, res) => {
-  console.log("📝 Registration request received");
+  console.log("Registration request received");
   console.log("Body:", req.body);
   console.log("Files:", req.files?.length || 0);
 
-  // =========================================
-  // Prepare data for Zod validation
-  // FormData sends everything as strings,
-  // so we need to convert types properly
-  // =========================================
 
   const rawData = {
     fullName: req.body.fullName,
@@ -58,21 +53,16 @@ exports.register = asyncHandler(async (req, res) => {
     terms: req.body.terms === "true" || req.body.terms === true,
   };
 
-  console.log("📦 Parsed data for validation:", rawData);
+  console.log("Parsed data for validation:", rawData);
 
-  // =========================================
   // Validate with Zod
-  // =========================================
 
   const validatedData = registerSchema.parse(rawData);
 
-  console.log("✅ Validation passed:", validatedData);
+  console.log("Validation passed:", validatedData);
 
-  // =========================================
+
   // Handle doctor verification documents
-  // =========================================
-  // PMDC Certificate, Medical Degree, and ID/CNIC are mandatory.
-  // Specialist Certificate/Document is optional.
 
   const uploadedFiles = req.files || {};
 
@@ -116,7 +106,7 @@ exports.register = asyncHandler(async (req, res) => {
     }
   });
 
-  console.log(`📎 Processing ${documents.length} doctor verification documents`);
+  console.log(`Processing ${documents.length} doctor verification documents`);
 
   const user = await registerUser(validatedData, documents);
 

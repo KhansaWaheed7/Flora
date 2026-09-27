@@ -1,15 +1,11 @@
 const { z } = require("zod");
 
-// =========================================
-// Register Schema
-// =========================================
 
+// Register Schema
 const registerSchema = z
   .object({
-    // -----------------------------------------
-    // Basic Information
-    // -----------------------------------------
 
+    // Basic Information
     fullName: z
       .string()
       .trim()
@@ -39,17 +35,15 @@ const registerSchema = z
       .max(120, "Invalid age")
       .optional(),
 
-    // -----------------------------------------
+
     // Role
-    // -----------------------------------------
 
     role: z
       .enum(["user", "doctor"])
       .default("user"),
 
-    // -----------------------------------------
+
     // Doctor Profile
-    // -----------------------------------------
 
     specialization: z
       .string()
@@ -70,9 +64,8 @@ const registerSchema = z
       .max(70, "Invalid years of experience")
       .optional(),
 
-    // -----------------------------------------
+
     // Doctor Registration / Verification
-    // -----------------------------------------
 
     pmdcRegistrationNumber: z
       .string()
@@ -88,9 +81,8 @@ const registerSchema = z
       ])
       .optional(),
 
-    // -----------------------------------------
+
     // Doctor Qualifications
-    // -----------------------------------------
 
     qualifications: z
       .array(
@@ -120,18 +112,15 @@ const registerSchema = z
       .optional(),
   })
 
-  // =========================================
+
   // Doctor-specific validation
-  // =========================================
 
   .superRefine((data, ctx) => {
     if (data.role !== "doctor") {
       return;
     }
 
-    // -----------------------------------------
     // Specialization
-    // -----------------------------------------
 
     if (!data.specialization) {
       ctx.addIssue({
@@ -141,9 +130,7 @@ const registerSchema = z
       });
     }
 
-    // -----------------------------------------
     // Hospital / Clinic
-    // -----------------------------------------
 
     if (!data.hospital) {
       ctx.addIssue({
@@ -153,9 +140,8 @@ const registerSchema = z
       });
     }
 
-    // -----------------------------------------
+
     // Experience
-    // -----------------------------------------
 
     if (data.yearsOfExperience === undefined) {
       ctx.addIssue({
@@ -165,9 +151,8 @@ const registerSchema = z
       });
     }
 
-    // -----------------------------------------
+
     // PMDC Registration Number
-    // -----------------------------------------
 
     if (!data.pmdcRegistrationNumber) {
       ctx.addIssue({
@@ -177,9 +162,8 @@ const registerSchema = z
       });
     }
 
-    // -----------------------------------------
+
     // Registration Type
-    // -----------------------------------------
 
     if (!data.registrationType) {
       ctx.addIssue({
@@ -189,9 +173,7 @@ const registerSchema = z
       });
     }
 
-    // -----------------------------------------
     // Qualifications
-    // -----------------------------------------
 
     if (!data.qualifications || data.qualifications.length === 0) {
       ctx.addIssue({
@@ -202,9 +184,8 @@ const registerSchema = z
     }
   });
 
-// =========================================
+
 // Login Schema
-// =========================================
 
 const loginSchema = z.object({
   email: z
@@ -218,9 +199,8 @@ const loginSchema = z.object({
     .min(1, "Password is required"),
 });
 
-// =========================================
+
 // Exports
-// =========================================
 
 module.exports = {
   registerSchema,

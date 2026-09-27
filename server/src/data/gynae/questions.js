@@ -1,9 +1,8 @@
 const { GYNAE_CATEGORIES } = require("./categories");
 
 const QUESTION_FLOWS = {
-  // ======================================================
+
   // MISSED / IRREGULAR PERIOD
-  // ======================================================
 
   [GYNAE_CATEGORIES.MISSED_PERIOD]: [
     {
@@ -162,9 +161,8 @@ const QUESTION_FLOWS = {
     },
   ],
 
-  // ======================================================
+
   // PELVIC PAIN
-  // ======================================================
 
   [GYNAE_CATEGORIES.PELVIC_PAIN]: [
     {
@@ -261,9 +259,8 @@ const QUESTION_FLOWS = {
     },
   ],
 
-  // ======================================================
+
   // VAGINAL DISCHARGE
-  // ======================================================
 
   [GYNAE_CATEGORIES.VAGINAL_DISCHARGE]: [
     {
@@ -360,9 +357,8 @@ const QUESTION_FLOWS = {
     },
   ],
 
-  // ======================================================
+
   // PAINFUL PERIOD
-  // ======================================================
 
   [GYNAE_CATEGORIES.PAINFUL_PERIOD]: [
     {
@@ -449,9 +445,7 @@ const QUESTION_FLOWS = {
     },
   ],
 
-  // ======================================================
   // ABNORMAL BLEEDING
-  // ======================================================
 
   [GYNAE_CATEGORIES.ABNORMAL_BLEEDING]: [
     {
@@ -552,10 +546,9 @@ const QUESTION_FLOWS = {
     },
   ],
 
-  // ======================================================
-  // URINARY SYMPTOMS
-  // ======================================================
 
+  // URINARY SYMPTOMS
+ 
   [GYNAE_CATEGORIES.URINARY_SYMPTOMS]: [
     {
       id: "burning",
@@ -651,9 +644,7 @@ const QUESTION_FLOWS = {
     },
   ],
 
-    // ======================================================
   // PREGNANCY CONCERN
-  // ======================================================
 
   [GYNAE_CATEGORIES.PREGNANCY_CONCERN]: [
     {
