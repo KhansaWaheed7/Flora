@@ -13,6 +13,7 @@ function Avatar({ name, image }) {
       <img
         src={image}
         alt={name}
+        referrerPolicy="no-referrer"
         className="h-11 w-11 flex-shrink-0 rounded-full object-cover"
       />
     );
@@ -86,7 +87,7 @@ export default function MyConsultations() {
       getMyRequests(),
       getConversations(),
     ]);
-
+    
     setConsultations(list || []);
 
     const counts = {};

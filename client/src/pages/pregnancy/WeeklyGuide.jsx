@@ -55,21 +55,21 @@ export default function WeeklyGuide() {
 
       {!loading && !error && data && (
         <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-          {/* Current Week summary card with progress ring + baby illustration */}
-          <div className="mb-5 flex items-center justify-between gap-4 rounded-2xl bg-[#FEF4F4] p-5">
+          {/* Current Week summary card with progress ring + baby illustration — made pink */}
+          <div className="mb-5 flex items-center justify-between gap-4 rounded-2xl bg-[#FEE4EB] p-5 ring-1 ring-[#FBCFE8] shadow-[0_4px_14px_rgba(243,59,125,0.10)]">
             <div>
-              <p className="text-xs text-[#8F8C8C]">Current Week</p>
-              <p className="font-display text-3xl font-semibold text-[#0D0D0D]">
+              <p className="text-xs font-semibold text-[#F33B7D]">Current Week</p>
+              <p className="font-display text-3xl font-semibold text-[#3D2A33]">
                 {currentWeek}
               </p>
-              <p className="text-xs text-[#8F8C8C]">
+              <p className="text-xs text-[#A8849A]">
                 {trimesterLabel[trimester]}
                 {trimester && ` (${TRIMESTER_RANGE[trimester]})`}
               </p>
             </div>
             <div className="relative h-20 w-20 flex-shrink-0">
               <svg viewBox="0 0 120 120" className="h-20 w-20 -rotate-90">
-                <circle cx="60" cy="60" r={radius} fill="none" stroke="#FEE4EB" strokeWidth="9" />
+                <circle cx="60" cy="60" r={radius} fill="none" stroke="#FFFFFF" strokeWidth="9" />
                 <circle
                   cx="60"
                   cy="60"
@@ -103,10 +103,10 @@ export default function WeeklyGuide() {
                 <button
                   key={week}
                   onClick={() => navigate(`/pregnancy/weekly-guide/${week}`)}
-                  className={`rounded-xl py-2.5 text-sm font-semibold transition ${
+                  className={`rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 ${
                     isCurrent
-                      ? "bg-[#F33B7D] text-white"
-                      : "bg-[#FEF4F4] text-[#3D3939] hover:bg-[#FEE4EB]"
+                      ? "bg-[#F33B7D] text-white shadow-[0_6px_16px_rgba(243,59,125,0.35)]"
+                      : "bg-[#FEE4EB] text-[#3D2A33] ring-1 ring-[#FBCFE8] shadow-[0_2px_8px_rgba(243,59,125,0.08)] hover:bg-[#FDD5E3] hover:ring-[#F9A8C7] hover:shadow-[0_6px_16px_rgba(243,59,125,0.18)] hover:-translate-y-0.5"
                   }`}
                 >
                   {week}

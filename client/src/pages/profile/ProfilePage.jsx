@@ -197,7 +197,7 @@ export default function ProfilePage() {
 
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {badges.map(({ icon: Icon, value, label }) => (
-              <div key={label} className="flex items-center gap-2 rounded-xl bg-[#FEF4F4] px-3 py-2.5">
+              <div key={label} className="flex items-center gap-2 rounded-xl bg-[#FCE4EC] px-3 py-2.5">
                 <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white text-[#F33B7D]">
                   <Icon className="h-4 w-4" />
                 </span>
@@ -257,7 +257,7 @@ export default function ProfilePage() {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {healthSummary.map(({ label, value, sub }) => (
-              <div key={label} className="rounded-xl bg-[#FEF4F4] p-3">
+              <div key={label} className="rounded-xl bg-[#FCE4EC] p-3">
                 <p className="text-[10px] text-[#8F8C8C]">{label}</p>
                 <p className="mt-1 font-display text-sm font-semibold text-[#0D0D0D]">{value}</p>
                 {sub && <p className="mt-0.5 text-[10px] text-[#B8AEB2]">{sub}</p>}

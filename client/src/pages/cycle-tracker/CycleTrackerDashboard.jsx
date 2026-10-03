@@ -412,12 +412,12 @@ export default function CycleTrackerDashboard() {
             <Link
               key={label}
               to={to}
-              className="flex flex-col items-center gap-2 rounded-xl bg-[#FEF4F4] p-3 text-center transition hover:bg-[#FEE4EB]"
+              className="group flex flex-col items-center gap-2 rounded-xl bg-[#FEE4EB] p-3 text-center ring-1 ring-[#FBCFE8] shadow-[0_2px_8px_rgba(243,59,125,0.08)] transition-all duration-200 hover:bg-[#FDD5E3] hover:ring-[#F9A8C7] hover:shadow-[0_6px_16px_rgba(243,59,125,0.18)] hover:-translate-y-0.5"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#F33B7D] shadow-sm">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#F33B7D] shadow-[0_2px_6px_rgba(243,59,125,0.15)] transition-transform duration-200 group-hover:scale-110">
                 <Icon className="h-4 w-4" />
               </span>
-              <span className="text-[10px] font-medium leading-tight text-[#3D2A33]">
+              <span className="text-[10px] font-semibold leading-tight text-[#3D2A33] group-hover:text-[#F33B7D] transition-colors">
                 {label}
               </span>
             </Link>
@@ -584,7 +584,6 @@ export default function CycleTrackerDashboard() {
       <ConfirmDeleteModal
         open={!!confirmTarget}
         cycleLabel={confirmTarget?.label}
-        deleting={deleting}
         onCancel={() => !deleting && setConfirmTarget(null)}
         onConfirm={confirmDelete}
       />

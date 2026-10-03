@@ -24,6 +24,7 @@ function Avatar({ name, image, size = "h-24 w-24" }) {
       <img
         src={image}
         alt={name}
+        referrerPolicy="no-referrer"
         className={`${size} flex-shrink-0 rounded-full object-cover`}
       />
     );

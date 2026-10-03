@@ -185,18 +185,20 @@ export default function PregnancyDashboard() {
         /* ------------------------------------------------------------- */
         <>
           {/* Quick Actions + Stop Tracking */}
-          <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(243,59,125,0.06)] ring-1 ring-[#F5E4EC]">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
               {quickActions.map(({ label, to, icon: Icon }) => (
                 <Link
                   key={label}
                   to={to}
-                  className="flex flex-col items-center gap-2 rounded-xl bg-[#FEF4F4] px-3 py-4 text-center transition hover:bg-[#FEE4EB]"
+                  className="group flex flex-col items-center gap-2 rounded-xl bg-[#FEE4EB] px-3 py-4 text-center ring-1 ring-[#FBCFE8] shadow-[0_2px_8px_rgba(243,59,125,0.08)] transition-all duration-200 hover:bg-[#FDD5E3] hover:ring-[#F9A8C7] hover:shadow-[0_6px_16px_rgba(243,59,125,0.18)] hover:-translate-y-0.5"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_2px_6px_rgba(243,59,125,0.15)] transition-transform duration-200 group-hover:scale-110">
                     <Icon className="h-4 w-4 text-[#F33B7D]" strokeWidth={1.5} />
                   </div>
-                  <span className="text-sm font-medium text-[#3D3939]">{label}</span>
+                  <span className="text-sm font-semibold text-[#3D2A33] transition-colors group-hover:text-[#F33B7D]">
+                    {label}
+                  </span>
                 </Link>
               ))}
 
@@ -217,13 +219,13 @@ export default function PregnancyDashboard() {
             </div>
           </div>
 
-          {/* Top summary card */}
-          <div className="mt-4 rounded-2xl bg-[#FEF4F4] p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+          {/* Top summary card — Week box back to white */}
+          <div className="mt-4 rounded-2xl bg-white p-5 shadow-[0_6px_20px_-6px_rgba(243,59,125,0.10)] ring-1 ring-[#F5E4EC]">
             <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-3">
               <div>
-                <p className="text-xs text-[#8F8C8C]">Current Week</p>
-                <p className="mt-1 font-display text-3xl font-semibold text-[#0D0D0D]">
-                  {currentWeek} <span className="text-sm font-normal text-[#B8AEB2]">of 40 Weeks</span>
+                <p className="text-xs font-semibold text-[#F33B7D]">Current Week</p>
+                <p className="mt-1 font-display text-3xl font-semibold text-[#3D2A33]">
+                  {currentWeek} <span className="text-sm font-normal text-[#A8849A]">of 40 Weeks</span>
                 </p>
               </div>
 
@@ -255,12 +257,12 @@ export default function PregnancyDashboard() {
               </div>
 
               <div className="text-right">
-                <p className="text-xs text-[#8F8C8C]">Trimester</p>
-                <p className="mt-1 font-display text-xl font-semibold text-[#0D0D0D]">
+                <p className="text-xs font-semibold text-[#F33B7D]">Trimester</p>
+                <p className="mt-1 font-display text-xl font-semibold text-[#3D2A33]">
                   {trimesterLabel[pregnancy?.trimester] || "-"}
                 </p>
                 {pregnancy?.trimester && (
-                  <p className="text-xs text-[#8F8C8C]">
+                  <p className="text-xs text-[#A8849A]">
                     {pregnancy.trimester === 1 ? "1 - 13" : pregnancy.trimester === 2 ? "14 - 27" : "28 - 40"} Weeks
                   </p>
                 )}
@@ -271,7 +273,7 @@ export default function PregnancyDashboard() {
               <div className="h-2 w-full overflow-hidden rounded-full bg-[#FEE4EB]">
                 <div className="h-full rounded-full bg-[#F33B7D]" style={{ width: `${pct}%` }} />
               </div>
-              <div className="mt-1.5 flex justify-between text-xs text-[#8F8C8C]">
+              <div className="mt-1.5 flex justify-between text-xs text-[#A8849A]">
                 <span>{pct}% complete</span>
                 {weeksRemaining != null && <span>{weeksRemaining} Weeks to go</span>}
               </div>
@@ -294,17 +296,18 @@ export default function PregnancyDashboard() {
 
           {/* Next Reminder + Today's Tip */}
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl bg-[#FEF4F4] p-4 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+            {/* Next Reminder — made pink */}
+            <div className="rounded-2xl bg-[#FEE4EB] p-4 shadow-[0_4px_14px_rgba(243,59,125,0.10)] ring-1 ring-[#FBCFE8]">
               <div className="flex items-center gap-2">
                 <CalendarClock className="h-4 w-4 text-[#F33B7D]" />
                 <p className="text-xs font-semibold text-[#F33B7D]">Next Reminder</p>
               </div>
               {upcomingReminder ? (
                 <>
-                  <p className="mt-2 font-display text-sm font-semibold text-[#0D0D0D]">
+                  <p className="mt-2 font-display text-sm font-semibold text-[#3D2A33]">
                     Week {upcomingReminder.week} – {upcomingReminder.title}
                   </p>
-                  <div className="mt-1 flex items-center justify-between text-xs text-[#8F8C8C]">
+                  <div className="mt-1 flex items-center justify-between text-xs text-[#A8849A]">
                     <span>
                       {weeksRemaining != null && currentWeek != null
                         ? `${Math.max(0, upcomingReminder.week - currentWeek)} Weeks left`
@@ -316,13 +319,14 @@ export default function PregnancyDashboard() {
                   </div>
                 </>
               ) : (
-                <p className="mt-2 text-xs text-[#8F8C8C]">No upcoming reminders.</p>
+                <p className="mt-2 text-xs text-[#A8849A]">No upcoming reminders.</p>
               )}
             </div>
 
-            <div className="rounded-2xl bg-[#FEF4F4] p-4 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
-              <p className="text-xs font-semibold text-[#F33B7D]">Today's Tip</p>
-              <p className="mt-1 text-xs text-[#3D3939]">{todaysTip}</p>
+            {/* Today's Tip — now matches Stop Tracking pink */}
+            <div className="rounded-2xl bg-[#F33B7D] p-4 shadow-[0_14px_28px_-6px_rgba(243,59,125,0.5)] transition hover:-translate-y-0.5 hover:bg-[#E02E6D]">
+              <p className="text-xs font-semibold text-white/90">Today's Tip</p>
+              <p className="mt-1 text-xs text-white">{todaysTip}</p>
             </div>
           </div>
         </>

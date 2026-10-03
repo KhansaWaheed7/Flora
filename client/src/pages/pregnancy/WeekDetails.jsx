@@ -172,14 +172,14 @@ export default function WeekDetails() {
                 </div>
               </div>
 
-              {/* Mother's Body Changes */}
-              <div className="rounded-2xl bg-[#FEF4F4] p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              {/* Mother's Body Changes — made pink */}
+              <div className="rounded-2xl bg-[#FEE4EB] p-5 shadow-[0_4px_14px_rgba(243,59,125,0.10)] ring-1 ring-[#FBCFE8]">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1">
-                    <h2 className="mb-2 font-display text-sm font-semibold text-[#0D0D0D]">
+                    <h2 className="mb-2 font-display text-sm font-semibold text-[#F33B7D]">
                       Mother's Body Changes
                     </h2>
-                    <p className="text-sm leading-relaxed text-[#3D3939]">
+                    <p className="text-sm leading-relaxed text-[#3D2A33]">
                       {weekInfo?.motherChanges}
                     </p>
                   </div>
@@ -197,18 +197,33 @@ export default function WeekDetails() {
           )}
 
           {tab === "checklist" && (
-            <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+            <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <h2 className="font-display text-sm font-semibold text-[#0D0D0D]">
+                This Week's Checklist
+              </h2>
+              <p className="mt-1 text-xs text-[#8F8C8C]">
+                Simple steps to stay on track this week.
+              </p>
+
               {weekInfo?.checklist?.length > 0 ? (
-                <ul className="space-y-3">
+                <ul className="mt-5 space-y-3">
                   {weekInfo.checklist.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-[#3D3939]">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#22C55E]" />
-                      {item}
+                    <li
+                      key={i}
+                      className="flex items-start gap-3 border-b border-[#F5E4EC] pb-3 last:border-0 last:pb-0"
+                    >
+                      <CheckCircle2
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#F33B7D]"
+                        strokeWidth={2}
+                      />
+                      <span className="text-sm leading-relaxed text-[#3D2A33]">
+                        {item}
+                      </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-[#8F8C8C]">
+                <p className="mt-5 text-sm text-[#A8849A]">
                   No checklist items for this week.
                 </p>
               )}
@@ -216,18 +231,33 @@ export default function WeekDetails() {
           )}
 
           {tab === "nutrition" && (
-            <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+            <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <h2 className="font-display text-sm font-semibold text-[#0D0D0D]">
+                Nutrition Tips
+              </h2>
+              <p className="mt-1 text-xs text-[#8F8C8C]">
+                What to focus on eating this week.
+              </p>
+
               {weekInfo?.nutritionTips?.length > 0 ? (
-                <ul className="space-y-3">
+                <ul className="mt-5 space-y-3">
                   {weekInfo.nutritionTips.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-[#3D3939]">
-                      <Apple className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#F59E0B]" />
-                      {item}
+                    <li
+                      key={i}
+                      className="flex items-start gap-3 border-b border-[#F5E4EC] pb-3 last:border-0 last:pb-0"
+                    >
+                      <Apple
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#F59E0B]"
+                        strokeWidth={2}
+                      />
+                      <span className="text-sm leading-relaxed text-[#3D2A33]">
+                        {item}
+                      </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-[#8F8C8C]">
+                <p className="mt-5 text-sm text-[#A8849A]">
                   No nutrition tips for this week.
                 </p>
               )}
@@ -235,18 +265,33 @@ export default function WeekDetails() {
           )}
 
           {tab === "warning" && (
-            <div className="rounded-2xl bg-white p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+            <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
+              <h2 className="font-display text-sm font-semibold text-[#0D0D0D]">
+                Warning Signs
+              </h2>
+              <p className="mt-1 text-xs text-[#8F8C8C]">
+                Contact your doctor immediately if you notice any of these.
+              </p>
+
               {weekInfo?.warningSigns?.length > 0 ? (
-                <ul className="space-y-3">
+                <ul className="mt-5 space-y-3">
                   {weekInfo.warningSigns.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-[#3D3939]">
-                      <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500" />
-                      {item}
+                    <li
+                      key={i}
+                      className="flex items-start gap-3 border-b border-[#F5E4EC] pb-3 last:border-0 last:pb-0"
+                    >
+                      <AlertTriangle
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500"
+                        strokeWidth={2}
+                      />
+                      <span className="text-sm leading-relaxed text-[#3D2A33]">
+                        {item}
+                      </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-[#8F8C8C]">
+                <p className="mt-5 text-sm text-[#A8849A]">
                   No warning signs listed for this week.
                 </p>
               )}

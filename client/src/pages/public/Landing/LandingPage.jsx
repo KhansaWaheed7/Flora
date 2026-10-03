@@ -155,9 +155,8 @@ const footerCols = [
       { label: "Articles", path: "/login" },
       { label: "FAQs", path: "/login" },
       { label: "Health Glossary", path: "/login" },
-      { label: "Support Center", path: "/login" },
+      { label: "Support Center", path: "mailto:flora.app.project@gmail.com" },
     ],
-
   },
   {
     title: "Company",
@@ -205,7 +204,6 @@ function FlowerMark({ className = "h-6 w-6" }) {
 export default function FloraLanding() {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  
   React.useEffect(() => {
     if (menuOpen) {
       const scrollY = window.scrollY;
@@ -341,105 +339,103 @@ export default function FloraLanding() {
       </header>
 
       {/* HERO */}
-<section
-  id="home"
-  className="relative overflow-hidden bg-cover bg-center -mt-23"
-  style={{ backgroundImage: `url(${backgroundPng})` }}
->
-  <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white via-white/80 to-transparent" />
-  <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/40 via-transparent to-white/70" />
-
-  <div className="mx-auto max-w-7xl px-6 pt-40 pb-32 md:pt-48">
-    <div className="max-w-lg ml-8 md:ml-16 lg:ml-24">
-      <h1
-        className="text-4xl font-semibold leading-[1.15] text-[#6E364B] sm:text-5xl"
-        style={{ 
-          fontFamily: "'Poppins', sans-serif",
-          textShadow: '0 2px 20px rgba(255,255,255,0.8), 0 2px 4px rgba(255,255,255,0.9)'
-        }}
+      <section
+        id="home"
+        className="relative overflow-hidden bg-cover bg-center -mt-23"
+        style={{ backgroundImage: `url(${backgroundPng})` }}
       >
-        Your Health.
-        <br />
-        Your Journey.
-        <br />
-        <span
-          className="relative inline-block text-[#EB6991]"
-          style={{ 
-            fontFamily: "'Playfair Display', serif", 
-            fontStyle: "italic",
-            textShadow: '0 2px 20px rgba(255,255,255,0.8), 0 2px 4px rgba(255,255,255,0.9)'
-          }}
-        >
-          Your Flora.
-        </span>
-      </h1>
-      <p 
-        className="mt-6 max-w-md text-base leading-relaxed text-[#6E364B]"
-        style={{
-          textShadow: '0 2px 20px rgba(255,255,255,0.8), 0 2px 4px rgba(255,255,255,0.9)'
-        }}
-      >
-        AI-powered gynecological health platform for cycle tracking,
-        PCOS screening, pregnancy care, and doctor consultation.
-      </p>
-      <div className="mt-8">
-        <Link
-          to="/register"
-          className="inline-flex items-center gap-2 rounded-full bg-[#EB6991] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_14px_28px_-6px_rgba(235,105,145,0.55)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_32px_-6px_rgba(235,105,145,0.65)]"
-        >
-          Start Your Journey
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
-    </div>
-  </div>
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-white via-white/80 to-transparent" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/40 via-transparent to-white/70" />
 
-  
+        <div className="mx-auto max-w-7xl px-6 pt-40 pb-32 md:pt-48">
+          <div className="max-w-lg ml-8 md:ml-16 lg:ml-24">
+            <h1
+              className="text-4xl font-semibold leading-[1.15] text-[#6E364B] sm:text-5xl"
+              style={{
+                fontFamily: "'Poppins', sans-serif",
+                textShadow: '0 2px 20px rgba(255,255,255,0.8), 0 2px 4px rgba(255,255,255,0.9)'
+              }}
+            >
+              Your Health.
+              <br />
+              Your Journey.
+              <br />
+              <span
+                className="relative inline-block text-[#EB6991]"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontStyle: "italic",
+                  textShadow: '0 2px 20px rgba(255,255,255,0.8), 0 2px 4px rgba(255,255,255,0.9)'
+                }}
+              >
+                Your Flora.
+              </span>
+            </h1>
+            <p
+              className="mt-6 max-w-md text-base leading-relaxed text-[#6E364B]"
+              style={{
+                textShadow: '0 2px 20px rgba(255,255,255,0.8), 0 2px 4px rgba(255,255,255,0.9)'
+              }}
+            >
+              AI-powered gynecological health platform for cycle tracking,
+              PCOS screening, pregnancy care, and doctor consultation.
+            </p>
+            <div className="mt-8">
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-2 rounded-full bg-[#EB6991] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_14px_28px_-6px_rgba(235,105,145,0.55)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_32px_-6px_rgba(235,105,145,0.65)]"
+              >
+                Start Your Journey
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
 
         {/* FLOATING TRUST BAR */}
-<div className="mx-auto mt-6 max-w-7xl px-6 relative z-10">
-  <div className="relative">
-    {/* Decorative glow behind the trust bar */}
-    <div className="absolute -inset-1 bg-gradient-to-r from-[#EB6991]/20 via-[#F33B7D]/10 to-[#EB6991]/20 rounded-[2rem] blur-xl opacity-70"></div>
-    
-    <div className="relative flex flex-col gap-6 rounded-[2rem] bg-white/50 backdrop-blur-md p-6 shadow-[0_20px_60px_-15px_rgba(235,105,145,0.3)] ring-1 ring-[#FDE3E5] sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-7">
-      {/* Left section with abstract */}
-      <div className="flex items-center gap-4">
-        <div className="relative">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#EB6991]/20 to-[#F33B7D]/20 blur-md"></div>
-          <span className="relative flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FEE4EB] to-[#FDE3E5]">
-            <img src={AbstractPng} alt="Abstract" className="h-16 w-auto object-cover" />
-          </span>
-        </div>
-        <div>
-          <p className="text-base font-semibold leading-snug text-[#2B1620]">
-            Care that understands
-            <br className="hidden sm:block" /> 
-            <span className="text-[#EB6991]">you, naturally.</span>
-          </p>
-          <div className="flex items-center gap-2 mt-1">
-            <CheckCircle className="h-3.5 w-3.5 text-[#EB6991]" />
-            <span className="text-xs text-[#8F7C87]">Trusted by women worldwide</span>
-          </div>
-        </div>
-      </div>
+        <div className="mx-auto mt-6 max-w-7xl px-6 relative z-10">
+          <div className="relative">
+            {/* Decorative glow behind the trust bar */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#EB6991]/20 via-[#F33B7D]/10 to-[#EB6991]/20 rounded-[2rem] blur-xl opacity-70"></div>
 
-      <div className="hidden h-10 w-px bg-gradient-to-b from-transparent via-[#F3DCE4] to-transparent sm:block" />
+            <div className="relative flex flex-col gap-6 rounded-[2rem] bg-white/50 backdrop-blur-md p-6 shadow-[0_20px_60px_-15px_rgba(235,105,145,0.3)] ring-1 ring-[#FDE3E5] sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-7">
+              {/* Left section with abstract */}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#EB6991]/20 to-[#F33B7D]/20 blur-md"></div>
+                  <span className="relative flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FEE4EB] to-[#FDE3E5]">
+                    <img src={AbstractPng} alt="Abstract" className="h-16 w-auto object-cover" />
+                  </span>
+                </div>
+                <div>
+                  <p className="text-base font-semibold leading-snug text-[#2B1620]">
+                    Care that understands
+                    <br className="hidden sm:block" />
+                    <span className="text-[#EB6991]">you, naturally.</span>
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <CheckCircle className="h-3.5 w-3.5 text-[#EB6991]" />
+                    <span className="text-xs text-[#8F7C87]">Trusted by women worldwide</span>
+                  </div>
+                </div>
+              </div>
 
-      {/* Trust Points */}
-      <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
-        {trustPoints.map(({ icon: Icon, label }) => (
-          <div key={label} className="group flex flex-col items-center gap-1.5 text-center transition-transform hover:scale-105">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#FEE4EB] to-[#FDE3E5] text-[#EB6991] shadow-[0_4px_12px_rgba(235,105,145,0.15)] transition group-hover:shadow-[0_8px_20px_rgba(235,105,145,0.25)]">
-              <Icon className="h-5 w-5" />
+              <div className="hidden h-10 w-px bg-gradient-to-b from-transparent via-[#F3DCE4] to-transparent sm:block" />
+
+              {/* Trust Points */}
+              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
+                {trustPoints.map(({ icon: Icon, label }) => (
+                  <div key={label} className="group flex flex-col items-center gap-1.5 text-center transition-transform hover:scale-105">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#FEE4EB] to-[#FDE3E5] text-[#EB6991] shadow-[0_4px_12px_rgba(235,105,145,0.15)] transition group-hover:shadow-[0_8px_20px_rgba(235,105,145,0.25)]">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <span className="text-xs font-medium text-[#5B4650] group-hover:text-[#EB6991] transition-colors">{label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <span className="text-xs font-medium text-[#5B4650] group-hover:text-[#EB6991] transition-colors">{label}</span>
           </div>
-        ))}
-      </div>
-    </div>
-  </div>
-</div>
+        </div>
 
         {/* Smooth transition wave to next section */}
         <div className="relative mt-16">
@@ -448,8 +444,8 @@ export default function FloraLanding() {
       </section>
 
       {/* FEATURES - With smooth pink gradient */}
-      <section 
-        id="features" 
+      <section
+        id="features"
         className="relative overflow-hidden py-20 bg-gradient-to-b from-[#FFF5F7] via-[#FDE8EE] to-[#FEF6F6]"
       >
         {/* Decorative top wave */}
@@ -596,115 +592,89 @@ export default function FloraLanding() {
         </div>
       </section>
 
-    {/* FOOTER */}
-<footer id="contact" className="border-t border-[#F7DCE4] bg-gradient-to-b from-[#FFF5F7] to-[#FEF6F6]">
-  <div className="mx-auto max-w-7xl px-6 py-14">
-    <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
-      <div>
-        <FloraLogo />
-        <p className="mt-4 max-w-xs text-sm text-[#8F7C87]">
-          Your all-in-one platform for women's health and well-being.
-        </p>
-        <div className="mt-4">
-          <p className="text-sm text-[#8F7C87]">
-            <span className="font-medium text-[#5B4650]">Support:</span>{" "}
-            <a 
-              href="mailto:flora.app.project@gmail.com" 
-              className="text-[#EB6991] hover:underline transition-colors"
-            >
-              flora.app.project@gmail.com
-            </a>
-          </p>
+      {/* FOOTER */}
+      <footer id="contact" className="border-t border-[#F7DCE4] bg-gradient-to-b from-[#FFF5F7] to-[#FEF6F6]">
+        <div className="mx-auto max-w-7xl px-6 py-14">
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <FloraLogo />
+              <p className="mt-4 max-w-xs text-sm text-[#8F7C87]">
+                Your all-in-one platform for women's health and well-being.
+              </p>
+              <div className="mt-4">
+                <p className="text-sm text-[#8F7C87]">
+                  <span className="font-medium text-[#5B4650]">Support:</span>{" "}
+                  <a
+                    href="mailto:flora.app.project@gmail.com"
+                    className="text-[#EB6991] hover:underline transition-colors"
+                  >
+                    flora.app.project@gmail.com
+                  </a>
+                </p>
+              </div>
+              <div className="mt-5 flex gap-3">
+                {["instagram", "facebook", "twitter", "youtube"].map((name) => (
+                  <a
+                    key={name}
+                    href="#"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[#EB6991] text-white shadow-[0_4px_10px_rgba(235,105,145,0.25)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(235,105,145,0.35)]"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
+                      {name === "facebook" && (
+                        <path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z" />
+                      )}
+                      {name === "twitter" && (
+                        <path d="M22 5.9c-.7.3-1.5.6-2.3.7.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 0 0-7 3.7A11.6 11.6 0 0 1 3.4 4.6a4.1 4.1 0 0 0 1.3 5.5c-.6 0-1.3-.2-1.8-.5v.1c0 2 1.4 3.6 3.3 4a4.1 4.1 0 0 1-1.9.1 4.1 4.1 0 0 0 3.8 2.9A8.3 8.3 0 0 1 2 18.4a11.7 11.7 0 0 0 6.3 1.8c7.5 0 11.7-6.3 11.7-11.7v-.5c.8-.6 1.5-1.3 2-2.1z" />
+                      )}
+                      {name === "instagram" && (
+                        <path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 2 .3 2.6.5.6.3 1.1.6 1.6 1.1.5.5.8 1 1.1 1.6.2.6.4 1.4.5 2.6.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 2-.5 2.6a4.4 4.4 0 0 1-2.7 2.7c-.6.2-1.4.4-2.6.5-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-2-.3-2.6-.5a4.4 4.4 0 0 1-2.7-2.7c-.2-.6-.4-1.4-.5-2.6-.1-1.3-.1-1.7-.1-4.9s0-3.6.1-4.9c.1-1.2.3-2 .5-2.6.3-.6.6-1.1 1.1-1.6.5-.5 1-.8 1.6-1.1.6-.2 1.4-.4 2.6-.5C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-1 .1-1.6.2-2 .4-.5.2-.8.4-1.2.8-.4.4-.6.7-.8 1.2-.2.4-.3 1-.4 2-.1 1.2-.1 1.6-.1 4.7s0 3.5.1 4.7c.1 1 .2 1.6.4 2 .2.5.4.8.8 1.2.4.4.7.6 1.2.8.4.2 1 .3 2 .4 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1-.1 1.6-.2 2-.4.5-.2.8-.4 1.2-.8.4-.4.6-.7.8-1.2.2-.4.3-1 .4-2 .1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c-.1-1-.2-1.6-.4-2a3.3 3.3 0 0 0-.8-1.2 3.3 3.3 0 0 0-1.2-.8c-.4-.2-1-.3-2-.4-1.2-.1-1.6-.1-4.7-.1zm0 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 1.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4zm5.2-2a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4z" />
+                      )}
+                      {name === "youtube" && (
+                        <path d="M23 12s0-3.6-.5-5.3a2.9 2.9 0 0 0-2-2C18.7 4.2 12 4.2 12 4.2s-6.7 0-8.5.5a2.9 2.9 0 0 0-2 2C1 8.4 1 12 1 12s0 3.6.5 5.3a2.9 2.9 0 0 0 2 2c1.8.5 8.5.5 8.5.5s6.7 0 8.5-.5a2.9 2.9 0 0 0 2-2C23 15.6 23 12 23 12zM9.7 15.5V8.5l6 3.5-6 3.5z" />
+                      )}
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            </div>
+            {footerCols.map((col) => (
+              <div key={col.title}>
+                <h4 className="font-display text-sm font-semibold text-[#2B1620]">
+                  {col.title}
+                </h4>
+                <ul className="mt-4 space-y-2.5">
+                  {col.links.map((link) => {
+                    const isExternal =
+                      link.path.startsWith("mailto:") ||
+                      link.path.startsWith("http") ||
+                      link.path.startsWith("#");
+                    const linkClasses =
+                      "text-sm text-[#8F7C87] hover:text-[#EB6991] transition-colors";
+
+                    return (
+                      <li key={link.label}>
+                        {isExternal ? (
+                          <a href={link.path} className={linkClasses}>
+                            {link.label}
+                          </a>
+                        ) : (
+                          <Link to={link.path} className={linkClasses}>
+                            {link.label}
+                          </Link>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-[#F7DCE4] pt-6 text-xs text-[#8A7B8F] sm:flex-row">
+            <p>© 2026 Flora. All rights reserved.</p>
+            <p>Made with <span className="text-[#EB6991]">❤</span> for women everywhere.</p>
+          </div>
         </div>
-        <div className="mt-5 flex gap-3">
-          {["instagram", "facebook", "twitter", "youtube"].map((name) => (
-            <a
-              key={name}
-              href="#"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-[#EB6991] text-white shadow-[0_4px_10px_rgba(235,105,145,0.25)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(235,105,145,0.35)]"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-                {name === "facebook" && (
-                  <path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z" />
-                )}
-                {name === "twitter" && (
-                  <path d="M22 5.9c-.7.3-1.5.6-2.3.7.8-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.6 1a4.1 4.1 0 0 0-7 3.7A11.6 11.6 0 0 1 3.4 4.6a4.1 4.1 0 0 0 1.3 5.5c-.6 0-1.3-.2-1.8-.5v.1c0 2 1.4 3.6 3.3 4a4.1 4.1 0 0 1-1.9.1 4.1 4.1 0 0 0 3.8 2.9A8.3 8.3 0 0 1 2 18.4a11.7 11.7 0 0 0 6.3 1.8c7.5 0 11.7-6.3 11.7-11.7v-.5c.8-.6 1.5-1.3 2-2.1z" />
-                )}
-                {name === "instagram" && (
-                  <path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 2 .3 2.6.5.6.3 1.1.6 1.6 1.1.5.5.8 1 1.1 1.6.2.6.4 1.4.5 2.6.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 2-.5 2.6a4.4 4.4 0 0 1-2.7 2.7c-.6.2-1.4.4-2.6.5-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-2-.3-2.6-.5a4.4 4.4 0 0 1-2.7-2.7c-.2-.6-.4-1.4-.5-2.6-.1-1.3-.1-1.7-.1-4.9s0-3.6.1-4.9c.1-1.2.3-2 .5-2.6.3-.6.6-1.1 1.1-1.6.5-.5 1-.8 1.6-1.1.6-.2 1.4-.4 2.6-.5C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.1-1 .1-1.6.2-2 .4-.5.2-.8.4-1.2.8-.4.4-.6.7-.8 1.2-.2.4-.3 1-.4 2-.1 1.2-.1 1.6-.1 4.7s0 3.5.1 4.7c.1 1 .2 1.6.4 2 .2.5.4.8.8 1.2.4.4.7.6 1.2.8.4.2 1 .3 2 .4 1.2.1 1.6.1 4.7.1s3.5 0 4.7-.1c1-.1 1.6-.2 2-.4.5-.2.8-.4 1.2-.8.4-.4.6-.7.8-1.2.2-.4.3-1 .4-2 .1-1.2.1-1.6.1-4.7s0-3.5-.1-4.7c-.1-1-.2-1.6-.4-2a3.3 3.3 0 0 0-.8-1.2 3.3 3.3 0 0 0-1.2-.8c-.4-.2-1-.3-2-.4-1.2-.1-1.6-.1-4.7-.1zm0 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 1.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4zm5.2-2a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4z" />
-                )}
-                {name === "youtube" && (
-                  <path d="M23 12s0-3.6-.5-5.3a2.9 2.9 0 0 0-2-2C18.7 4.2 12 4.2 12 4.2s-6.7 0-8.5.5a2.9 2.9 0 0 0-2 2C1 8.4 1 12 1 12s0 3.6.5 5.3a2.9 2.9 0 0 0 2 2c1.8.5 8.5.5 8.5.5s6.7 0 8.5-.5a2.9 2.9 0 0 0 2-2C23 15.6 23 12 23 12zM9.7 15.5V8.5l6 3.5-6 3.5z" />
-                )}
-              </svg>
-            </a>
-          ))}
-        </div>
-      </div>
-      {footerCols.map((col) => (
-        <div key={col.title}>
-          <h4 className="font-display text-sm font-semibold text-[#2B1620]">
-            {col.title}
-          </h4>
-          <ul className="mt-4 space-y-2.5">
-            {col.links.map((link) => {
-              const isTerms = link.label === "Terms & Conditions";
-              const isPrivacy = link.label === "Privacy Policy";
-              const isAbout = link.label === "About Us";
-              const isContact = link.label === "Contact Us";
-              const isLogin = link.path === "/login";
-              
-              return (
-                <li key={link.label}>
-                  {isTerms ? (
-                    <Link
-                      to={link.path}
-                      className="text-sm text-[#8F7C87] hover:text-[#EB6991] transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  ) : isPrivacy ? (
-                    <Link
-                      to={link.path}
-                      className="text-sm text-[#8F7C87] hover:text-[#EB6991] transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  ) : isAbout || isContact ? (
-                    <a
-                      href={link.path}
-                      className="text-sm text-[#8F7C87] hover:text-[#EB6991] transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  ) : isLogin ? (
-                    <Link
-                      to={link.path}
-                      className="text-sm text-[#8F7C87] hover:text-[#EB6991] transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  ) : (
-                    <Link
-                      to={link.path}
-                      className="text-sm text-[#8F7C87] hover:text-[#EB6991] transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
-    </div>
-    <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-[#F7DCE4] pt-6 text-xs text-[#8A7B8F] sm:flex-row">
-      <p>© 2026 Flora. All rights reserved.</p>
-      <p>Made with <span className="text-[#EB6991]">❤</span> for women everywhere.</p>
-    </div>
-  </div>
-</footer>
+      </footer>
     </div>
   );
 }

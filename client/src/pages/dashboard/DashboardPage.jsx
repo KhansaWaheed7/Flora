@@ -994,31 +994,60 @@ export default function DashboardPage() {
 
             <div className="divide-y divide-[#F5E4EC]">
               {latestNotifications.length > 0 ? (
-                latestNotifications.slice(0, 5).map((notification) => (
-                  <Link
-                    key={notification._id}
-                    to={notification.link || "/notifications"}
-                    className="group relative flex items-center gap-3 px-2 py-3 -mx-2 first:pt-0 last:pb-0 rounded-xl transition-all duration-200 hover:bg-[#FEF4F4] hover:shadow-[0_2px_8px_rgba(243,59,125,0.06)]"
-                  >
-                    {!notification.read && (
-                      <span className="absolute left-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#F33B7D] shadow-[0_0_0_3px_rgba(243,59,125,0.15)]" />
-                    )}
-                    <span className="ml-2 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#FEE4EB] text-[#F33B7D] shadow-sm ring-1 ring-[#F5E4EC] transition-transform duration-200 group-hover:scale-105">
-                      <Bell className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[#3D2A33]">
-                        {notification.title}
-                      </p>
-                      <p className="truncate text-xs text-[#A8849A]">
-                        {notification.message}
-                      </p>
-                    </div>
-                    {!notification.read && (
-                      <span className="h-2 w-2 flex-shrink-0 rounded-full bg-[#F33B7D] shadow-[0_0_0_3px_rgba(243,59,125,0.15)]" />
-                    )}
-                  </Link>
-                ))
+                latestNotifications.slice(0, 5).map((notification) => {
+                  const isUnread = !notification.read;
+
+                  return (
+                    <Link
+                      key={notification._id}
+                      to={notification.link || "/notifications"}
+                      className="group relative flex items-center gap-3 px-2 py-3 -mx-2 first:pt-0 last:pb-0 rounded-xl transition-all duration-200 hover:bg-[#FEF4F4] hover:shadow-[0_2px_8px_rgba(243,59,125,0.06)]"
+                    >
+                      {/* Pink accent bar for unread */}
+                      {isUnread && (
+                        <span className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-[#F33B7D] shadow-[0_0_8px_rgba(243,59,125,0.5)]" />
+                      )}
+
+                      {/* Icon */}
+                      <span
+                        className={`ml-2 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 transition-transform duration-200 group-hover:scale-105 ${
+                          isUnread
+                            ? "bg-[#F33B7D] text-white ring-[#F33B7D]"
+                            : "bg-[#FEE4EB] text-[#F33B7D] ring-[#F5E4EC]"
+                        }`}
+                      >
+                        <Bell className="h-4 w-4" />
+                      </span>
+
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={`truncate text-sm ${
+                            isUnread
+                              ? "font-bold text-[#3D2A33]"
+                              : "font-semibold text-[#3D2A33]"
+                          }`}
+                        >
+                          {notification.title}
+                        </p>
+                        <p
+                          className={`truncate text-xs ${
+                            isUnread ? "text-[#A8849A]" : "text-[#C9A8B8]"
+                          }`}
+                        >
+                          {notification.message}
+                        </p>
+                      </div>
+
+                      {/* Pulsing unread dot */}
+                      {isUnread && (
+                        <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#F33B7D] opacity-60" />
+                          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#F33B7D] shadow-[0_0_0_3px_rgba(243,59,125,0.18)]" />
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })
               ) : (
                 <div className="py-5 text-center text-xs text-[#C9A8B8]">
                   No notifications yet.

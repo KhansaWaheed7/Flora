@@ -184,12 +184,20 @@ export default function MedicalReportDetailsPage() {
       backTo="/medical-reports"
     >
       <section className="mt-6">
-        <div className="flex justify-end">
+        {/* Disclaimer + Download row */}
+        <div className="flex items-start gap-3">
+          <div className="flex flex-1 gap-3 rounded-2xl border border-[#FEE4EB] bg-[#fcd7e6] p-5">
+            <ShieldCheck className="h-5 w-5 flex-shrink-0 text-[#F33B7D]" />
+            <p className="text-xs leading-5 text-[#6F6A6B]">
+              {disclaimer}
+            </p>
+          </div>
+
           <button
             type="button"
             onClick={handleDownload}
             disabled={downloading}
-            className="flex items-center gap-2 rounded-xl border border-[#F0DCE4] bg-white px-5 py-2.5 text-sm font-semibold text-[#3D3939] transition hover:bg-[#FFF0F5] disabled:opacity-50"
+            className="flex flex-shrink-0 items-center gap-2 rounded-xl border border-[#F0DCE4] bg-white px-5 py-2.5 text-sm font-semibold text-[#3D3939] transition hover:bg-[#FFF0F5] disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
             {downloading ? "Downloading..." : "Download"}
@@ -252,13 +260,6 @@ export default function MedicalReportDetailsPage() {
               abnormalResults={abnormalResults}
             />
           )}
-        </div>
-
-        <div className="mt-5 flex gap-3 rounded-2xl border border-[#FEE4EB] bg-[#fcd7e6] p-5">
-          <ShieldCheck className="h-5 w-5 flex-shrink-0 text-[#F33B7D]" />
-          <p className="text-xs leading-5 text-[#6F6A6B]">
-            {disclaimer}
-          </p>
         </div>
       </section>
     </PageLayout>

@@ -1,5 +1,5 @@
 // Header.jsx
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getCurrentUser, logout } from "../../utils/auth";
 import Avatar from "../common/Avatar";
 import {
@@ -17,7 +17,6 @@ import {
   BellRing,
   Info,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import {
   getNotifications,
@@ -52,16 +51,32 @@ function getNotificationMeta(type) {
 }
 
 // Notification Item Component
-function NotificationItem({ notification, onRead }) {
+function NotificationItem({ notification, onRead, onClose }) {
   const { Icon, color } = getNotificationMeta(notification.type);
+  const navigate = useNavigate();
+  const isUnread = !notification.read;
+
+  const handleClick = () => {
+    // Mark as read if it's unread
+    if (isUnread) {
+      onRead(notification._id);
+    }
+
+    // Navigate to the linked page (fallback to notifications page)
+    const target = notification.link || "/notifications";
+    navigate(target);
+
+    // Close the dropdown
+    onClose?.();
+  };
 
   return (
     <button
       type="button"
       className={`w-full text-left rounded-xl px-3 py-2 transition-colors hover:bg-[#FEF4F4] ${
-        !notification.read ? "bg-[#FEF4F4]" : ""
+        isUnread ? "bg-[#FEF4F4]" : ""
       }`}
-      onClick={() => onRead(notification._id)}
+      onClick={handleClick}
     >
       <div className="flex items-start gap-3">
         <span
@@ -83,7 +98,7 @@ function NotificationItem({ notification, onRead }) {
               : ""}
           </p>
         </div>
-        {!notification.read && (
+        {isUnread && (
           <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-[#EB6991]" />
         )}
       </div>
@@ -217,140 +232,140 @@ export default function Header({
   };
 
   const handleSearch = (query) => {
-  setSearchQuery(query);
+    setSearchQuery(query);
 
-  if (query.trim().length < 2) {
-    setSearchResults([]);
-    setShowSearchResults(false);
-    return;
-  }
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
 
-  const q = query.toLowerCase().trim();
+    const q = query.toLowerCase().trim();
 
-  const searchableItems = [
-    {
-      id: "dashboard",
-      title: "Dashboard",
-      description: "Your health overview",
-      icon: "🏠",
-      path: "/dashboard",
-    },
-    {
-      id: "cycle",
-      title: "Cycle Tracker",
-      description: "Track your menstrual cycle",
-      icon: "📅",
-      path: "/cycle-tracker",
-    },
-    {
-      id: "cycle-log",
-      title: "Log Period",
-      description: "Log your period",
-      icon: "🩸",
-      path: "/cycle-tracker/log",
-    },
-    {
-      id: "cycle-history",
-      title: "Cycle History",
-      description: "View your cycle history",
-      icon: "📊",
-      path: "/cycle-tracker/history",
-    },
-    {
-      id: "pcos",
-      title: "PCOS Assessment",
-      description: "Check your PCOS risk",
-      icon: "🩺",
-      path: "/pcos-detection",
-    },
-    {
-      id: "pregnancy",
-      title: "Pregnancy",
-      description: "Track your pregnancy",
-      icon: "👶",
-      path: "/pregnancy",
-    },
-    {
-      id: "doctor",
-      title: "Talk to Doctor",
-      description: "Connect with a doctor",
-      icon: "👩‍⚕️",
-      path: "/doctors",
-    },
-    {
-      id: "chat",
-      title: "Messages",
-      description: "Chat with your doctor",
-      icon: "💬",
-      path: "/chat",
-    },
-    {
-      id: "reports",
-      title: "Medical Reports",
-      description: "Upload and view medical reports",
-      icon: "📄",
-      path: "/medical-reports",
-    },
-    {
-      id: "gynae",
-      title: "Gynae Assistant",
-      description: "Get AI health guidance",
-      icon: "🤖",
-      path: "/gynae-assistant",
-    },
-    {
-      id: "diet",
-      title: "Diet & Nutrition",
-      description: "Healthy eating guidance",
-      icon: "🍎",
-      path: "/diet-nutrition",
-    },
-    {
-      id: "exercise",
-      title: "Exercise",
-      description: "Exercise and fitness",
-      icon: "🏃",
-      path: "/exercise",
-    },
-    {
-      id: "education",
-      title: "Health Education",
-      description: "Learn about women's health",
-      icon: "📚",
-      path: "/health-education",
-    },
-    {
-      id: "profile",
-      title: "Profile",
-      description: "Manage your profile",
-      icon: "👤",
-      path: "/profile",
-    },
-    {
-      id: "settings",
-      title: "Settings",
-      description: "Manage your account settings",
-      icon: "⚙️",
-      path: "/settings",
-    },
-    {
-      id: "notifications",
-      title: "Notifications",
-      description: "View your notifications",
-      icon: "🔔",
-      path: "/notifications",
-    },
-  ];
+    const searchableItems = [
+      {
+        id: "dashboard",
+        title: "Dashboard",
+        description: "Your health overview",
+        icon: "🏠",
+        path: "/dashboard",
+      },
+      {
+        id: "cycle",
+        title: "Cycle Tracker",
+        description: "Track your menstrual cycle",
+        icon: "📅",
+        path: "/cycle-tracker",
+      },
+      {
+        id: "cycle-log",
+        title: "Log Period",
+        description: "Log your period",
+        icon: "🩸",
+        path: "/cycle-tracker/log",
+      },
+      {
+        id: "cycle-history",
+        title: "Cycle History",
+        description: "View your cycle history",
+        icon: "📊",
+        path: "/cycle-tracker/history",
+      },
+      {
+        id: "pcos",
+        title: "PCOS Assessment",
+        description: "Check your PCOS risk",
+        icon: "🩺",
+        path: "/pcos-detection",
+      },
+      {
+        id: "pregnancy",
+        title: "Pregnancy",
+        description: "Track your pregnancy",
+        icon: "👶",
+        path: "/pregnancy",
+      },
+      {
+        id: "doctor",
+        title: "Talk to Doctor",
+        description: "Connect with a doctor",
+        icon: "👩‍⚕️",
+        path: "/doctors",
+      },
+      {
+        id: "chat",
+        title: "Messages",
+        description: "Chat with your doctor",
+        icon: "💬",
+        path: "/chat",
+      },
+      {
+        id: "reports",
+        title: "Medical Reports",
+        description: "Upload and view medical reports",
+        icon: "📄",
+        path: "/medical-reports",
+      },
+      {
+        id: "gynae",
+        title: "Gynae Assistant",
+        description: "Get AI health guidance",
+        icon: "🤖",
+        path: "/gynae-assistant",
+      },
+      {
+        id: "diet",
+        title: "Diet & Nutrition",
+        description: "Healthy eating guidance",
+        icon: "🍎",
+        path: "/diet-nutrition",
+      },
+      {
+        id: "exercise",
+        title: "Exercise",
+        description: "Exercise and fitness",
+        icon: "🏃",
+        path: "/exercise",
+      },
+      {
+        id: "education",
+        title: "Health Education",
+        description: "Learn about women's health",
+        icon: "📚",
+        path: "/health-education",
+      },
+      {
+        id: "profile",
+        title: "Profile",
+        description: "Manage your profile",
+        icon: "👤",
+        path: "/profile",
+      },
+      {
+        id: "settings",
+        title: "Settings",
+        description: "Manage your account settings",
+        icon: "⚙️",
+        path: "/settings",
+      },
+      {
+        id: "notifications",
+        title: "Notifications",
+        description: "View your notifications",
+        icon: "🔔",
+        path: "/notifications",
+      },
+    ];
 
-  const results = searchableItems.filter(
-    (item) =>
-      item.title.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q)
-  );
+    const results = searchableItems.filter(
+      (item) =>
+        item.title.toLowerCase().includes(q) ||
+        item.description.toLowerCase().includes(q)
+    );
 
-  setSearchResults(results);
-  setShowSearchResults(true);
-};
+    setSearchResults(results);
+    setShowSearchResults(true);
+  };
 
   const handleSearchSelect = (result) => {
     setShowSearchResults(false);
@@ -402,9 +417,9 @@ export default function Header({
           {showSearchResults && (
             <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 z-30 overflow-hidden">
               <SearchResults
-  results={searchResults}
-  onSelect={handleSearchSelect}
-/>
+                results={searchResults}
+                onSelect={handleSearchSelect}
+              />
             </div>
           )}
         </div>
@@ -449,6 +464,7 @@ export default function Header({
                         key={notification._id}
                         notification={notification}
                         onRead={handleNotificationRead}
+                        onClose={() => setNotifOpen(false)}
                       />
                     ))
                   ) : (
