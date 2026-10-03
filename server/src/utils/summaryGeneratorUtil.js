@@ -1,4 +1,3 @@
-// server/src/utils/summaryGeneratorUtil.js
 
 class SummaryGeneratorUtil {
   /**
@@ -186,8 +185,6 @@ class SummaryGeneratorUtil {
         "This result is outside the reference range provided by the laboratory.";
     }
 
-    // IMPORTANT:
-    // Return a STRING because MedicalReport schema expects [String]
     findings.push(
       `${testName}: ${value} ${unit} (reference range: ${range}). ${explanation}`
     );

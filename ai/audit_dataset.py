@@ -10,10 +10,7 @@ def main():
     print("       PCOS DATASET AUDIT")
     print("========================================\n")
 
-    # -----------------------------------------
     # Load workbook
-    # -----------------------------------------
-
     excel_file = pd.ExcelFile(DATASET_PATH)
 
     print("Available sheets:")
@@ -22,9 +19,8 @@ def main():
 
     print()
 
-    # -----------------------------------------
+
     # Load Full_new sheet
-    # -----------------------------------------
 
     df = pd.read_excel(
         DATASET_PATH,
@@ -34,9 +30,8 @@ def main():
     # Clean column names
     df.columns = df.columns.str.strip()
 
-    # -----------------------------------------
+
     # Basic information
-    # -----------------------------------------
 
     print("Dataset shape:")
     print(f"Rows    : {df.shape[0]}")
@@ -49,9 +44,8 @@ def main():
     for i, column in enumerate(df.columns, start=1):
         print(f"{i:02d}. {column}")
 
-    # -----------------------------------------
+
     # Target distribution
-    # -----------------------------------------
 
     target = "PCOS (Y/N)"
 
@@ -78,9 +72,8 @@ def main():
 
         print(f"WARNING: Target column '{target}' not found.")
 
-    # -----------------------------------------
+
     # Missing values
-    # -----------------------------------------
 
     print("\n========================================")
     print("MISSING VALUES")
@@ -100,9 +93,8 @@ def main():
 
         print(missing)
 
-    # -----------------------------------------
+
     # Data types
-    # -----------------------------------------
 
     print("\n========================================")
     print("DATA TYPES")
@@ -110,9 +102,8 @@ def main():
 
     print(df.dtypes)
 
-    # -----------------------------------------
+
     # Duplicate rows
-    # -----------------------------------------
 
     print("\n========================================")
     print("DUPLICATES")
@@ -122,9 +113,8 @@ def main():
 
     print(f"Duplicate rows: {duplicates}")
 
-    # -----------------------------------------
+
     # Unique values for selected features
-    # -----------------------------------------
 
     important_columns = [
         "Age (yrs)",
@@ -159,9 +149,8 @@ def main():
 
         print(values.head(20))
 
-    # -----------------------------------------
+
     # Numerical summary
-    # -----------------------------------------
 
     print("\n========================================")
     print("NUMERICAL SUMMARY")
@@ -177,9 +166,8 @@ def main():
             numerical.describe().round(2).to_string()
         )
 
-    # -----------------------------------------
+
     # Finished
-    # -----------------------------------------
 
     print("\n========================================")
     print("AUDIT COMPLETE")

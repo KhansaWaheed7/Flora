@@ -5,7 +5,7 @@ import PageLayout from "../../layouts/PageLayout";
 import { questions, TOTAL_QUESTIONS } from "../../data/pcosQuestions";
 
 function frequencyToBoolean(value) {
-  return ["Often", "Frequently"].includes(value);
+  return ["Yes", "Often", "Frequently"].includes(value);
 }
 
 function buildPayload(answers) {

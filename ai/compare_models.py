@@ -9,18 +9,14 @@ from xgboost import XGBClassifier
 import numpy as np
 
 
-# =========================================
 # Load Dataset
-# =========================================
 
 df = load_dataset("data/pcos.xlsx")
 
 X, y = preprocess(df)
 
 
-# =========================================
 # Cross Validation
-# =========================================
 
 cv = StratifiedKFold(
     n_splits=5,
@@ -29,9 +25,7 @@ cv = StratifiedKFold(
 )
 
 
-# =========================================
 # Models
-# =========================================
 
 models = {
 
@@ -57,9 +51,8 @@ models = {
 }
 
 
-# =========================================
+
 # Metrics
-# =========================================
 
 scoring = {
     "accuracy": "accuracy",
@@ -70,9 +63,7 @@ scoring = {
 }
 
 
-# =========================================
 # Compare Models
-# =========================================
 
 print("\n========================================")
 print("      PCOS MODEL COMPARISON")

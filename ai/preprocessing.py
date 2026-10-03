@@ -11,7 +11,6 @@ FEATURE_COLUMNS = [
     "Hair loss(Y/N)",
     "hair growth(Y/N)",
     "Skin darkening (Y/N)",
-    "Waist:Hip Ratio",
     "Reg.Exercise(Y/N)",
     "Fast food (Y/N)"
 ]
@@ -26,7 +25,7 @@ def load_dataset(path):
         sheet_name="Full_new"
     )
 
-    # Remove leading/trailing spaces from every column
+   
     df.columns = df.columns.str.strip()
 
     return df
@@ -44,17 +43,13 @@ def preprocess(df):
     # Remove rows with missing values
     df = df.dropna()
 
-    # Keep Cycle(R/I) as the dataset's original numeric encoding
-    # Dataset values are: 2, 4, 5
     df["Cycle(R/I)"] = df["Cycle(R/I)"].map({
     2: 0,
     4: 1,
     5: 1
 })
 
-    # Binary columns already use:
-    # Yes = 1
-    # No  = 0
+ 
     binary_columns = [
         "Weight gain(Y/N)",
         "Pimples(Y/N)",

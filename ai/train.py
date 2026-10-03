@@ -20,18 +20,15 @@ import joblib
 import os
 
 
-# =========================================
 # Load Dataset
-# =========================================
 
 df = load_dataset("data/pcos.xlsx")
 
 X, y = preprocess(df)
 
 
-# =========================================
+
 # Train / Test Split
-# =========================================
 
 X_train, X_test, y_train, y_test = train_test_split(
     X,
@@ -42,9 +39,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 
-# =========================================
 # Final Random Forest Model
-# =========================================
 
 model = RandomForestClassifier(
     n_estimators=300,
@@ -56,9 +51,7 @@ model = RandomForestClassifier(
 )
 
 
-# =========================================
 # Train
-# =========================================
 
 model.fit(
     X_train,
@@ -66,18 +59,14 @@ model.fit(
 )
 
 
-# =========================================
 # Predictions
-# =========================================
 
 predictions = model.predict(X_test)
 
 probabilities = model.predict_proba(X_test)[:, 1]
 
 
-# =========================================
 # Evaluation
-# =========================================
 
 accuracy = accuracy_score(
     y_test,
@@ -110,9 +99,7 @@ cm = confusion_matrix(
 )
 
 
-# =========================================
 # Print Results
-# =========================================
 
 print("\n========== FINAL RANDOM FOREST EVALUATION ==========\n")
 
@@ -135,9 +122,8 @@ print(
 )
 
 
-# =========================================
+
 # Save Model
-# =========================================
 
 os.makedirs(
     "models",
