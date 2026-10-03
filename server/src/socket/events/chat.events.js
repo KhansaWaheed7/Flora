@@ -5,15 +5,13 @@ const {
 } = require("../../services/message.service");
 
 const { MESSAGE_READ, NEW_MESSAGE } = require("../../constants/socketEvents");
-// =========================================
+
 // Chat Events
-// =========================================
 
 const registerChatEvents = (io, socket) => {
 
-  // =========================================
+
   // Join Chat Room
-  // =========================================
 
   socket.on("join-chat", async (chatId) => {
 
@@ -49,9 +47,8 @@ const registerChatEvents = (io, socket) => {
 
   });
 
-  // =========================================
+ 
 // Send Message
-// =========================================
 
 socket.on(
   "send-message",
@@ -79,10 +76,7 @@ socket.on(
   }
 );
 
-
-// =========================================
 // Message Delivered
-// =========================================
 
 socket.on(
   "message-delivered",
@@ -138,9 +132,8 @@ if (
   }
 );
 
-// =========================================
+
 // Typing Indicator
-// =========================================
 
 socket.on("typing", ({ chatId }) => {
 
@@ -151,9 +144,8 @@ socket.on("typing", ({ chatId }) => {
 
 });
 
-// =========================================
+
 // Stop Typing
-// =========================================
 
 socket.on("stop-typing", ({ chatId }) => {
 
@@ -163,9 +155,7 @@ socket.on("stop-typing", ({ chatId }) => {
 
 });
 
-// =========================================
 // Mark Messages as Read
-// =========================================
 
 socket.on(
   "mark-read",

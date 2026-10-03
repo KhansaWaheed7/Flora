@@ -2,10 +2,8 @@ const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const AuditLog = require("../models/AuditLog");
 
-// =========================================
-// Pending Doctors
-// =========================================
 
+// Pending Doctors
 const getPendingDoctors = async () => {
   return await User.find({
     role: "doctor",
@@ -13,9 +11,9 @@ const getPendingDoctors = async () => {
   }).select("-password -refreshToken");
 };
 
-// =========================================
+
 // Verified Doctors — Search + Pagination
-// =========================================
+
 const getDoctors = async (
   page = 1,
   limit = 10,
@@ -80,9 +78,8 @@ const getDoctors = async (
   };
 };
 
-// =========================================
+
 // Approve Doctor
-// =========================================
 
 const approveDoctor = async (doctorId, adminId) => {
   const doctor = await User.findById(doctorId);
@@ -113,10 +110,8 @@ const approveDoctor = async (doctorId, adminId) => {
   return doctor;
 };
 
-// =========================================
-// Reject Doctor
-// =========================================
 
+// Reject Doctor
 const rejectDoctor = async (doctorId, adminId) => {
   const doctor = await User.findById(doctorId);
 
@@ -145,9 +140,8 @@ const rejectDoctor = async (doctorId, adminId) => {
   return doctor;
 };
 
-// =========================================
+
 // Admin Dashboard Statistics
-// =========================================
 
 const getDashboardStats = async () => {
   const [
@@ -187,9 +181,8 @@ const getDashboardStats = async () => {
   };
 };
 
-// =========================================
+
 // Get All Patients
-// =========================================
 
 const getPatients = async (page = 1, limit = 10, search = "") => {
   const skip = (page - 1) * limit;
@@ -224,9 +217,8 @@ const getPatients = async (page = 1, limit = 10, search = "") => {
   };
 };
 
-// =========================================
+
 // Update Patient Account Status
-// =========================================
 
 const updatePatientStatus = async (patientId, status, adminId) => {
   const patient = await User.findById(patientId);
@@ -252,9 +244,7 @@ const updatePatientStatus = async (patientId, status, adminId) => {
   return patient;
 };
 
-// =========================================
 // Update Doctor Account Status
-// =========================================
 
 const updateDoctorStatus = async (doctorId, status, adminId) => {
   const doctor = await User.findById(doctorId);
@@ -280,9 +270,8 @@ const updateDoctorStatus = async (doctorId, status, adminId) => {
   return doctor;
 };
 
-// =========================================
+
 // Get Audit Logs
-// =========================================
 
 const getAuditLogs = async (page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
@@ -310,9 +299,8 @@ const getAuditLogs = async (page = 1, limit = 20) => {
   };
 };
 
-// =========================================
+
 // Suspend Doctor
-// =========================================
 
 const suspendDoctor = async (doctorId, adminId, reason = "") => {
   const doctor = await User.findById(doctorId);
@@ -327,9 +315,7 @@ const suspendDoctor = async (doctorId, adminId, reason = "") => {
 
   // Update account status
   doctor.accountStatus = "suspended";
-  
-  // If you want to store the rejection reason in the existing field
-  // (this is the same field used for verification rejection)
+
   doctor.doctorVerification.rejectionReason = reason || "Account suspended by admin";
   
   await doctor.save();

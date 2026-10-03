@@ -1,7 +1,3 @@
-// =========================================
-// Online Users
-// userId -> socketId
-// =========================================
 
 const onlineUsers = new Map();
 
@@ -33,17 +29,15 @@ const registerPresenceEvents = (io, socket) => {
 
 };
 
-// =========================================
+
 // Get Socket Id
-// =========================================
 
 const getSocketId = (userId) => {
   return onlineUsers.get(userId.toString());
 };
 
-// =========================================
+
 // Check Online Status
-// =========================================
 
 const isUserOnline = (userId) => {
   return onlineUsers.has(userId.toString());

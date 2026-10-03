@@ -21,10 +21,8 @@ const {
   suspendDoctor, 
 } = require("../controllers/adminVerification.controller");
 
-// =========================================
-// Dashboard
-// =========================================
 
+// Dashboard
 router.get(
   "/dashboard",
   protect,
@@ -32,10 +30,8 @@ router.get(
   getDashboardStats
 );
 
-// =========================================
-// Patients
-// =========================================
 
+// Patients
 router.get(
   "/patients",
   protect,
@@ -50,10 +46,8 @@ router.patch(
   updatePatientStatus
 );
 
-// =========================================
-// Doctors - Management
-// =========================================
 
+// Doctors - Management
 router.get(
   "/doctors",
   protect,
@@ -68,12 +62,8 @@ router.patch(
   updateDoctorStatus
 );
 
-// =========================================
-// Doctors - Verification (using adminVerification)
-// =========================================
+// Doctors - Verification 
 
-// IMPORTANT: Put specific routes before generic ones
-// Get pending doctors for verification
 router.get(
   "/doctors/pending",
   protect,
@@ -113,10 +103,8 @@ router.patch(
   suspendDoctor
 );
 
-// =========================================
-// Audit Logs
-// =========================================
 
+// Audit Logs
 router.get(
   "/audit-logs",
   protect,

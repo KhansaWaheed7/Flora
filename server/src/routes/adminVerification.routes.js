@@ -15,9 +15,8 @@ const {
   deleteDoctorDocument,
 } = require("../controllers/adminVerification.controller");
 
-// =========================================
+
 // Admin Verification Routes
-// =========================================
 
 // Pending doctors
 router.get(

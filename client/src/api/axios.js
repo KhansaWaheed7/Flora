@@ -5,9 +5,8 @@ const api = axios.create({
   withCredentials: false,
 });
 
-// =========================================
+
 // Request Interceptor
-// =========================================
 
 api.interceptors.request.use(
   (config) => {
@@ -17,8 +16,7 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Don't manually set multipart content type
-    // Browser will set boundary automatically.
+
     if (!(config.data instanceof FormData)) {
       config.headers["Content-Type"] = "application/json";
     }
@@ -28,9 +26,8 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// =========================================
+
 // Response Interceptor
-// =========================================
 
 let isRefreshing = false;
 let failedQueue = [];
@@ -53,12 +50,10 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Only handle 401 errors
     if (error.response?.status !== 401) {
       return Promise.reject(error);
     }
 
-    // Never try to refresh the refresh-token request itself
     if (originalRequest?.url?.includes("/auth/refresh-token")) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
@@ -69,7 +64,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Prevent infinite retry loop
+
     if (originalRequest._retry) {
       return Promise.reject(error);
     }
@@ -88,10 +83,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // =========================================
-    // Another request is already refreshing
-    // =========================================
-
+ 
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({
@@ -110,9 +102,7 @@ api.interceptors.response.use(
         });
     }
 
-    // =========================================
     // Refresh Access Token
-    // =========================================
 
     isRefreshing = true;
 
@@ -142,8 +132,7 @@ api.interceptors.response.use(
         newAccessToken
       );
 
-      // If backend rotates refresh tokens,
-      // save the new one as well.
+    
       if (newRefreshToken) {
         localStorage.setItem(
           "refreshToken",
@@ -153,7 +142,6 @@ api.interceptors.response.use(
 
       processQueue(null, newAccessToken);
 
-      // Retry original request with new token
       originalRequest.headers.Authorization =
         `Bearer ${newAccessToken}`;
 

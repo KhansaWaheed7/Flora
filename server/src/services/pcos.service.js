@@ -4,9 +4,8 @@ const { predictPCOS } = require("./ai.service");
 const getRecommendations = require("../utils/pcosRecommendations");
 const { createNotification } = require("./notification.service");
 
-// =========================================
+
 // Create Assessment
-// =========================================
 
 const createAssessment = async (userId, answers) => {
 
@@ -58,9 +57,8 @@ const createAssessment = async (userId, answers) => {
 
 };
 
-// =========================================
+
 // Latest Assessment
-// =========================================
 
 const getLatestAssessment = async (userId) => {
 
@@ -80,9 +78,8 @@ const getLatestAssessment = async (userId) => {
 
 };
 
-// =========================================
+
 // Assessment History
-// =========================================
 
 const getAssessmentHistory = async (userId) => {
 
@@ -95,9 +92,8 @@ const getAssessmentHistory = async (userId) => {
 
 };
 
-// =========================================
+
 // Dashboard
-// =========================================
 
 const getDashboard = async (userId) => {
 
@@ -130,9 +126,8 @@ const getDashboard = async (userId) => {
 
 };
 
-// =========================================
+
 // Delete Assessment
-// =========================================
 
 const deleteAssessment = async (userId, assessmentId) => {
 

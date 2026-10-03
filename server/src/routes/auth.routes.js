@@ -16,8 +16,7 @@ const {
   deleteAccount,
 } = require("../controllers/auth.controller");
 
-// Public routes
-// Use upload.array for multiple files with field name "documents"
+
 router.post(
   "/register",
   upload.fields([

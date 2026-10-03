@@ -54,12 +54,10 @@ const markAllRead = async (userId) => {
   );
 };
 
-// Create time-based notifications from the health data that already exists.
-// This is intentionally idempotent, so refreshing the dashboard never creates duplicates.
+
 const syncTimeBasedNotifications = async (userId) => {
   const now = new Date();
 
-  // Cycle reminders: next period, ovulation and fertile window.
   const cycles = await Cycle.find({ user: userId }).sort({ periodStart: 1 }).lean();
   if (cycles.length) {
     const averageCycle = calculateAverageCycleLength(cycles);
@@ -133,8 +131,6 @@ const syncTimeBasedNotifications = async (userId) => {
     }
   }
 
-  // Pregnancy reminders: make the existing weekly reminder records visible in the
-  // common notification center when their week is current or within the next 2 weeks.
   const pregnancy = await Pregnancy.findOne({ user: userId, isActive: true }).lean();
   if (pregnancy) {
     const currentWeek = calculateCurrentWeek(pregnancy.lastPeriodDate);

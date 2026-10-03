@@ -30,7 +30,6 @@ app.use(cookieParser());
 
 app.use(morgan("dev"));
 
-// Routes come AFTER middleware
 app.use("/api/v1", routes);
 
 app.get("/", (req, res) => {

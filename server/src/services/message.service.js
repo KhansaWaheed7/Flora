@@ -3,13 +3,9 @@ const Message = require("../models/Message");
 const ApiError = require("../utils/ApiError");
 const EncryptionUtil = require("../utils/encryptionUtil");
 const { createNotification } = require("./notification.service");
-// =========================================
-// Send Message
-// =========================================
 
-// =========================================
+
 // Send Message
-// =========================================
 
 const sendMessage = async (
   chatId,
@@ -54,7 +50,6 @@ const sendMessage = async (
     );
   }
 
-  // Determine receiver
   const receiver =
     chat.patient.toString() === senderId.toString()
       ? chat.doctor
@@ -63,9 +58,8 @@ const sendMessage = async (
   let messageType = "text";
   let attachment = undefined;
 
-  // =========================================
+
   // Handle Attachment
-  // =========================================
 
   if (file) {
     const fileHash = EncryptionUtil.generateHash(
@@ -95,9 +89,8 @@ const sendMessage = async (
     };
   }
 
-  // =========================================
+
   // Create Message
-  // =========================================
 
   const newMessage = await Message.create({
     chat: chat._id,
@@ -154,17 +147,8 @@ if (messageResponse.attachment) {
 return messageResponse;
 };
 
-// =========================================
-// Get Messages
-// =========================================
 
-// =========================================
 // Get Messages
-// =========================================
-
-// =========================================
-// Get Messages
-// =========================================
 
 const getMessages = async (chatId, userId) => {
   const chat = await Chat.findById(chatId);
@@ -205,9 +189,8 @@ const getMessages = async (chatId, userId) => {
   return messages;
 };
 
-// =========================================
+
 // Get Attachment
-// =========================================
 
 const getMessageAttachment = async (
   chatId,
@@ -220,7 +203,7 @@ const getMessageAttachment = async (
     throw new ApiError(404, "Chat not found.");
   }
 
-  // Verify user belongs to this chat
+
   const isParticipant = chat.participants.some(
     (participant) =>
       participant.toString() === userId.toString()
@@ -233,7 +216,7 @@ const getMessageAttachment = async (
     );
   }
 
-  // Find message AND make sure it belongs to this chat
+
   const message = await Message.findOne({
     _id: messageId,
     chat: chatId,
@@ -268,9 +251,8 @@ const getMessageAttachment = async (
   };
 };
 
-// =========================================
+
 // Mark Messages as Read
-// =========================================
 
 const markMessagesAsRead = async (
   chatId,
@@ -314,7 +296,7 @@ const markMessagesAsRead = async (
   }
 );
 
-console.log("📖 Messages marked as read:", {
+console.log("Messages marked as read:", {
   chatId,
   userId: userId.toString(),
   modifiedCount: result.modifiedCount,

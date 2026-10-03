@@ -2,17 +2,6 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext";
 
-/*
-NOTE: The exact auth handshake shape expected by
-server/src/socket/middleware/socketAuth.js hasn't been confirmed -
-this uses the most common pattern (auth: { token }) with the same
-access token used for REST calls. If the socket fails to connect /
-authenticate, share that middleware file and this will be corrected.
-
-VITE_API_URL is like "http://localhost:5000/api/v1" - the socket
-server itself runs on the bare origin (no /api/v1), so that suffix
-is stripped here.
-*/
 const SOCKET_URL = (import.meta.env.VITE_API_URL || "").replace(
   /\/api\/v1\/?$/,
   ""

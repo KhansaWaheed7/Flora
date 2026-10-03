@@ -20,9 +20,6 @@ const {
 const createPregnancy = async (userId, lastPeriodDate) => {
   const existing = await Pregnancy.findOne({ user: userId });
 
-  // The Pregnancy model keeps one record per user. If the user previously
-  // stopped pregnancy tracking, reactivate that record instead of trying to
-  // create a second document (the `user` field is unique).
   if (existing?.isActive) {
     throw new ApiError(400, "Active pregnancy already exists.");
   }
@@ -62,7 +59,7 @@ existing.isActive = true;
 existing.cycleTrackingResetRequired = true;
     pregnancy = await existing.save();
 
-    // Recreate/reset reminders for the newly active pregnancy.
+  
     await PregnancyReminder.deleteMany({ pregnancy: pregnancy._id });
     await generatePregnancyReminders(pregnancy._id);
   } else {

@@ -12,8 +12,7 @@ const {
 const generateVerificationToken = require("../utils/generateVerificationToken");
 const generateResetToken = require("../utils/generateResetToken");
 
-// IMPORTANT: Import uploadDocument inside functions to avoid circular dependency
-// const { uploadDocument } = require("./doctorVerification.service");
+
 
 const registerUser = async (data, files = []) => {
   const existingUser = await User.findOne({
@@ -40,9 +39,7 @@ const registerUser = async (data, files = []) => {
 
   // Doctor information
   if (role === "doctor") {
-    // Enforce required verification documents at the service layer as well.
-    // This prevents a doctor from being created without PMDC, degree, and ID
-    // even if registerUser is called from another backend path.
+
     const documentTypes = new Set(
       (files || []).map((document) => document?.documentType)
     );
@@ -68,7 +65,6 @@ const registerUser = async (data, files = []) => {
       );
     }
 
-    // Ensure qualifications is an array
     let qualifications = data.qualifications || [];
     if (typeof qualifications === "string") {
       try {
@@ -102,7 +98,7 @@ const registerUser = async (data, files = []) => {
   const user = await User.create(userData);
 
   // Upload doctor verification documents.
-  // Required-document validation is performed before registration.
+
   if (role === "doctor" && files && files.length > 0) {
     try {
       const { uploadDocument } = require("./doctorVerification.service");
@@ -115,8 +111,7 @@ const registerUser = async (data, files = []) => {
         );
       }
     } catch (error) {
-      // Do not leave a doctor account registered if a required document
-      // cannot be stored successfully.
+
       await User.findByIdAndDelete(user._id);
       throw error;
     }
@@ -158,7 +153,6 @@ const loginUser = async (email, password) => {
     );
   }
 
-  // Doctor verification status checks with specific status codes
   if (user.role === "doctor") {
     const status = user.doctorVerification?.status;
     
@@ -426,7 +420,7 @@ const deleteAccount = async (userId) => {
   await User.findByIdAndDelete(userId);
 };
 
-// ✅ EXPORT ALL FUNCTIONS PROPERLY
+
 module.exports = {
   registerUser,
   loginUser,

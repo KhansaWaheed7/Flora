@@ -299,7 +299,7 @@ console.log(
   // Download report
 
   static downloadReport = asyncHandler(async (req, res) => {
-    // FIX: Check if user exists
+
     if (!req.user) {
       throw new ApiError(401, "User not authenticated");
     }

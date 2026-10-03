@@ -13,8 +13,7 @@ const analyzeCycle = require("../utils/cycleHealth");
 const { createNotification } = require("./notification.service");
 
 const createCycle = async (userId, data) => {
-  // Menstrual cycle tracking is paused while the user has an active pregnancy.
-  // Historical cycle records remain untouched.
+
   const activePregnancy = await Pregnancy.findOne({
     user: userId,
     isActive: true,
@@ -40,8 +39,6 @@ const createCycle = async (userId, data) => {
     );
   }
 
-  // Check whether the user needs to start a fresh cycle
-// after pregnancy tracking ended.
 const pregnancyRecord = await Pregnancy.findOne({
   user: userId,
 }).lean();
@@ -49,7 +46,7 @@ const pregnancyRecord = await Pregnancy.findOne({
 const requiresNewCycle =
   pregnancyRecord?.cycleTrackingResetRequired === true;
 
-// Do not use the old pre-pregnancy cycle when starting again.
+
 const previousCycle = requiresNewCycle
   ? null
   : await Cycle.findOne({
@@ -78,8 +75,7 @@ let cycleLength = 28;
 
   let periodLength = null;
 
-  // If the user already knows the end date,
-  // calculate the period length immediately.
+
   if (data.periodEnd) {
     periodLength =
       Math.floor(
@@ -221,7 +217,7 @@ if (pregnancyRecord?.cycleTrackingResetRequired === true) {
   if (!cycle.periodEnd) {
     cycle.periodLength = null;
   } else {
-    // Period has ended, so calculate its actual length
+    
     const periodLength =
       Math.floor(
         (new Date(cycle.periodEnd) -
@@ -307,7 +303,6 @@ const predictCycle = async (userId) => {
   };
 }
 
-// Pregnancy has ended, but the user has not logged a new period yet.
 const pregnancyRecord = await Pregnancy.findOne({
   user: userId,
 }).lean();
@@ -351,11 +346,7 @@ const cycles = await Cycle.find({
     periodLength: latestCycle.periodLength,
   });
 
-  /*
-   * The current period has already started.
-   * Therefore the next period is predicted from this
-   * period's start date, not from the previous period.
-   */
+
   const nextPeriod = addDays(
     latestCycle.periodStart,
     averageCycle

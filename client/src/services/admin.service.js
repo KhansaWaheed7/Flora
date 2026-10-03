@@ -1,9 +1,6 @@
 import api from "../api/axios";
 
-/*
-Dashboard stats
-Real shape from backend: { totalPatients, totalDoctors, pendingDoctors, suspendedAccounts }
-*/
+
 export const getDashboardStats = async () => {
   const response = await api.get("/admin/dashboard");
   return response.data;

@@ -22,9 +22,7 @@ const normalizePublicSchedule = (schedule = []) =>
   });
 
 
-// =========================================
 // Create Consultation Request
-// =========================================
 
 const createChat = async (patientId, doctorId, reason) => {
   if (patientId === doctorId) {
@@ -129,9 +127,8 @@ const createChat = async (patientId, doctorId, reason) => {
   return chat;
 };
 
-// =========================================
+
 // Get Available Doctors
-// =========================================
 
 const getAvailableDoctors = async (patientId) => {
   const doctors = await User.find({
@@ -147,10 +144,9 @@ const getAvailableDoctors = async (patientId) => {
     })
     .lean();
 
-  // -----------------------------------------
-  // Find active chats for this patient
-  // -----------------------------------------
 
+  // Find active chats for this patient
+ 
   const activeChats = await Chat.find({
     patient: patientId,
     status: "active",
@@ -164,9 +160,6 @@ const getAvailableDoctors = async (patientId) => {
     )
   );
 
-  // -----------------------------------------
-  // Add hasActiveChat to every doctor
-  // -----------------------------------------
 
   const doctorsWithChatStatus = doctors.map((doctor) => ({
     ...doctor,
@@ -184,9 +177,7 @@ const getAvailableDoctors = async (patientId) => {
   return doctorsWithChatStatus;
 };
 
-// =========================================
 // Get Patient Consultation History
-// =========================================
 
 const getMyRequests = async (patientId) => {
   const chats = await Chat.find({
@@ -203,9 +194,8 @@ const getMyRequests = async (patientId) => {
   return chats;
 };
 
-// =========================================
+
 // Get Conversations
-// =========================================
 
 const getConversations = async (userId) => {
   const chats = await Chat.find({
@@ -269,13 +259,8 @@ const getConversations = async (userId) => {
   return conversations;
 };
 
-// =========================================
-// Get Doctor Profile for an Existing Consultation
-// =========================================
 
-// =========================================
 // Get Doctor Profile for an Existing Consultation
-// =========================================
 
 const getDoctorProfileForConsultation = async (patientId, chatId) => {
   const chat = await Chat.findOne({
@@ -298,8 +283,7 @@ const getDoctorProfileForConsultation = async (patientId, chatId) => {
     throw new ApiError(404, "Doctor profile not found.");
   }
 
-  // Normalize the doctor's weekly schedule so all 7 days
-  // are always returned, including unavailable days.
+  
   const DAY_NAMES = [
     "Sunday",
     "Monday",
@@ -359,9 +343,7 @@ const getDoctorProfileForConsultation = async (patientId, chatId) => {
   };
 };
 
-// =========================================
 // Get Patient Profile for an Existing Consultation
-// =========================================
 
 const getPatientProfileForConsultation = async (doctorId, chatId) => {
   const chat = await Chat.findOne({
@@ -423,9 +405,7 @@ const getPatientProfileForConsultation = async (doctorId, chatId) => {
   };
 };
 
-// =========================================
 // Close Consultation from Patient Side
-// =========================================
 
 const closeConsultationAsPatient = async (patientId, chatId) => {
   const chat = await Chat.findOne({

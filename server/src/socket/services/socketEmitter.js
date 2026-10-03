@@ -2,9 +2,8 @@ const { getIO } = require("../index");
 const {
   getSocketId,
 } = require("../events/presence.events");
-// =========================================
+
 // Emit To Room
-// =========================================
 
 const emitToRoom = (
   roomId,
@@ -18,9 +17,8 @@ const emitToRoom = (
 
 };
 
-// =========================================
+
 // Emit To User
-// =========================================
 
 const emitToUser = (
   userId,

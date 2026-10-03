@@ -2,7 +2,7 @@
 export const HEALTH_TIPS = [
   "Keep your water bottle close — hydration is always a good idea.",
   "Period day? A warm heating pad can be your best friend.",
-  "Track your period — your cycle has a story to tell.",
+  "Track your period, your cycle has a story to tell.",
   "Add a little extra iron to your plate during your period.",
   "A short walk can help you feel lighter on period days.",
   "Listen to your body, rest when it asks for a break.",

@@ -80,14 +80,14 @@ const uploadDocument = async (
       stream.end(file.buffer);
     });
 
-    console.log("✅ Document uploaded to Cloudinary:", {
+    console.log("Document uploaded to Cloudinary:", {
       publicId: result.public_id,
       url: result.secure_url,
       resourceType: result.resource_type,
     });
 
   } catch (error) {
-    console.error("❌ Cloudinary upload error:", error);
+    console.error("Cloudinary upload error:", error);
     throw new ApiError(
       500,
       "Failed to upload verification document: " + error.message
@@ -120,24 +120,23 @@ const uploadDocument = async (
       );
     }
 
-    // New/re-uploaded document requires review again
+  
     user.doctorVerification.status = "pending";
 
-    // Clear previous rejection
+
     user.doctorVerification.rejectionReason = "";
 
-    // Clear previous verification information
+
     user.doctorVerification.verifiedAt = null;
     user.doctorVerification.verifiedBy = null;
 
     await user.save();
     
-    console.log("✅ Document saved to database for user:", userId);
+    console.log("Document saved to database for user:", userId);
 
   } catch (error) {
-    console.error("❌ Database save error:", error);
-    
-    // Remove newly uploaded Cloudinary file
+    console.error("Database save error:", error);
+
     try {
       await cloudinary.uploader.destroy(
         result.public_id,
@@ -156,7 +155,6 @@ const uploadDocument = async (
     throw error;
   }
 
-  // Delete old Cloudinary document AFTER database update
   if (
     existingDocument &&
     existingDocument.publicId
@@ -177,7 +175,6 @@ const uploadDocument = async (
     }
   }
 
-  // Return useful document information
   return {
     type: newDocument.type,
     url: newDocument.url,

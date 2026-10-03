@@ -7,9 +7,7 @@ const {
 } = require("./events/presence.events");
 let io;
 
-// =========================================
 // Initialize Socket.IO
-// =========================================
 
 const initializeSocket = (server) => {
 
@@ -26,7 +24,7 @@ const initializeSocket = (server) => {
   io.on("connection", (socket) => {
 
   console.log(
-    `🟢 ${socket.user.fullName} connected (${socket.id})`
+    `${socket.user.fullName} connected (${socket.id})`
   );
 
   registerChatEvents(io, socket);
@@ -35,7 +33,7 @@ const initializeSocket = (server) => {
   socket.on("disconnect", () => {
 
     console.log(
-      `🔴 ${socket.user.fullName} disconnected`
+      `${socket.user.fullName} disconnected`
     );
 
   });
@@ -46,9 +44,8 @@ const initializeSocket = (server) => {
 
 };
 
-// =========================================
+
 // Get Socket Instance
-// =========================================
 
 const getIO = () => {
 

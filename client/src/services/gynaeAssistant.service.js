@@ -1,5 +1,3 @@
-// client/src/services/gynaeAssistant.service.js
-
 import api from "../api/axios";
 import { GYNAE_ASSISTANT } from "../api/endpoints";
 

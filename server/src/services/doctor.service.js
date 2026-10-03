@@ -215,9 +215,8 @@ const getDashboard = async (doctorId) => {
   };
 };
 
-// =========================================
+
 // Pending Consultation Requests
-// =========================================
 
 const getPendingRequests = async (doctorId) => {
 
@@ -234,9 +233,8 @@ const getPendingRequests = async (doctorId) => {
     });
 
 };
-// =========================================
+
 // Assigned Patients
-// =========================================
 
 const getAssignedPatients = async (doctorId) => {
 
@@ -256,9 +254,8 @@ const getAssignedPatients = async (doctorId) => {
 
 };
 
-// =========================================
+
 // Closed Consultations
-// =========================================
 
 const getClosedConsultations = async (doctorId) => {
   return await Chat.find({
@@ -274,9 +271,8 @@ const getClosedConsultations = async (doctorId) => {
     });
 };
 
-// =========================================
+
 // Accept Consultation Request
-// =========================================
 
 const acceptConsultation = async (doctorId, chatId) => {
 
@@ -327,9 +323,7 @@ emitToUser(
 
 };
 
-// =========================================
 // Reject Consultation Request
-// =========================================
 
 const rejectConsultation = async (doctorId, chatId) => {
 
@@ -378,9 +372,9 @@ emitToUser(
 
 };
 
-// =========================================
+
 // Close Consultation
-// =========================================
+
 const closeConsultation = async (doctorId, chatId) => {
   const chat = await Chat.findOne({
     _id: chatId,
@@ -424,10 +418,7 @@ const closeConsultation = async (doctorId, chatId) => {
 };
 
 
-// =========================================
 // Doctor Schedule
-// =========================================
-
 const getDoctorSchedule = async (doctorId) => {
   const doctor = await User.findOne({
     _id: doctorId,
@@ -471,9 +462,7 @@ const updateDoctorSchedule = async (doctorId, schedule, scheduleTimezone = DEFAU
   };
 };
 
-// =========================================
 // Get Doctor Profile
-// =========================================
 
 const getDoctorProfile = async (doctorId) => {
   const doctor = await User.findOne({
@@ -512,9 +501,7 @@ const getDoctorProfile = async (doctorId) => {
   };
 };
 
-// =========================================
 // Update Doctor Profile
-// =========================================
 
 const updateDoctorProfile = async (doctorId, data) => {
   const doctor = await User.findOne({
@@ -526,9 +513,8 @@ const updateDoctorProfile = async (doctorId, data) => {
     throw new ApiError(404, "Doctor profile not found.");
   }
 
-  // -----------------------------------------
+
   // Basic Profile
-  // -----------------------------------------
 
   if (data.fullName !== undefined) {
     doctor.fullName = data.fullName;
@@ -542,9 +528,7 @@ const updateDoctorProfile = async (doctorId, data) => {
     doctor.profilePicture = data.profilePicture;
   }
 
-  // -----------------------------------------
   // Professional Profile
-  // -----------------------------------------
 
   if (data.hospital !== undefined) {
     doctor.hospital = data.hospital;
@@ -601,9 +585,8 @@ const updateDoctorProfile = async (doctorId, data) => {
   };
 };
 
-// =========================================
+
 // Upload Doctor Profile Picture
-// =========================================
 
 const uploadDoctorAvatar = async (doctorId, file) => {
   if (!file) {
@@ -650,8 +633,6 @@ const uploadDoctorAvatar = async (doctorId, file) => {
       result.secure_url
     );
 
-    // If doctor already has an old Cloudinary image,
-    // delete it before saving the new one.
     if (doctor.profilePicture) {
       try {
         const urlParts = doctor.profilePicture.split("/upload/");
@@ -693,9 +674,8 @@ const uploadDoctorAvatar = async (doctorId, file) => {
   }
 };
 
-// =========================================
+
 // Remove Doctor Profile Picture
-// =========================================
 
 const removeDoctorAvatar = async (doctorId) => {
   const doctor = await User.findOne({
@@ -707,7 +687,7 @@ const removeDoctorAvatar = async (doctorId) => {
     throw new ApiError(404, "Doctor profile not found.");
   }
 
-  // Nothing to remove
+
   if (!doctor.profilePicture) {
     return "";
   }
@@ -718,10 +698,8 @@ const removeDoctorAvatar = async (doctorId) => {
     if (urlParts.length === 2) {
       let publicId = urlParts[1];
 
-      // Remove version: v123456789/
       publicId = publicId.replace(/^v\d+\//, "");
 
-      // Remove extension
       publicId = publicId.replace(/\.[^/.]+$/, "");
 
       await cloudinary.uploader.destroy(publicId);

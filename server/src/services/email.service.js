@@ -181,7 +181,7 @@ const sendDoctorVerificationEmail = async (doctor, status, rejectionReason = nul
     return info;
   } catch (error) {
     console.error("Failed to send email:", error);
-    // Don't throw error, just log it so the operation continues
+
     return null;
   }
 };
