@@ -25,8 +25,8 @@ import {
 import toast from "react-hot-toast";
 import api from "../../api/axios";
 
-// Use these icons instead of FilePdf/FileImage
-const FilePdfIcon = FileText; // Reuse FileText for PDFs
+
+const FilePdfIcon = FileText; 
 const FileImageIcon = ImageIcon; // Use Image icon for images
 
 export default function DoctorDetails() {
@@ -41,14 +41,14 @@ export default function DoctorDetails() {
     const fetchDoctor = async () => {
       try {
         setLoading(true);
-        // Try to get from pending doctors first (most likely to be there)
+
         const res = await getPendingDoctors();
         const found = res.data?.doctors?.find(d => d._id === id);
         
         if (found) {
           setDoctor(found);
         } else {
-          // If not in pending, try all doctors
+   
           const allRes = await getDoctors({ page: 1, limit: 100 });
           const foundInAll = allRes.data?.doctors?.find(d => d._id === id);
           if (!foundInAll) throw new Error("Doctor not found");

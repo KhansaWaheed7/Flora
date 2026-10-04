@@ -67,10 +67,6 @@ const validatePassword = (password) => {
   return errors;
 };
 
-// =========================================
-// Initial Form
-// =========================================
-
 const initialForm = {
   name: "",
   email: "",
@@ -96,9 +92,6 @@ const initialForm = {
   terms: false,
 };
 
-// =========================================
-// Component
-// =========================================
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -112,9 +105,6 @@ export default function RegisterPage() {
 
   const [form, setForm] = useState(initialForm);
 
-  // =========================================
-  // Handle Input Changes
-  // =========================================
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -124,7 +114,7 @@ export default function RegisterPage() {
       [name]: type === "checkbox" ? checked : value,
     }));
 
-    // Clear field error when user edits field
+
     if (fieldErrors[name]) {
       setFieldErrors((prev) => ({
         ...prev,
@@ -133,14 +123,10 @@ export default function RegisterPage() {
     }
   };
 
-  // =========================================
-  // Handle Doctor Documents
-  // =========================================
-
   const handleDocumentsChange = (newDocuments) => {
     setDocuments(newDocuments);
 
-    // Clear document-specific errors as soon as a file is selected.
+  
     const documentTypes = Object.keys(newDocuments);
     if (documentTypes.length > 0) {
       setFieldErrors((prev) => {
@@ -153,17 +139,10 @@ export default function RegisterPage() {
     }
   };
 
-  // =========================================
-  // Validate Form
-  // =========================================
-
   const validateForm = () => {
     const errors = {};
     let isValid = true;
 
-    // -----------------------------------------
-    // Full Name
-    // -----------------------------------------
 
     if (!form.name.trim()) {
       errors.name = "Full name is required";
@@ -180,10 +159,6 @@ export default function RegisterPage() {
       isValid = false;
     }
 
-    // -----------------------------------------
-    // Email
-    // -----------------------------------------
-
     if (!form.email.trim()) {
       errors.email = "Email is required";
       isValid = false;
@@ -192,10 +167,7 @@ export default function RegisterPage() {
       isValid = false;
     }
 
-    // -----------------------------------------
-    // Password
-    // -----------------------------------------
-
+  
     const passwordErrors = validatePassword(form.password);
 
     if (!form.password) {
@@ -209,10 +181,6 @@ export default function RegisterPage() {
       isValid = false;
     }
 
-    // -----------------------------------------
-    // Confirm Password
-    // -----------------------------------------
-
     if (!form.confirmPassword) {
       errors.confirmPassword = "Please confirm your password";
       isValid = false;
@@ -221,19 +189,12 @@ export default function RegisterPage() {
       isValid = false;
     }
 
-    // -----------------------------------------
-    // Terms
-    // -----------------------------------------
-
     if (!form.terms) {
       errors.terms = "You must accept the Terms & Conditions";
       isValid = false;
     }
 
-    // =========================================
-    // Doctor Validation
-    // =========================================
-
+  
     if (form.role === "doctor") {
       // Specialization
       if (!form.specialization.trim()) {
@@ -329,8 +290,7 @@ export default function RegisterPage() {
         errors.identity_document = "Identity Document / CNIC is required";
         isValid = false;
       }
-      // specialist_certificate is intentionally optional.
-
+      
     }
 
     setFieldErrors(errors);
@@ -338,9 +298,6 @@ export default function RegisterPage() {
     return isValid;
   };
 
-  // =========================================
-  // Backend Error Helpers
-  // =========================================
 
   const showErrorToast = (message, icon = "") => {
     toast.error(message, {
@@ -359,20 +316,13 @@ export default function RegisterPage() {
     });
   };
 
-  // =========================================
-  // Map Backend Validation Errors
-  // =========================================
-
+ 
   const handleBackendValidationErrors = (backendErrors) => {
     console.log("Backend validation errors:", backendErrors);
 
     const mappedErrors = {};
 
-    // -----------------------------------------
-    // Case 1:
-    // Zod returns an array of issues
-    // -----------------------------------------
-
+   
     if (Array.isArray(backendErrors)) {
       backendErrors.forEach((err) => {
         const path = err?.path?.[0];
@@ -411,17 +361,6 @@ export default function RegisterPage() {
       return true;
     }
 
-    // -----------------------------------------
-    // Case 2:
-    // Zod flatten().fieldErrors returns object
-    //
-    // Example:
-    // {
-    //   email: ["Invalid email"],
-    //   password: ["Password too short"]
-    // }
-    // -----------------------------------------
-
     if (
       backendErrors &&
       typeof backendErrors === "object" &&
@@ -459,19 +398,14 @@ export default function RegisterPage() {
     return false;
   };
 
-  // =========================================
   // Submit Registration
-  // =========================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     setFieldErrors({});
 
-    // -----------------------------------------
-    // Frontend Validation
-    // -----------------------------------------
-
+   
     if (!validateForm()) {
       return;
     }
@@ -493,9 +427,6 @@ export default function RegisterPage() {
     });
 
     try {
-      // =========================================
-      // Create FormData
-      // =========================================
 
       const formData = new FormData();
 
@@ -503,10 +434,6 @@ export default function RegisterPage() {
       formData.append("email", form.email.trim().toLowerCase());
       formData.append("password", form.password);
       formData.append("role", form.role);
-
-      // =========================================
-      // Doctor Data
-      // =========================================
 
       if (form.role === "doctor") {
         formData.append(
@@ -548,7 +475,7 @@ export default function RegisterPage() {
         );
 
         // Verification Documents
-        // Each document has its own multipart field.
+      
         if (documents.pmdc_certificate) {
           formData.append(
             "pmdcCertificate",
@@ -578,15 +505,8 @@ export default function RegisterPage() {
         }
       }
 
-      // =========================================
-      // API Request
-      // =========================================
-
+   
       const response = await registerWithFiles(formData);
-
-      // =========================================
-      // Success
-      // =========================================
 
       toast.dismiss("register-loading");
 
@@ -644,18 +564,12 @@ export default function RegisterPage() {
         }
       );
 
-      // =========================================
-      // Reset Form
-      // =========================================
 
       setForm(initialForm);
       setDocuments({});
       setFieldErrors({});
 
-      // =========================================
-      // Navigate to Login
-      // =========================================
-
+   
       const navigationDelay = isDoctor ? 4000 : 2000;
 
       setTimeout(() => {
@@ -666,20 +580,14 @@ export default function RegisterPage() {
 
       toast.dismiss("register-loading");
 
-      // =========================================
-      // Backend Response Exists
-      // =========================================
-
+  
       if (error.response) {
         const status = error.response.status;
         const data = error.response.data || {};
 
         console.log("Registration backend response:", data);
 
-        // -----------------------------------------
-        // Validation Errors
-        // -----------------------------------------
-
+       
         if (data.errors) {
           const handled = handleBackendValidationErrors(
             data.errors
@@ -690,19 +598,12 @@ export default function RegisterPage() {
           }
         }
 
-        // -----------------------------------------
-        // General Backend Message
-        // -----------------------------------------
-
         const message =
           data.message ||
           data.error ||
           "";
 
-        // -----------------------------------------
-        // Email Already Exists
-        // -----------------------------------------
-
+     
         if (
           status === 400 ||
           status === 409
@@ -723,10 +624,7 @@ export default function RegisterPage() {
           }
         }
 
-        // -----------------------------------------
-        // Bad Request
-        // -----------------------------------------
-
+    
         if (status === 400) {
           showErrorToast(
             message ||
@@ -736,10 +634,7 @@ export default function RegisterPage() {
           return;
         }
 
-        // -----------------------------------------
-        // Conflict
-        // -----------------------------------------
-
+      
         if (status === 409) {
           setFieldErrors((prev) => ({
             ...prev,
@@ -749,10 +644,7 @@ export default function RegisterPage() {
           return;
         }
 
-        // -----------------------------------------
-        // Unprocessable Entity
-        // -----------------------------------------
-
+  
         if (status === 422) {
           showErrorToast(
             "Please check all fields and try again."
@@ -761,10 +653,7 @@ export default function RegisterPage() {
           return;
         }
 
-        // -----------------------------------------
-        // Too Many Requests
-        // -----------------------------------------
-
+      
         if (status === 429) {
           showErrorToast(
             "Too many attempts. Please wait a moment before trying again."
@@ -773,10 +662,7 @@ export default function RegisterPage() {
           return;
         }
 
-        // -----------------------------------------
-        // Server Error
-        // -----------------------------------------
-
+    
         if (status >= 500) {
           showErrorToast(
             "Server error. Please try again later."
@@ -785,10 +671,7 @@ export default function RegisterPage() {
           return;
         }
 
-        // -----------------------------------------
-        // Other HTTP Errors
-        // -----------------------------------------
-
+  
         showErrorToast(
           message ||
             "Registration failed. Please try again."
@@ -797,10 +680,7 @@ export default function RegisterPage() {
         return;
       }
 
-      // =========================================
-      // Request Sent But No Response
-      // =========================================
-
+    
       if (error.request) {
         if (!navigator.onLine) {
           showErrorToast(
@@ -817,10 +697,7 @@ export default function RegisterPage() {
         return;
       }
 
-      // =========================================
-      // Unknown Error
-      // =========================================
-
+     
       showErrorToast(
         "Registration failed. Please try again."
       );
@@ -828,10 +705,6 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
-
-  // =========================================
-  // JSX
-  // =========================================
 
   return (
     <AuthSplitLayout
@@ -1054,9 +927,7 @@ export default function RegisterPage() {
             )}
         </div>
 
-        {/* =========================================
-            Role
-        ========================================= */}
+     
 
         <div>
           <Label className="text-xs">

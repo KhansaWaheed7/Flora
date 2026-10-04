@@ -13,7 +13,6 @@ import api from "../../api/axios";
 import { AuthSplitLayout } from "../../layouts/AuthLayout";
 import WomanPng from "../../assets/woman.png";
 
-// Reusing the same trustBadges or creating admin-specific ones
 const adminTrustBadges = [
   { icon: ShieldCheck, label: "Secure\nAccess" },
   { icon: Headphones, label: "24/7\nSupport" },
