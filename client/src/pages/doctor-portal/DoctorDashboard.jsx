@@ -60,6 +60,66 @@ function formatNotificationTime(value) {
   return date.toLocaleDateString();
 }
 
+function getNotificationLink(notification) {
+  if (!notification) return null;
+
+  const type = String(notification.type || "").toLowerCase();
+  const title = String(notification.title || "").toLowerCase();
+  const message = String(notification.message || "").toLowerCase();
+
+  // =========================
+  // CHAT / MESSAGE
+  // =========================
+  const isChatNotification =
+    type.includes("message") ||
+    type.includes("chat") ||
+    type.includes("consultation_message") ||
+    title.includes("message") ||
+    title.includes("chat") ||
+    message.includes("message");
+
+  if (isChatNotification) {
+    const chatId =
+      notification.metadata?.chatId ||
+      notification.metadata?.consultationId ||
+      notification.consultationId ||
+      notification.consultation?._id ||
+      notification.chatId ||
+      notification.conversationId ||
+      notification.data?.chatId ||
+      notification.data?.consultationId ||
+      notification.data?.conversationId;
+
+    if (chatId) {
+      return `/doctor/messages/${chatId}`;
+    }
+  }
+
+  // =========================
+  // CLOSED CONSULTATION
+  // =========================
+  const isClosedConsultation =
+    type.includes("consultation_closed") ||
+    type.includes("closed_consultation") ||
+    title.includes("consultation closed") ||
+    title.includes("consultation has been closed") ||
+    message.includes("consultation closed") ||
+    message.includes("consultation has been closed");
+
+  if (isClosedConsultation) {
+    return "/doctor/closed-consultations";
+  }
+
+  // =========================
+  // OTHER NOTIFICATIONS
+  // =========================
+  if (notification.link) {
+    return notification.link;
+  }
+
+  return null;
+}
+
 export default function DoctorDashboard() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
@@ -303,14 +363,12 @@ export default function DoctorDashboard() {
           )}
         </div>
 
-        {/* Notifications — compact */}
-        <div className="relative flex flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-[0_4px_14px_rgba(243,59,125,0.06)] ring-1 ring-[#F5E4EC]">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-gradient-to-br from-[#FEE4EB] to-transparent opacity-60" />
-
+        {/* Notifications — matches user dashboard styling */}
+        <div className="relative flex flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-[0_8px_24px_-6px_rgba(243,59,125,0.10),0_2px_6px_rgba(0,0,0,0.04)] ring-1 ring-[#F5E4EC]">
           <div className="relative mb-3 flex items-center justify-between">
             <div>
               <h2 className="font-display text-sm font-semibold text-[#3D2A33]">
-                Notifications
+                Latest Notifications
               </h2>
               <p className="text-[11px] text-[#A8849A]">
                 Recent updates
@@ -334,35 +392,70 @@ export default function DoctorDashboard() {
               </p>
             </div>
           ) : (
-            <div className="relative space-y-1.5">
-              {notifications.slice(0, 3).map((notification) => (
-                <Link
-                  key={notification._id}
-                  to={notification.link || "/doctor/notifications"}
-                  className={`group flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#FEF4F4] hover:shadow-[0_6px_16px_-8px_rgba(243,59,125,0.35)] ${
-                    notification.read ? "bg-white" : "bg-[#FEF4F4]"
-                  }`}
-                >
-                  <span className="relative flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#FCE4EB] ring-1 ring-[#F8C9DA]">
-                    <Bell className="h-3.5 w-3.5 text-[#F33B7D]" strokeWidth={1.75} />
-                    {!notification.read && (
-                      <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[#F33B7D] ring-2 ring-white" />
+            <div className="relative divide-y divide-[#F5E4EC]">
+              {notifications.slice(0, 3).map((notification) => {
+                const isUnread = !notification.read;
+                const link =
+                  getNotificationLink(notification) || "/doctor/notifications";
+
+                return (
+                  <Link
+                    key={notification._id}
+                    to={link}
+                    className="group relative flex items-center gap-3 px-2 py-3 -mx-2 first:pt-0 last:pb-0 rounded-xl transition-all duration-200 hover:bg-[#FEF4F4] hover:shadow-[0_2px_8px_rgba(243,59,125,0.06)]"
+                  >
+                    {/* Pink accent bar for unread */}
+                    {isUnread && (
+                      <span className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-[#F33B7D] shadow-[0_0_8px_rgba(243,59,125,0.5)]" />
                     )}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-xs font-semibold text-[#3D2A33]">
-                      {notification.title}
+
+                    {/* Icon */}
+                    <span
+                      className={`ml-2 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 transition-transform duration-200 group-hover:scale-105 ${
+                        isUnread
+                          ? "bg-[#F33B7D] text-white ring-[#F33B7D]"
+                          : "bg-[#FEE4EB] text-[#F33B7D] ring-[#F5E4EC]"
+                      }`}
+                    >
+                      <Bell className="h-4 w-4" />
                     </span>
-                    <span className="mt-0.5 block truncate text-[11px] text-[#8F8C8C]">
-                      {notification.message}
+
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`truncate text-sm ${
+                          isUnread
+                            ? "font-bold text-[#3D2A33]"
+                            : "font-semibold text-[#3D2A33]"
+                        }`}
+                      >
+                        {notification.title}
+                      </p>
+                      <p
+                        className={`truncate text-xs ${
+                          isUnread ? "text-[#A8849A]" : "text-[#C9A8B8]"
+                        }`}
+                      >
+                        {notification.message}
+                      </p>
+                    </div>
+
+                    {/* Timestamp */}
+                    <span className="flex-shrink-0 text-[10px] font-medium text-[#C9A8B8]">
+                      {formatNotificationTime(notification.createdAt)}
                     </span>
-                  </span>
-                  <span className="flex-shrink-0 text-[10px] font-medium text-[#B8B4B4]">
-                    {formatNotificationTime(notification.createdAt)}
-                  </span>
-                  <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-[#E8D5DD] transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[#F33B7D]" />
-                </Link>
-              ))}
+
+                    {/* Pulsing unread dot */}
+                    {isUnread && (
+                      <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#F33B7D] opacity-60" />
+                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#F33B7D] shadow-[0_0_0_3px_rgba(243,59,125,0.18)]" />
+                      </span>
+                    )}
+
+                    <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-[#E8D5DD] transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[#F33B7D]" />
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
