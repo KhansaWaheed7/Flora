@@ -252,14 +252,14 @@ export default function DoctorProfileDetails() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Specialization */}
-            <div className="rounded-xl bg-[#FEF4F4] p-4">
+            <div className="rounded-xl bg-[#FCE4EB] p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white">
                   <Stethoscope size={19} className="text-[#F33B7D]" />
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs text-[#B8AEB2]">Specialization</p>
+                  <p className="text-xs text-[#8F8C8C]">Specialization</p>
                   <p className="mt-1 font-medium text-[#0D0D0D]">
                     {profile.specialization || "Not provided"}
                   </p>
@@ -268,14 +268,14 @@ export default function DoctorProfileDetails() {
             </div>
 
             {/* Hospital */}
-            <div className="rounded-xl bg-[#FEF4F4] p-4">
+            <div className="rounded-xl bg-[#FCE4EB] p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white">
                   <Building2 size={19} className="text-[#F33B7D]" />
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs text-[#B8AEB2]">Hospital / Clinic</p>
+                  <p className="text-xs text-[#8F8C8C]">Hospital / Clinic</p>
                   <p className="mt-1 truncate font-medium text-[#0D0D0D]">
                     {profile.hospital || "Not provided"}
                   </p>
@@ -284,14 +284,14 @@ export default function DoctorProfileDetails() {
             </div>
 
             {/* Experience */}
-            <div className="rounded-xl bg-[#FEF4F4] p-4">
+            <div className="rounded-xl bg-[#FCE4EB] p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white">
                   <Clock3 size={19} className="text-[#F33B7D]" />
                 </div>
 
                 <div>
-                  <p className="text-xs text-[#B8AEB2]">
+                  <p className="text-xs text-[#8F8C8C]">
                     Years of Experience
                   </p>
 
@@ -303,14 +303,14 @@ export default function DoctorProfileDetails() {
             </div>
 
             {/* Consultation Fee */}
-            <div className="rounded-xl bg-[#FEF4F4] p-4">
+            <div className="rounded-xl bg-[#FCE4EB] p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white">
                   <Coins size={19} className="text-[#F33B7D]" />
                 </div>
 
                 <div>
-                  <p className="text-xs text-[#B8AEB2]">
+                  <p className="text-xs text-[#8F8C8C]">
                     Consultation Fee
                   </p>
 
@@ -324,14 +324,14 @@ export default function DoctorProfileDetails() {
             </div>
 
             {/* City */}
-            <div className="rounded-xl bg-[#FEF4F4] p-4">
+            <div className="rounded-xl bg-[#FCE4EB] p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white">
                   <MapPin size={19} className="text-[#F33B7D]" />
                 </div>
 
                 <div>
-                  <p className="text-xs text-[#B8AEB2]">Location</p>
+                  <p className="text-xs text-[#8F8C8C]">Location</p>
 
                   <p className="mt-1 font-medium text-[#0D0D0D]">
                     {profile.city || "Not provided"}
@@ -365,7 +365,7 @@ export default function DoctorProfileDetails() {
               {profile.qualifications.map((qualification, index) => (
                 <div
                   key={index}
-                  className="rounded-xl bg-[#FEF4F4] p-4"
+                  className="rounded-xl bg-[#FCE4EB] p-4"
                 >
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -373,7 +373,7 @@ export default function DoctorProfileDetails() {
                         {qualification.degree || "Medical Degree"}
                       </p>
 
-                      <p className="mt-1 text-sm text-[#8F8C8C]">
+                      <p className="mt-1 text-sm text-[#6F6A6D]">
                         {qualification.institution || "Institution not provided"}
                       </p>
                     </div>
@@ -388,7 +388,7 @@ export default function DoctorProfileDetails() {
               ))}
             </div>
           ) : (
-            <div className="rounded-xl bg-[#FEF4F4] p-5 text-center">
+            <div className="rounded-xl bg-[#FCE4EB] p-5 text-center">
               <p className="text-sm text-[#8F8C8C]">
                 No qualifications added yet.
               </p>
@@ -406,8 +406,8 @@ export default function DoctorProfileDetails() {
             Professional introduction.
           </p>
 
-          <div className="mt-5 rounded-xl bg-[#FEF4F4] p-5">
-            <p className="text-sm leading-7 text-[#5F5A5D]">
+          <div className="mt-5 rounded-xl bg-[#FCE4EB] p-5">
+            <p className="text-sm leading-7 text-[#3D3939]">
               {profile.bio ||
                 "You have not added a professional bio yet. Add a short introduction about yourself and your medical experience."}
             </p>
@@ -473,7 +473,7 @@ export default function DoctorProfileDetails() {
               profile.languages.map((language, index) => (
                 <span
                   key={index}
-                  className="rounded-full bg-[#FEF4F4] px-4 py-2 text-sm font-medium text-[#5F5A5D] ring-1 ring-[#FEE4EB]"
+                  className="rounded-full bg-[#FCE4EB] px-4 py-2 text-sm font-medium text-[#3D3939] ring-1 ring-[#FEE4EB]"
                 >
                   {language}
                 </span>
@@ -514,7 +514,7 @@ export default function DoctorProfileDetails() {
           </div>
 
           {profile.verificationStatus !== "verified" && (
-            <div className="mt-5 rounded-xl bg-[#FEF4F4] p-4">
+            <div className="mt-5 rounded-xl bg-[#FCE4EB] p-4">
               <p className="text-sm leading-6 text-[#8F8C8C]">
                 Your professional verification is currently{" "}
                 <span className={`font-medium ${verification.text}`}>
@@ -537,7 +537,7 @@ export default function DoctorProfileDetails() {
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
           <Link
             to="/doctor/profile"
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#FEE4EB] bg-white px-5 py-3 text-sm font-medium text-[#5F5A5D] transition hover:bg-[#FEF4F4]"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#FEE4EB] bg-white px-5 py-3 text-sm font-medium text-[#5F5A5D] transition hover:bg-[#FCE4EB]"
           >
             <ArrowLeft size={16} />
             Back to Profile

@@ -49,14 +49,14 @@ function DetailItem({ icon: Icon, label, children }) {
   if (!children) return null;
 
   return (
-    <div className="rounded-xl bg-[#FEF4F4] p-4">
+    <div className="rounded-xl bg-[#FCE4EB] p-4">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white">
           <Icon className="h-5 w-5 text-[#F33B7D]" />
         </div>
 
         <div className="min-w-0">
-          <p className="text-xs text-[#B8AEB2]">{label}</p>
+          <p className="text-xs text-[#8F8C8C]">{label}</p>
           <p className="mt-1 break-words text-sm font-medium text-[#0D0D0D]">
             {children}
           </p>
@@ -507,7 +507,7 @@ export default function DoctorProfile() {
                 (qualification, index) => (
                   <div
                     key={index}
-                    className="rounded-xl bg-[#FEF4F4] p-4"
+                    className="rounded-xl bg-[#FCE4EB] p-4"
                   >
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <div>
@@ -517,7 +517,7 @@ export default function DoctorProfile() {
                         </p>
 
                         {qualification.institution && (
-                          <p className="mt-1 text-sm text-[#8F8C8C]">
+                          <p className="mt-1 text-sm text-[#6F6A6D]">
                             {qualification.institution}
                           </p>
                         )}
@@ -606,7 +606,7 @@ export default function DoctorProfile() {
                 (language, index) => (
                   <span
                     key={index}
-                    className="rounded-full bg-[#FEF4F4] px-4 py-2 text-sm font-medium text-[#5F5A5D] ring-1 ring-[#FEE4EB]"
+                    className="rounded-full bg-[#FCE4EB] px-4 py-2 text-sm font-medium text-[#3D3939] ring-1 ring-[#FEE4EB]"
                   >
                     {language}
                   </span>
@@ -630,8 +630,8 @@ export default function DoctorProfile() {
               Professional introduction.
             </p>
 
-            <div className="mt-5 rounded-xl bg-[#FEF4F4] p-5">
-              <p className="text-sm leading-7 text-[#5F5A5D]">
+            <div className="mt-5 rounded-xl bg-[#FCE4EB] p-5">
+              <p className="text-sm leading-7 text-[#3D3939]">
                 {doctor.bio}
               </p>
             </div>

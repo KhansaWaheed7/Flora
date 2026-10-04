@@ -41,7 +41,6 @@ function Avatar({ name, image, size = "h-11 w-11" }) {
     );
   }
 
-
   return (
     <div
       className={`${size} flex-shrink-0 rounded-full bg-[#F33B7D] flex items-center justify-center text-sm font-semibold text-white`}
@@ -84,8 +83,8 @@ export default function DoctorChat() {
 
   const { socket, connected } = useSocket();
   const handleOpenPatientProfile = () => {
-  navigate(`/doctor/patient/${id}`);
-};
+    navigate(`/doctor/patient/${id}`);
+  };
   const { user } = useAuth();
   const currentUserId = getUserId(user);
 
@@ -169,55 +168,55 @@ export default function DoctorChat() {
     // -----------------------------------------
 
     const handleNewMessage = (message) => {
-  const messageChatId =
-    message.chat?._id ||
-    message.chat?.id ||
-    message.chatId ||
-    message.chat;
+      const messageChatId =
+        message.chat?._id ||
+        message.chat?.id ||
+        message.chatId ||
+        message.chat;
 
-  if (messageChatId?.toString() !== id.toString()) {
-    return;
-  }
+      if (messageChatId?.toString() !== id.toString()) {
+        return;
+      }
 
-  console.log("📩 Doctor received message:", message);
+      console.log("📩 Doctor received message:", message);
 
-  setMessages((prev) => {
-    const alreadyExists = prev.some(
-      (item) => item._id === message._id
-    );
+      setMessages((prev) => {
+        const alreadyExists = prev.some(
+          (item) => item._id === message._id
+        );
 
-    if (alreadyExists) {
-      return prev;
-    }
+        if (alreadyExists) {
+          return prev;
+        }
 
-    return [...prev, message];
-  });
+        return [...prev, message];
+      });
 
-  const senderId = getUserId(message.sender);
-  const currentUserIdNormalized = getUserId(user);
+      const senderId = getUserId(message.sender);
+      const currentUserIdNormalized = getUserId(user);
 
-  const isFromPatient =
-    senderId !== null &&
-    currentUserIdNormalized !== null &&
-    senderId !== currentUserIdNormalized;
+      const isFromPatient =
+        senderId !== null &&
+        currentUserIdNormalized !== null &&
+        senderId !== currentUserIdNormalized;
 
-  // Message reached doctor
-  if (message._id && isFromPatient) {
-    console.log(
-      "📦 Sending delivery acknowledgement:",
-      message._id
-    );
+      // Message reached doctor
+      if (message._id && isFromPatient) {
+        console.log(
+          "📦 Sending delivery acknowledgement:",
+          message._id
+        );
 
-    socket.emit("message-delivered", {
-      messageId: message._id,
-    });
-  }
+        socket.emit("message-delivered", {
+          messageId: message._id,
+        });
+      }
 
-  // Chat is open, so mark messages as read
-  socket.emit("mark-read", {
-    chatId: id,
-  });
-};
+      // Chat is open, so mark messages as read
+      socket.emit("mark-read", {
+        chatId: id,
+      });
+    };
 
     // -----------------------------------------
     // Message Delivered
@@ -282,18 +281,18 @@ export default function DoctorChat() {
     // Typing
     // -----------------------------------------
 
-   const handleTyping = ({ userId }) => {
-  const typingUserId = getUserId(userId);
-  const myUserId = getUserId(user);
+    const handleTyping = ({ userId }) => {
+      const typingUserId = getUserId(userId);
+      const myUserId = getUserId(user);
 
-  if (
-    typingUserId &&
-    myUserId &&
-    typingUserId !== myUserId
-  ) {
-    setOtherTyping(true);
-  }
-};
+      if (
+        typingUserId &&
+        myUserId &&
+        typingUserId !== myUserId
+      ) {
+        setOtherTyping(true);
+      }
+    };
 
     const handleStopTyping = () => {
       setOtherTyping(false);
@@ -388,146 +387,146 @@ export default function DoctorChat() {
   };
 
   const handleOpenAttachment = async (message) => {
-  // Open tab immediately from the user's click
-  const newTab = window.open("", "_blank");
+    // Open tab immediately from the user's click
+    const newTab = window.open("", "_blank");
 
-  if (!newTab) {
-    setError(
-      "The attachment could not be opened. Please allow pop-ups for this site."
-    );
-    return;
-  }
+    if (!newTab) {
+      setError(
+        "The attachment could not be opened. Please allow pop-ups for this site."
+      );
+      return;
+    }
 
-  // Show loading UI immediately in the new tab
-  newTab.document.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Opening attachment...</title>
-        <style>
-          body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fffbfc;
-            font-family: Arial, sans-serif;
-          }
-
-          .container {
-            text-align: center;
-            color: #3d3939;
-          }
-
-          .spinner {
-            width: 42px;
-            height: 42px;
-            margin: 0 auto 18px;
-            border: 4px solid #f7d9e5;
-            border-top-color: #f33b7d;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-          }
-
-          .title {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 6px;
-          }
-
-          .subtitle {
-            font-size: 12px;
-            color: #8f8c8c;
-          }
-
-          @keyframes spin {
-            to {
-              transform: rotate(360deg);
+    // Show loading UI immediately in the new tab
+    newTab.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Opening attachment...</title>
+          <style>
+            body {
+              margin: 0;
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: #fffbfc;
+              font-family: Arial, sans-serif;
             }
-          }
-        </style>
-      </head>
 
-      <body>
-        <div class="container">
-          <div class="spinner"></div>
-          <div class="title">Opening attachment...</div>
-          <div class="subtitle">
-            Please wait while your file is being prepared.
+            .container {
+              text-align: center;
+              color: #3d3939;
+            }
+
+            .spinner {
+              width: 42px;
+              height: 42px;
+              margin: 0 auto 18px;
+              border: 4px solid #f7d9e5;
+              border-top-color: #f33b7d;
+              border-radius: 50%;
+              animation: spin 0.8s linear infinite;
+            }
+
+            .title {
+              font-size: 15px;
+              font-weight: 600;
+              margin-bottom: 6px;
+            }
+
+            .subtitle {
+              font-size: 12px;
+              color: #8f8c8c;
+            }
+
+            @keyframes spin {
+              to {
+                transform: rotate(360deg);
+              }
+            }
+          </style>
+        </head>
+
+        <body>
+          <div class="container">
+            <div class="spinner"></div>
+            <div class="title">Opening attachment...</div>
+            <div class="subtitle">
+              Please wait while your file is being prepared.
+            </div>
           </div>
-        </div>
-      </body>
-    </html>
-  `);
+        </body>
+      </html>
+    `);
 
-  newTab.document.close();
+    newTab.document.close();
 
-  try {
-    setOpeningAttachment(message._id);
-    setError("");
+    try {
+      setOpeningAttachment(message._id);
+      setError("");
 
-    const blob = await getChatAttachment(
-      id,
-      message._id
-    );
+      const blob = await getChatAttachment(
+        id,
+        message._id
+      );
 
-    const blobUrl = URL.createObjectURL(blob);
+      const blobUrl = URL.createObjectURL(blob);
 
-    // Replace loading page with the actual file
-    newTab.location.href = blobUrl;
+      // Replace loading page with the actual file
+      newTab.location.href = blobUrl;
 
-    // Keep blob alive while browser loads it
-    setTimeout(() => {
-      URL.revokeObjectURL(blobUrl);
-    }, 60000);
-  } catch (err) {
-    console.error(
-      "Failed to open attachment:",
-      err
-    );
+      // Keep blob alive while browser loads it
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+      }, 60000);
+    } catch (err) {
+      console.error(
+        "Failed to open attachment:",
+        err
+      );
 
-    // Show error inside the already-open tab
-    newTab.document.body.innerHTML = `
-      <div style="
-        min-height:100vh;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-family:Arial,sans-serif;
-        background:#fffbfc;
-      ">
+      // Show error inside the already-open tab
+      newTab.document.body.innerHTML = `
         <div style="
-          text-align:center;
-          padding:30px;
+          min-height:100vh;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-family:Arial,sans-serif;
+          background:#fffbfc;
         ">
           <div style="
-            font-size:16px;
-            font-weight:600;
-            color:#dc2626;
-            margin-bottom:8px;
+            text-align:center;
+            padding:30px;
           ">
-            Failed to open attachment
-          </div>
+            <div style="
+              font-size:16px;
+              font-weight:600;
+              color:#dc2626;
+              margin-bottom:8px;
+            ">
+              Failed to open attachment
+            </div>
 
-          <div style="
-            font-size:13px;
-            color:#8f8c8c;
-          ">
-            Please close this tab and try again.
+            <div style="
+              font-size:13px;
+              color:#8f8c8c;
+            ">
+              Please close this tab and try again.
+            </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
 
-    setError(
-      err?.response?.data?.message ||
-        "Failed to open attachment."
-    );
-  } finally {
-    setOpeningAttachment(null);
-  }
-};
+      setError(
+        err?.response?.data?.message ||
+          "Failed to open attachment."
+      );
+    } finally {
+      setOpeningAttachment(null);
+    }
+  };
 
   // =========================================
   // Typing
@@ -705,34 +704,26 @@ export default function DoctorChat() {
           </button>
 
           <button
-  type="button"
-  onClick={handleOpenPatientProfile}
-  className="rounded-full focus:outline-none focus:ring-2 focus:ring-[#F33B7D] focus:ring-offset-2"
-  title="View patient profile"
->
-  <Avatar
-    name={patient?.fullName}
-    image={patient?.profilePicture || patient?.avatar}
-  />
-</button>
+            type="button"
+            onClick={handleOpenPatientProfile}
+            className="rounded-full focus:outline-none focus:ring-2 focus:ring-[#F33B7D] focus:ring-offset-2"
+            title="View patient profile"
+          >
+            <Avatar
+              name={patient?.fullName}
+              image={patient?.profilePicture || patient?.avatar}
+            />
+          </button>
 
-<div className="min-w-0 flex-1">
-  <button
-    type="button"
-    onClick={handleOpenPatientProfile}
-    className="truncate text-left text-base font-semibold text-[#0D0D0D] hover:text-[#F33B7D] hover:underline"
-  >
-    {patient?.fullName || "Patient"}
-  </button>
-
-  <p className="mt-0.5 text-xs text-[#8F8C8C]">
-    {otherTyping
-      ? "Typing..."
-      : connected
-      ? "Online"
-      : "Connecting..."}
-  </p>
-</div>
+          <div className="min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={handleOpenPatientProfile}
+              className="truncate text-left text-base font-semibold text-[#0D0D0D] hover:text-[#F33B7D] hover:underline"
+            >
+              {patient?.fullName || "Patient"}
+            </button>
+          </div>
 
           <span className="rounded-full bg-[#FFF1F6] px-3 py-1 text-[10px] font-semibold text-[#F33B7D]">
             Patient
@@ -755,119 +746,119 @@ export default function DoctorChat() {
           )}
 
           {messages.map((message) => {
-  const senderId = getUserId(message.sender);
+            const senderId = getUserId(message.sender);
 
-  const isMine =
-    senderId !== null &&
-    currentUserId !== null &&
-    senderId === currentUserId;
+            const isMine =
+              senderId !== null &&
+              currentUserId !== null &&
+              senderId === currentUserId;
 
-  return (
-    <div
-      key={message._id}
-      className={`flex ${
-        isMine ? "justify-end" : "justify-start"
-      }`}
-    >
-      <div
-        className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm ${
-          isMine
-            ? "rounded-br-md bg-[#F33B7D] text-white"
-            : "rounded-bl-md bg-[#FFF1F6] text-[#3D3939] border border-[#F7D9E5]"
-        }`}
-      >
-        {message.attachment && (
-          <button
-            type="button"
-            onClick={() =>
-              handleOpenAttachment(message)
-            }
-            disabled={
-              openingAttachment === message._id
-            }
-            className={`mb-1 flex w-full items-center gap-2 rounded-xl p-2 text-left transition ${
-              isMine
-                ? "bg-white/10 hover:bg-white/20"
-                : "bg-white hover:bg-[#FFF8FA]"
-            } ${
-              openingAttachment === message._id
-                ? "cursor-wait opacity-70"
-                : ""
-            }`}
-          >
-            {openingAttachment === message._id ? (
-              <Loader2 className="h-5 w-5 flex-shrink-0 animate-spin text-[#F33B7D]" />
-            ) : (
-              <FileText
-                className={`h-5 w-5 flex-shrink-0 ${
-                  isMine
-                    ? "text-white"
-                    : "text-[#F33B7D]"
-                }`}
-              />
-            )}
-
-            <div className="min-w-0 flex-1">
-              <p
-                className={`truncate text-xs font-medium ${
-                  isMine
-                    ? "text-white"
-                    : "text-[#3D3939]"
+            return (
+              <div
+                key={message._id}
+                className={`flex ${
+                  isMine ? "justify-end" : "justify-start"
                 }`}
               >
-                {openingAttachment === message._id
-                  ? "Opening..."
-                  : message.attachment.originalName}
-              </p>
+                <div
+                  className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm ${
+                    isMine
+                      ? "rounded-br-md bg-[#F33B7D] text-white"
+                      : "rounded-bl-md bg-[#FFF1F6] text-[#3D3939] border border-[#F7D9E5]"
+                  }`}
+                >
+                  {message.attachment && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleOpenAttachment(message)
+                      }
+                      disabled={
+                        openingAttachment === message._id
+                      }
+                      className={`mb-1 flex w-full items-center gap-2 rounded-xl p-2 text-left transition ${
+                        isMine
+                          ? "bg-white/10 hover:bg-white/20"
+                          : "bg-white hover:bg-[#FFF8FA]"
+                      } ${
+                        openingAttachment === message._id
+                          ? "cursor-wait opacity-70"
+                          : ""
+                      }`}
+                    >
+                      {openingAttachment === message._id ? (
+                        <Loader2 className="h-5 w-5 flex-shrink-0 animate-spin text-[#F33B7D]" />
+                      ) : (
+                        <FileText
+                          className={`h-5 w-5 flex-shrink-0 ${
+                            isMine
+                              ? "text-white"
+                              : "text-[#F33B7D]"
+                          }`}
+                        />
+                      )}
 
-              <p
-                className={`text-[10px] ${
-                  isMine
-                    ? "text-white/70"
-                    : "text-[#B8AEB2]"
-                }`}
-              >
-                {message.attachment.size
-                  ? `${(
-                      message.attachment.size / 1024
-                    ).toFixed(1)} KB`
-                  : "Attachment"}
-              </p>
-            </div>
-          </button>
-        )}
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={`truncate text-xs font-medium ${
+                            isMine
+                              ? "text-white"
+                              : "text-[#3D3939]"
+                          }`}
+                        >
+                          {openingAttachment === message._id
+                            ? "Opening..."
+                            : message.attachment.originalName}
+                        </p>
 
-        {message.message && (
-          <p className="whitespace-pre-wrap break-words text-sm">
-            {message.message}
-          </p>
-        )}
+                        <p
+                          className={`text-[10px] ${
+                            isMine
+                              ? "text-white/70"
+                              : "text-[#B8AEB2]"
+                          }`}
+                        >
+                          {message.attachment.size
+                            ? `${(
+                                message.attachment.size / 1024
+                              ).toFixed(1)} KB`
+                            : "Attachment"}
+                        </p>
+                      </div>
+                    </button>
+                  )}
 
-        <div
-          className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
-            isMine
-              ? "text-white/75"
-              : "text-[#B8AEB2]"
-          }`}
-        >
-          <span>
-            {formatTime(message.createdAt)}
-          </span>
+                  {message.message && (
+                    <p className="whitespace-pre-wrap break-words text-sm">
+                      {message.message}
+                    </p>
+                  )}
 
-          {isMine && (
-            <span className="font-semibold">
-              {message.isRead
-                ? "✓✓"
-                : message.isDelivered
-                ? "✓✓"
-                : "✓"}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-})}
+                  <div
+                    className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
+                      isMine
+                        ? "text-white/75"
+                        : "text-[#B8AEB2]"
+                    }`}
+                  >
+                    <span>
+                      {formatTime(message.createdAt)}
+                    </span>
+
+                    {isMine && (
+                      <span className="font-semibold">
+                        {message.isRead
+                          ? "✓✓"
+                          : message.isDelivered
+                          ? "✓✓"
+                          : "✓"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
 
           {otherTyping && (
             <div className="flex justify-start">

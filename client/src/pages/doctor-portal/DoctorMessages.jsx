@@ -150,7 +150,7 @@ function Avatar({
 
   return (
     <div
-      className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#FEE4EB] text-sm font-bold text-[#F33B7D] ${className}`}
+      className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#F33B7D] text-sm font-bold text-white ${className}`}
     >
       {initials}
     </div>

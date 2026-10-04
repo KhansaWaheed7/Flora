@@ -63,13 +63,13 @@ function DetailItem({ icon: Icon, label, value }) {
   )
     return null;
   return (
-    <div className="rounded-xl bg-[#FEF4F4] p-4">
+    <div className="rounded-xl bg-[#FCE4EB] p-4">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white">
           <Icon className="h-5 w-5 text-[#F33B7D]" />
         </div>
         <div className="min-w-0">
-          <p className="text-xs text-[#B8AEB2]">{label}</p>
+          <p className="text-xs text-[#8F8C8C]">{label}</p>
           <p className="mt-1 break-words text-sm font-medium text-[#0D0D0D]">
             {value}
           </p>
@@ -335,11 +335,11 @@ export default function ConsultationDoctorProfile() {
             </div>
             <div className="mt-4 space-y-3">
               {doctor.qualifications.map((q, i) => (
-                <div key={i} className="rounded-xl bg-[#FEF4F4] p-4">
+                <div key={i} className="rounded-xl bg-[#FCE4EB] p-4">
                   <p className="font-semibold">
                     {q.degree || "Qualification"}
                   </p>
-                  <p className="text-sm text-[#8F8C8C]">
+                  <p className="text-sm text-[#6F6A6D]">
                     {q.institution || ""}
                     {q.completionYear ? ` • ${q.completionYear}` : ""}
                   </p>
@@ -356,7 +356,7 @@ export default function ConsultationDoctorProfile() {
               {doctor.areasOfExpertise.map((x, i) => (
                 <span
                   key={i}
-                  className="rounded-full bg-[#FEF4F4] px-3 py-1.5 text-sm"
+                  className="rounded-full bg-[#FCE4EB] px-3 py-1.5 text-sm text-[#3D3939]"
                 >
                   {x}
                 </span>
@@ -375,7 +375,7 @@ export default function ConsultationDoctorProfile() {
               {doctor.languages.map((x, i) => (
                 <span
                   key={i}
-                  className="rounded-full bg-[#FEF4F4] px-3 py-1.5 text-sm"
+                  className="rounded-full bg-[#FCE4EB] px-3 py-1.5 text-sm text-[#3D3939]"
                 >
                   {x}
                 </span>
@@ -389,7 +389,7 @@ export default function ConsultationDoctorProfile() {
         {doctor.bio && (
           <div className="rounded-2xl bg-white p-6 shadow-[0_4px_14px_rgba(0,0,0,0.04)] ring-1 ring-black/5">
             <h2 className="text-xl font-semibold">About the Doctor</h2>
-            <p className="mt-4 rounded-xl bg-[#FEF4F4] p-5 text-sm leading-7 text-[#5F5A5D]">
+            <p className="mt-4 rounded-xl bg-[#FCE4EB] p-5 text-sm leading-7 text-[#3D3939]">
               {doctor.bio}
             </p>
           </div>
@@ -405,7 +405,7 @@ export default function ConsultationDoctorProfile() {
           <button
             disabled={closing}
             onClick={handleClose}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-50 px-5 py-3 text-sm font-semibold text-red-600 ring-1 ring-red-100 hover:bg-red-100 disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_-6px_rgba(220,38,38,0.5)] transition hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <XCircle className="h-4 w-4" />
             {closing ? "Closing consultation..." : "Close Consultation"}

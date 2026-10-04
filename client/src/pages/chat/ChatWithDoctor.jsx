@@ -479,7 +479,10 @@ export default function ChatWithDoctor() {
 
   if (loading) {
     return (
-      <PageLayout>
+      <PageLayout
+        title="Chat"
+        subtitle="Loading conversation..."
+      >
         <div className="min-h-[70vh] flex items-center justify-center">
           <Loader2
             className="animate-spin text-[#F33B7D]"
@@ -496,7 +499,10 @@ export default function ChatWithDoctor() {
 
   if (!consultation) {
     return (
-      <PageLayout>
+      <PageLayout
+        title="Chat"
+        subtitle="Consultation"
+      >
         <div className="min-h-[70vh] flex flex-col items-center justify-center">
           <p className="text-gray-600 mb-4">
             Consultation not found.
@@ -534,7 +540,10 @@ export default function ChatWithDoctor() {
   // --------------------------------------------------
 
   return (
-    <PageLayout>
+    <PageLayout
+      title="Chat"
+      subtitle="Talk to your doctor"
+    >
       <div className="max-w-5xl mx-auto px-4 py-6">
 
         {/* Single unified card: header + messages + input */}

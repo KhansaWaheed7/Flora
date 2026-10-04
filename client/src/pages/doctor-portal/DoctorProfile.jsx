@@ -223,7 +223,7 @@ export default function DoctorProfile() {
             {badges.map(({ icon: Icon, value, label }) => (
               <div
                 key={label}
-                className="flex items-center gap-2 rounded-xl bg-[#FEF4F4] px-3 py-2.5"
+                className="flex items-center gap-2 rounded-xl bg-[#FCE4EB] px-3 py-2.5"
               >
                 <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white text-[#F33B7D]">
                   <Icon className="h-4 w-4" />
@@ -234,7 +234,7 @@ export default function DoctorProfile() {
                     {value}
                   </p>
 
-                  <p className="text-[10px] text-[#B8AEB2]">
+                  <p className="text-[10px] text-[#8F8C8C]">
                     {label}
                   </p>
                 </div>
@@ -249,7 +249,7 @@ export default function DoctorProfile() {
             Verification Status
           </p>
 
-          <div className="mt-5 flex h-24 w-24 items-center justify-center rounded-full bg-[#FEF4F4]">
+          <div className="mt-5 flex h-24 w-24 items-center justify-center rounded-full bg-[#FCE4EB]">
             <ShieldCheck className="h-12 w-12 text-[#F33B7D]" />
           </div>
 
@@ -294,7 +294,7 @@ export default function DoctorProfile() {
             {professionalSummary.map(({ label, value }) => (
               <div
                 key={label}
-                className="rounded-xl bg-[#FEF4F4] p-3"
+                className="rounded-xl bg-[#FCE4EB] p-3"
               >
                 <p className="text-[10px] text-[#8F8C8C]">
                   {label}
@@ -319,7 +319,7 @@ export default function DoctorProfile() {
               <Link
                 key={label}
                 to={to}
-                className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-sm text-[#3D3939] transition hover:bg-[#FEF4F4]"
+                className="flex items-center gap-3 rounded-xl px-2 py-2.5 text-sm text-[#3D3939] transition hover:bg-[#FCE4EB]"
               >
                 <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#FEE4EB] text-[#F33B7D]">
                   <Icon className="h-4 w-4" />
@@ -351,7 +351,7 @@ export default function DoctorProfile() {
           </Link>
         </div>
 
-        <p className="text-sm leading-6 text-[#8F8C8C]">
+        <p className="text-sm leading-6 text-[#3D3939]">
           {profile?.bio ||
             "Add a professional bio to help patients learn more about you."}
         </p>
@@ -381,7 +381,7 @@ export default function DoctorProfile() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-[#B8AEB2]">
+            <p className="text-sm text-[#8F8C8C]">
               No areas of expertise added yet.
             </p>
           )}
@@ -402,14 +402,14 @@ export default function DoctorProfile() {
               {profile.languages.map((language, index) => (
                 <span
                   key={`${language}-${index}`}
-                  className="rounded-full bg-[#FEF4F4] px-3 py-1.5 text-xs font-medium text-[#3D3939]"
+                  className="rounded-full bg-[#FCE4EB] px-3 py-1.5 text-xs font-medium text-[#3D3939]"
                 >
                   {language}
                 </span>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-[#B8AEB2]">
+            <p className="text-sm text-[#8F8C8C]">
               No languages added yet.
             </p>
           )}
