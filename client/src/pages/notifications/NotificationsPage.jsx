@@ -1,16 +1,27 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Bell, Calendar, HeartPulse, Baby, ShieldCheck, FileText,
-  MessageCircle, Stethoscope, User, CheckCheck, ChevronRight, RefreshCw,
+  Bell,
+Calendar,
+HeartPulse,
+Baby,
+ShieldCheck,
+FileText,
+MessageCircle,
+Stethoscope,
+User,
+CheckCheck,
+ChevronRight,
+RefreshCw,
+Trash2,
 } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import {
   getNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
+  deleteNotification,
 } from "../../services/notification.service";
-
 const iconMap = {
   cycle: Calendar,
   pregnancy: Baby,
@@ -44,7 +55,7 @@ function formatTime(date) {
   });
 }
 
-function NotificationCard({ notification, onRead }) {
+function NotificationCard({ notification, onRead, onDelete }) {
   const Icon = iconMap[notification.type] || Bell;
   const isUnread = !notification.read;
   const isHigh = notification.priority === "high";
@@ -121,9 +132,27 @@ function NotificationCard({ notification, onRead }) {
         </div>
       </div>
 
-      {notification.link && (
-        <ChevronRight className="relative mt-3 h-4 w-4 flex-shrink-0 text-[#E8D5DD] transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[#F33B7D]" />
-      )}
+      <div className="relative mt-2 flex flex-shrink-0 items-center gap-1">
+  {notification.link && (
+    <ChevronRight
+      className="h-4 w-4 text-[#E8D5DD] transition-colors duration-200 group-hover:text-[#F33B7D]"
+    />
+  )}
+
+  <button
+    type="button"
+    onClick={(event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onDelete(notification._id);
+    }}
+    className="flex h-8 w-8 items-center justify-center rounded-lg text-[#B8AEB2] transition-all duration-200 hover:bg-[#FEE4EB] hover:text-[#F33B7D]"
+    aria-label="Delete notification"
+    title="Delete notification"
+  >
+    <Trash2 className="h-4 w-4" />
+  </button>
+</div>
     </div>
   );
 
@@ -184,6 +213,21 @@ export default function NotificationsPage() {
       console.error("Failed to mark notification as read:", err);
     }
   };
+  const handleDelete = async (id) => {
+  try {
+    setWorking(true);
+
+    await deleteNotification(id);
+
+    setNotifications((items) =>
+      items.filter((item) => item._id !== id)
+    );
+  } catch (err) {
+    console.error("Failed to delete notification:", err);
+  } finally {
+    setWorking(false);
+  }
+};
 
   const handleMarkAllRead = async () => {
     if (!unreadCount) return;
@@ -317,10 +361,11 @@ export default function NotificationsPage() {
             <div className="space-y-3">
               {visibleNotifications.map((notification) => (
                 <NotificationCard
-                  key={notification._id}
-                  notification={notification}
-                  onRead={handleRead}
-                />
+  key={notification._id}
+  notification={notification}
+  onRead={handleRead}
+  onDelete={handleDelete}
+/>
               ))}
             </div>
           </>

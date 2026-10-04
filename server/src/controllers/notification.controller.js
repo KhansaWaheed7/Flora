@@ -45,3 +45,20 @@ exports.markAllRead = asyncHandler(async (req, res) => {
     new ApiResponse(200, "All notifications marked as read", null)
   );
 });
+
+exports.deleteNotification = asyncHandler(async (req, res) => {
+  const notification = await notificationService.deleteNotification(
+    req.user._id,
+    req.params.id
+  );
+
+  if (!notification) {
+    return res.status(404).json(
+      new ApiResponse(404, "Notification not found", null)
+    );
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, "Notification deleted successfully", null)
+  );
+});

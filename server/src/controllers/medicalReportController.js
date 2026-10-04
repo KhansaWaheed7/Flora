@@ -56,15 +56,7 @@ class MedicalReportController {
 
     await report.save();
 
-    await createNotification({
-      userId,
-      type: "medical_report",
-      title: "Medical report uploaded",
-      message: `${report.fileName} was uploaded and is being analyzed.`,
-      link: `/medical-reports/${report._id}/processing`,
-      uniqueKey: `report-uploaded-${report._id}`,
-      metadata: { reportId: report._id, fileName: report.fileName },
-    });
+   
 
     // Process asynchronously
     this.processReportAsync(report._id, file.buffer, fileType);
