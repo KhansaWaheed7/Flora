@@ -494,43 +494,98 @@ ${extractedText}
     return "unknown";
   }
 
-  static async generateWithRetry(ai, prompt, maxRetries = 3) {
+ static async generateWithRetry(ai, prompt, maxRetries = 3) {
+  const primaryModel =
+    process.env.GEMINI_MODEL || "gemini-3.5-flash";
+
+  const fallbackModel =
+    process.env.GEMINI_FALLBACK_MODEL || "gemini-3.1-flash-lite";
+
+  const models = [primaryModel];
+
+  if (fallbackModel && fallbackModel !== primaryModel) {
+    models.push(fallbackModel);
+  }
+
   let lastError;
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await ai.models.generateContent({
-        model: "gemini-3.6-flash",
-        contents: prompt,
-        config: {
-          temperature: 0.1,
-          responseMimeType: "application/json",
-        },
-      });
-    } catch (error) {
-      lastError = error;
+  for (const model of models) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(
+          `Gemini request using ${model} (attempt ${attempt}/${maxRetries})`
+        );
 
-      const status = error?.status;
-      const code = error?.code;
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            temperature: 0.1,
+            responseMimeType: "application/json",
+          },
+        });
 
-      const isRetryable =
-        status === "UNAVAILABLE" ||
-        code === 503 ||
-        code === 429 ||
-        error?.message?.includes("high demand") ||
-        error?.message?.includes("temporarily unavailable");
+        console.log(`Gemini request successful using ${model}`);
 
-      if (!isRetryable || attempt === maxRetries) {
-        throw error;
+        return response;
+      } catch (error) {
+        lastError = error;
+
+        const status = error?.status;
+        const code = error?.code;
+        const message = error?.message || "";
+
+        const isRetryable =
+          status === "UNAVAILABLE" ||
+          status === 503 ||
+          code === 503 ||
+          code === 429 ||
+          status === 429 ||
+          message.includes("high demand") ||
+          message.includes("temporarily unavailable") ||
+          message.includes("UNAVAILABLE") ||
+          message.includes("RESOURCE_EXHAUSTED");
+
+        console.error(
+          `Gemini error using ${model}:`,
+          message
+        );
+
+        // If this is not a temporary error,
+        // don't keep retrying.
+        if (!isRetryable) {
+          throw error;
+        }
+
+        // If this model has failed all retries,
+        // move to the fallback model.
+        if (attempt === maxRetries) {
+          console.warn(
+            `${model} failed after ${maxRetries} attempts.`
+          );
+
+          if (model !== models[models.length - 1]) {
+            console.warn(
+              `Switching to fallback model: ${fallbackModel}`
+            );
+          }
+
+          break;
+        }
+
+        // Exponential backoff:
+        // 2s → 4s → 8s
+        const delay = 2000 * Math.pow(2, attempt - 1);
+
+        console.warn(
+          `Gemini temporarily unavailable. ` +
+          `Retry ${attempt}/${maxRetries} in ${delay}ms...`
+        );
+
+        await new Promise((resolve) =>
+          setTimeout(resolve, delay)
+        );
       }
-
-      const delay = attempt * 2000;
-
-      console.warn(
-        `Gemini temporarily unavailable. Retry ${attempt}/${maxRetries} in ${delay}ms...`
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 

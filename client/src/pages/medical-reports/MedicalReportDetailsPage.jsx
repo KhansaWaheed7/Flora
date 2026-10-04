@@ -334,25 +334,44 @@ function OverviewTab({
       </div>
 
       <div className="space-y-5">
-        <Card title="Flora's Insights">
-          <p className="text-sm leading-6 text-[#6F6A6B]">
-            {overview || "No overview is available for this report."}
-          </p>
+        {/* Flora's Insights — highlighted pink "poppy" card */}
+        <div className="relative overflow-hidden rounded-2xl border border-[#F33B7D]/40 bg-gradient-to-br from-[#FCD7E6] via-[#FDE4EE] to-[#FBCFE0] p-5 shadow-[0_8px_30px_rgba(243,59,125,0.25)] ring-1 ring-[#F33B7D]/20">
+          {/* Decorative glow */}
+          <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/50 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-12 -left-10 h-28 w-28 rounded-full bg-[#F33B7D]/20 blur-3xl" />
 
-          <InsightList
-            title="Key findings"
-            items={keyFindings}
-          />
+          <div className="relative">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F33B7D] text-white shadow-[0_4px_12px_rgba(243,59,125,0.45)]">
+                <HeartPulse className="h-4 w-4" />
+              </span>
+              <h2 className="text-sm font-semibold text-[#2F2B2B]">
+                Flora's Insights
+              </h2>
+              <span className="ml-auto animate-pulse rounded-full bg-[#F33B7D] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                AI
+              </span>
+            </div>
 
-          <InsightList
-            title="Normal results"
-            items={report.insights?.normalResults}
-            green
-          />
-        </Card>
+            <p className="text-sm leading-6 text-[#3D3939]">
+              {overview || "No overview is available for this report."}
+            </p>
+
+            <InsightList
+              title="Key findings"
+              items={keyFindings}
+            />
+
+            <InsightList
+              title="Normal results"
+              items={report.insights?.normalResults}
+              green
+            />
+          </div>
+        </div>
 
         {whenToSeeDoctor && (
-          <div className="rounded-2xl border border-orange-100 bg-orange-50 p-5">
+          <div className="rounded-2xl border-2 border-orange-300 bg-orange-50 p-5 shadow-sm">
             <div className="flex gap-3">
               <Stethoscope className="h-5 w-5 flex-shrink-0 text-orange-500" />
               <div>
@@ -608,7 +627,7 @@ function InsightList({ title, items = [], green = false }) {
         {items.map((item, index) => (
           <li
             key={`${item}-${index}`}
-            className="flex gap-2 text-sm text-[#6F6A6B]"
+            className="flex gap-2 text-sm text-[#3D3939]"
           >
             <span
               className={`mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full ${
