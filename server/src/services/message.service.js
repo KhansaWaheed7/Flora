@@ -96,7 +96,7 @@ const sendMessage = async (
     chat: chat._id,
     sender: senderId,
     receiver,
-    message: message?.trim() || "",
+    message: EncryptionUtil.encryptText(message?.trim() || ""),
     messageType,
     attachment,
     isDelivered: false,
@@ -124,7 +124,7 @@ const sendMessage = async (
     type: "message",
     title: "New message",
     message: message?.trim()
-      ? `You received a new message: ${message.trim().slice(0, 80)}${message.trim().length > 80 ? "..." : ""}`
+      ? "You received a new secure message."
       : "You received a new attachment.",
     link: `/chat/${chat._id}`,
     uniqueKey: `message-${newMessage._id}`,
@@ -137,6 +137,7 @@ const sendMessage = async (
 );
 
 const messageResponse = populatedMessage.toObject();
+messageResponse.message = message?.trim() || "";
 
 if (messageResponse.attachment) {
   delete messageResponse.attachment.encryptedData;
@@ -186,7 +187,11 @@ const getMessages = async (chatId, userId) => {
       createdAt: 1,
     });
 
-  return messages;
+  return messages.map((item) => {
+    const result = item.toObject();
+    result.message = EncryptionUtil.decryptText(result.message);
+    return result;
+  });
 };
 
 

@@ -326,4 +326,11 @@ userSchema.methods.comparePassword = function (password) {
   return bcrypt.compare(password, this.password);
 };
 
+// Automatically remove accounts that never verify their email.
+
+userSchema.index(
+  { emailVerificationExpire: 1 },
+  { expireAfterSeconds: 0 }
+);
+
 module.exports = mongoose.model("User", userSchema);

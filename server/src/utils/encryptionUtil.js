@@ -14,6 +14,37 @@ const ENCRYPTION_KEY = crypto
   .digest();
 
 class EncryptionUtil {
+  /** Encrypt chat text before it is written to MongoDB. The version prefix
+   * lets reads distinguish encrypted records from legacy plaintext records.
+   */
+  static encryptText(text) {
+    if (typeof text !== "string") throw new TypeError("Text must be a string");
+    const encrypted = this.encryptBuffer(Buffer.from(text, "utf8"));
+    return `enc:v1:${JSON.stringify({
+      data: encrypted.encryptedData.toString("base64"),
+      iv: encrypted.iv,
+      authTag: encrypted.authTag,
+    })}`;
+  }
+
+  /** Decrypt a chat message. Unprefixed values are legacy plaintext and are
+   * intentionally returned unchanged until the migration script is run.
+   */
+  static decryptText(value) {
+    if (typeof value !== "string" || !value.startsWith("enc:v1:")) return value || "";
+    try {
+      const payload = JSON.parse(value.slice("enc:v1:".length));
+      return this.decryptBuffer(
+        Buffer.from(payload.data, "base64"),
+        payload.iv,
+        payload.authTag
+      ).toString("utf8");
+    } catch (error) {
+      console.error("Chat message decryption failed");
+      throw new Error("Unable to decrypt chat message. Check ENCRYPTION_KEY.");
+    }
+  }
+
   /**
    * Encrypt buffer (for memory stored files)
    */

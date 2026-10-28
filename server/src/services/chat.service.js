@@ -1,3 +1,4 @@
+const EncryptionUtil = require("../utils/encryptionUtil");
 const Chat = require("../models/Chat");
 const User = require("../models/User");
 const Profile = require("../models/Profile");
@@ -244,7 +245,7 @@ const getConversations = async (userId) => {
       lastMessage: chat.lastMessage
         ? {
             _id: chat.lastMessage._id,
-            message: chat.lastMessage.message,
+            message: EncryptionUtil.decryptText(chat.lastMessage.message),
             sender: chat.lastMessage.sender,
             createdAt: chat.lastMessage.createdAt,
           }
@@ -438,7 +439,7 @@ const closeConsultationAsPatient = async (patientId, chatId) => {
     chat: chat._id,
     sender: patientId,
     receiver: chat.doctor,
-    message: "Consultation has been closed.",
+    message: EncryptionUtil.encryptText("Consultation has been closed."),
     messageType: "system",
     isRead: false,
   });

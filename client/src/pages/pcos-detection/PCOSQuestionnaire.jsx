@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Info, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Info, Check, Minus, Plus } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
 import { questions, TOTAL_QUESTIONS } from "../../data/pcosQuestions";
 
@@ -8,14 +8,44 @@ function frequencyToBoolean(value) {
   return ["Yes", "Often", "Frequently"].includes(value);
 }
 
+// Per-unit validation ranges (start = typical for a 10-year-old female)
+const HEIGHT_RANGES = {
+  cm: { min: 120, max: 200, step: 1 },
+  ft: { min: 4.0, max: 6.6, step: 0.1 },
+  in: { min: 48, max: 79, step: 1 },
+};
+
+const WEIGHT_RANGES = {
+  kg: { min: 20, max: 150, step: 0.5 },
+};
+
+// Menstrual cycle length ranges (days)
+const CYCLE_RANGES = {
+  min: 15,
+  max: 90,
+  regularMin: 21,
+  regularMax: 35,
+};
+
+// Exercise frequency range (days per week)
+const EXERCISE_RANGES = {
+  min: 0,
+  max: 7,
+  step: 1,
+};
+
+function isCycleIrregular(cycleLength, irregularCyclesAnswer) {
+  const n = Number(cycleLength);
+  const outOfRange =
+    !isNaN(n) && (n < CYCLE_RANGES.regularMin || n > CYCLE_RANGES.regularMax);
+  return outOfRange || frequencyToBoolean(irregularCyclesAnswer);
+}
+
 function buildPayload(answers) {
-  // Get height value and unit
   const heightValue = Number(answers.heightWeight?.height);
   const heightUnit = answers.heightWeight?.heightUnit || "cm";
 
-  // Convert height to cm
   let heightInCm = heightValue;
-
   if (heightUnit === "ft") {
     heightInCm = heightValue * 30.48;
   } else if (heightUnit === "in") {
@@ -35,7 +65,10 @@ function buildPayload(answers) {
     weight,
     bmi,
     cycleLength: Number(answers.cycleLength),
-    irregularPeriods: frequencyToBoolean(answers.irregularCycles),
+    irregularPeriods: isCycleIrregular(
+      answers.cycleLength,
+      answers.irregularCycles
+    ),
     weightGain: frequencyToBoolean(answers.weightGain),
     acne: frequencyToBoolean(answers.acne),
     hairLoss: frequencyToBoolean(answers.hairLoss),
@@ -46,6 +79,60 @@ function buildPayload(answers) {
   };
 }
 
+// Reusable stepper input with custom +/- buttons
+function StepperInput({
+  value,
+  onChange,
+  onStep,
+  min,
+  max,
+  step = 1,
+  placeholder,
+  unit,
+  className = "",
+}) {
+  const numeric = value === "" || value === undefined ? null : Number(value);
+  const canDecrement = numeric === null || numeric > min;
+  const canIncrement = numeric === null || numeric < max;
+
+  return (
+    <div className="relative">
+      <input
+        type="number"
+        value={value || ""}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`w-full rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-4 py-3.5 pr-28 text-lg font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
+      />
+      {unit && (
+        <span className="absolute right-[5.5rem] top-1/2 -translate-y-1/2 text-sm text-[#8F8C8C]">
+          {unit}
+        </span>
+      )}
+      <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1">
+        <button
+          type="button"
+          aria-label="Decrease"
+          onClick={() => onStep(-step)}
+          disabled={!canDecrement}
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#F0DCE4] bg-white text-[#3D3939] transition hover:bg-[#FEF4F4] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          aria-label="Increase"
+          onClick={() => onStep(step)}
+          disabled={!canIncrement}
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#F0DCE4] bg-white text-[#3D3939] transition hover:bg-[#FEF4F4] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function PCOSQuestionnaire() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
@@ -54,14 +141,41 @@ export default function PCOSQuestionnaire() {
   const current = questions[step];
   const isLast = step === TOTAL_QUESTIONS - 1;
 
+  const heightUnit = answers.heightWeight?.heightUnit || "cm";
+  const heightRange = HEIGHT_RANGES[heightUnit] || HEIGHT_RANGES.cm;
+  const weightRange = WEIGHT_RANGES.kg;
+
   const isAnswered = () => {
     const val = answers[current.key];
+
+    if (current.key === "age") {
+      const age = Number(val);
+      if (!Number.isInteger(age) || age < 10 || age > 60) return false;
+      return true;
+    }
+
+    if (current.key === "cycleLength") {
+      const n = Number(val);
+      if (!Number.isInteger(n)) return false;
+      if (n < CYCLE_RANGES.min || n > CYCLE_RANGES.max) return false;
+      return true;
+    }
+
+    if (current.key === "exerciseFrequency") {
+      const n = Number(val);
+      if (!Number.isInteger(n)) return false;
+      if (n < EXERCISE_RANGES.min || n > EXERCISE_RANGES.max) return false;
+      return true;
+    }
+
     if (current.type === "height_weight") {
       const height = Number(val?.height);
       const weight = Number(val?.weight);
       if (!val?.heightUnit) return false;
-      if (isNaN(height) || height <= 0) return false;
-      if (isNaN(weight) || weight <= 0) return false;
+      if (isNaN(height) || height < heightRange.min || height > heightRange.max)
+        return false;
+      if (isNaN(weight) || weight < weightRange.min || weight > weightRange.max)
+        return false;
       return true;
     }
     return val !== undefined && val !== "";
@@ -87,10 +201,10 @@ export default function PCOSQuestionnaire() {
     setAnswers((prev) => ({ ...prev, [current.key]: value }));
   };
 
-  // Handle number input - only prevent negative values
+  // Generic number input
   const handleNumberChange = (e) => {
     const value = e.target.value;
-    if (value === '' || value === '-') {
+    if (value === "" || value === "-") {
       setAnswer(value);
       return;
     }
@@ -100,81 +214,213 @@ export default function PCOSQuestionnaire() {
     }
   };
 
-  // Handle height input
+  // Age input (10–60)
+  const handleAgeChange = (e) => {
+    const value = e.target.value;
+    if (value === "") {
+      setAnswer("");
+      return;
+    }
+    if (!/^\d+$/.test(value)) return;
+
+    const num = Number(value);
+    if (num < 10) {
+      setAnswer("10");
+      return;
+    }
+    if (num > 60) {
+      setAnswer("60");
+      return;
+    }
+    setAnswer(value);
+  };
+
+  const handleAgeStep = (delta) => {
+    const currentVal =
+      answers.age === "" || answers.age === undefined ? 10 : Number(answers.age);
+    const next = Math.min(60, Math.max(10, currentVal + delta));
+    setAnswer(String(next));
+  };
+
+  const handleNumberStep = (delta) => {
+    const currentVal =
+      answers[current.key] === "" || answers[current.key] === undefined
+        ? 0
+        : Number(answers[current.key]);
+    const next = Math.max(0, currentVal + delta);
+    setAnswer(String(next));
+  };
+
+  // Cycle length input (15–90 days, clamped)
+  const handleCycleChange = (e) => {
+    const value = e.target.value;
+
+    if (value === "") {
+      setAnswer("");
+      return;
+    }
+
+    if (!/^\d+$/.test(value)) return;
+
+    const num = Number(value);
+
+    if (num < CYCLE_RANGES.min) {
+      setAnswer(String(CYCLE_RANGES.min));
+      return;
+    }
+    if (num > CYCLE_RANGES.max) {
+      setAnswer(String(CYCLE_RANGES.max));
+      return;
+    }
+
+    setAnswer(value);
+  };
+
+  const handleCycleStep = (delta) => {
+    const currentVal =
+      answers.cycleLength === "" || answers.cycleLength === undefined
+        ? CYCLE_RANGES.regularMin
+        : Number(answers.cycleLength);
+    const next = Math.min(
+      CYCLE_RANGES.max,
+      Math.max(CYCLE_RANGES.min, currentVal + delta)
+    );
+    setAnswer(String(next));
+  };
+
+  // Exercise frequency input (0–7 days, clamped)
+  const handleExerciseChange = (e) => {
+    const value = e.target.value;
+
+    if (value === "") {
+      setAnswer("");
+      return;
+    }
+
+    if (!/^\d+$/.test(value)) return;
+
+    const num = Number(value);
+
+    if (num < EXERCISE_RANGES.min) {
+      setAnswer(String(EXERCISE_RANGES.min));
+      return;
+    }
+    if (num > EXERCISE_RANGES.max) {
+      setAnswer(String(EXERCISE_RANGES.max));
+      return;
+    }
+
+    setAnswer(value);
+  };
+
+  const handleExerciseStep = (delta) => {
+    const currentVal =
+      answers.exerciseFrequency === "" ||
+      answers.exerciseFrequency === undefined
+        ? EXERCISE_RANGES.min
+        : Number(answers.exerciseFrequency);
+    const next = Math.min(
+      EXERCISE_RANGES.max,
+      Math.max(EXERCISE_RANGES.min, currentVal + delta)
+    );
+    setAnswer(String(next));
+  };
+
+  // Height input — clamps to the range of the currently selected unit
   const handleHeightChange = (e) => {
     const value = e.target.value;
-    const currentHeightWeight = answers.heightWeight || { heightUnit: 'cm' };
-    
-    // Allow empty string for clearing the input
-    if (value === '') {
-      setAnswer({
-        ...currentHeightWeight,
-        height: '',
-      });
+    const currentHeightWeight = answers.heightWeight || { heightUnit: "cm" };
+
+    if (value === "") {
+      setAnswer({ ...currentHeightWeight, height: "" });
       return;
     }
-    
-    // Allow decimal point for typing
-    if (value === '.') {
-      setAnswer({
-        ...currentHeightWeight,
-        height: '0.',
-      });
+    if (value === ".") {
+      setAnswer({ ...currentHeightWeight, height: "0." });
       return;
     }
-    
+
     const num = Number(value);
-    if (!isNaN(num) && num >= 0) {
-      setAnswer({
-        ...currentHeightWeight,
-        height: value,
-      });
+    if (isNaN(num)) return;
+
+    if (num < heightRange.min) {
+      setAnswer({ ...currentHeightWeight, height: String(heightRange.min) });
+      return;
     }
+    if (num > heightRange.max) {
+      setAnswer({ ...currentHeightWeight, height: String(heightRange.max) });
+      return;
+    }
+
+    setAnswer({ ...currentHeightWeight, height: value });
   };
 
-  // Handle weight input
+  const handleHeightStep = (delta) => {
+    const currentHeightWeight = answers.heightWeight || { heightUnit: "cm" };
+    const currentVal =
+      currentHeightWeight.height === "" ||
+      currentHeightWeight.height === undefined
+        ? heightRange.min
+        : Number(currentHeightWeight.height);
+    const next = Math.min(
+      heightRange.max,
+      Math.max(heightRange.min, +(currentVal + delta).toFixed(2))
+    );
+    setAnswer({ ...currentHeightWeight, height: String(next) });
+  };
+
+  // Weight input — clamps to weight range
   const handleWeightChange = (e) => {
     const value = e.target.value;
-    const currentHeightWeight = answers.heightWeight || { heightUnit: 'cm' };
-    
-    // Allow empty string for clearing the input
-    if (value === '') {
-      setAnswer({
-        ...currentHeightWeight,
-        weight: '',
-      });
+    const currentHeightWeight = answers.heightWeight || { heightUnit: "cm" };
+
+    if (value === "") {
+      setAnswer({ ...currentHeightWeight, weight: "" });
       return;
     }
-    
-    // Allow decimal point for typing
-    if (value === '.') {
-      setAnswer({
-        ...currentHeightWeight,
-        weight: '0.',
-      });
+    if (value === ".") {
+      setAnswer({ ...currentHeightWeight, weight: "0." });
       return;
     }
-    
+
     const num = Number(value);
-    if (!isNaN(num) && num >= 0) {
-      setAnswer({
-        ...currentHeightWeight,
-        weight: value,
-      });
+    if (isNaN(num)) return;
+
+    if (num < weightRange.min) {
+      setAnswer({ ...currentHeightWeight, weight: String(weightRange.min) });
+      return;
     }
+    if (num > weightRange.max) {
+      setAnswer({ ...currentHeightWeight, weight: String(weightRange.max) });
+      return;
+    }
+
+    setAnswer({ ...currentHeightWeight, weight: value });
   };
 
-  // Get placeholder based on selected unit
+  const handleWeightStep = (delta) => {
+    const currentHeightWeight = answers.heightWeight || { heightUnit: "cm" };
+    const currentVal =
+      currentHeightWeight.weight === "" ||
+      currentHeightWeight.weight === undefined
+        ? weightRange.min
+        : Number(currentHeightWeight.weight);
+    const next = Math.min(
+      weightRange.max,
+      Math.max(weightRange.min, +(currentVal + delta).toFixed(1))
+    );
+    setAnswer({ ...currentHeightWeight, weight: String(next) });
+  };
+
   const getHeightPlaceholder = () => {
-    const unit = answers.heightWeight?.heightUnit || 'cm';
-    switch(unit) {
-      case 'ft':
-        return '5.8';
-      case 'in':
-        return '65';
-      case 'cm':
+    switch (heightUnit) {
+      case "ft":
+        return "5.8";
+      case "in":
+        return "65";
+      case "cm":
       default:
-        return '165';
+        return "165";
     }
   };
 
@@ -215,22 +461,78 @@ export default function PCOSQuestionnaire() {
           )}
 
           <div className="mt-5">
-            {current.type === "number" && (
-              <div className="relative">
-                <input
-                  type="number"
-                  value={answers[current.key] || ""}
-                  onChange={handleNumberChange}
+            {current.type === "number" &&
+              (current.key === "age" ? (
+                <StepperInput
+                  value={answers.age}
+                  onChange={handleAgeChange}
+                  onStep={handleAgeStep}
+                  min={10}
+                  max={60}
+                  step={1}
                   placeholder={current.placeholder}
-                  className="w-full rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-4 py-3.5 text-lg font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15"
+                  unit={current.unit}
                 />
-                {current.unit && (
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-[#8F8C8C]">
-                    {current.unit}
-                  </span>
-                )}
-              </div>
-            )}
+              ) : current.key === "cycleLength" ? (
+                <>
+                  <StepperInput
+                    value={answers.cycleLength}
+                    onChange={handleCycleChange}
+                    onStep={handleCycleStep}
+                    min={CYCLE_RANGES.min}
+                    max={CYCLE_RANGES.max}
+                    step={1}
+                    placeholder={current.placeholder}
+                    unit={current.unit || "days"}
+                  />
+                  {answers.cycleLength !== "" &&
+                    answers.cycleLength !== undefined &&
+                    (() => {
+                      const n = Number(answers.cycleLength);
+                      const isRegular =
+                        n >= CYCLE_RANGES.regularMin &&
+                        n <= CYCLE_RANGES.regularMax;
+                      return (
+                        <p
+                          className={`mt-2 text-xs font-medium ${
+                            isRegular ? "text-green-600" : "text-[#F33B7D]"
+                          }`}
+                        >
+                          {isRegular
+                            ? `Regular cycle (${CYCLE_RANGES.regularMin}–${CYCLE_RANGES.regularMax} days)`
+                            : `Outside the typical ${CYCLE_RANGES.regularMin}–${CYCLE_RANGES.regularMax}-day window — this will be counted as an irregular cycle.`}
+                        </p>
+                      );
+                    })()}
+                </>
+              ) : current.key === "exerciseFrequency" ? (
+                <>
+                  <StepperInput
+                    value={answers.exerciseFrequency}
+                    onChange={handleExerciseChange}
+                    onStep={handleExerciseStep}
+                    min={EXERCISE_RANGES.min}
+                    max={EXERCISE_RANGES.max}
+                    step={EXERCISE_RANGES.step}
+                    placeholder={current.placeholder}
+                    unit={current.unit || "days/week"}
+                  />
+                  <p className="mt-1 text-[10px] text-[#8F8C8C]">
+                    {EXERCISE_RANGES.min}–{EXERCISE_RANGES.max} days/week
+                  </p>
+                </>
+              ) : (
+                <StepperInput
+                  value={answers[current.key]}
+                  onChange={handleNumberChange}
+                  onStep={handleNumberStep}
+                  min={0}
+                  max={Infinity}
+                  step={1}
+                  placeholder={current.placeholder}
+                  unit={current.unit}
+                />
+              ))}
 
             {current.type === "height_weight" && (
               <div className="grid grid-cols-2 gap-4">
@@ -239,23 +541,43 @@ export default function PCOSQuestionnaire() {
                     Height
                   </label>
                   <div className="flex gap-2">
-                    <input
-                      type="number"
-                      step="any"
-                      value={answers.heightWeight?.height || ""}
-                      onChange={handleHeightChange}
-                      placeholder={getHeightPlaceholder()}
-                      className="w-[190px] rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-3 py-3 text-sm font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15"
-                    />
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        step={heightRange.step}
+                        value={answers.heightWeight?.height || ""}
+                        onChange={handleHeightChange}
+                        placeholder={getHeightPlaceholder()}
+                        className="w-full rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-3 py-3 pr-16 text-sm font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
+                        <button
+                          type="button"
+                          aria-label="Decrease height"
+                          onClick={() => handleHeightStep(-heightRange.step)}
+                          className="flex h-7 w-6 items-center justify-center rounded border border-[#F0DCE4] bg-white text-[#3D3939] transition hover:bg-[#FEF4F4] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Increase height"
+                          onClick={() => handleHeightStep(heightRange.step)}
+                          className="flex h-7 w-6 items-center justify-center rounded border border-[#F0DCE4] bg-white text-[#3D3939] transition hover:bg-[#FEF4F4] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
                     <select
-                      value={answers.heightWeight?.heightUnit || 'cm'}
+                      value={heightUnit}
                       onChange={(e) => {
                         const unit = e.target.value;
                         const currentHeightWeight = answers.heightWeight || {};
                         setAnswer({
                           ...currentHeightWeight,
                           heightUnit: unit,
-                          height: '', // Clear height when switching units
+                          height: "", // Clear height when switching units
                         });
                       }}
                       className="w-[70px] rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-2 py-3 text-sm font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15"
@@ -265,22 +587,48 @@ export default function PCOSQuestionnaire() {
                       <option value="in">in</option>
                     </select>
                   </div>
+                  <p className="mt-1 text-[10px] text-[#8F8C8C]">
+                    {heightRange.min}–{heightRange.max} {heightUnit}
+                  </p>
                 </div>
-                <div className="relative">
+                <div>
                   <label className="mb-1.5 block text-xs font-semibold text-[#3D3939]">
                     Weight
                   </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={answers.heightWeight?.weight || ""}
-                    onChange={handleWeightChange}
-                    placeholder="60"
-                    className="w-full rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-4 py-3 pr-12 text-sm font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15"
-                  />
-                  <span className="absolute right-4 top-[38px] text-xs text-[#8F8C8C]">
-                    kg
-                  </span>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step={weightRange.step}
+                      value={answers.heightWeight?.weight || ""}
+                      onChange={handleWeightChange}
+                      placeholder="60"
+                      className="w-full rounded-xl border border-[#F0DCE4] bg-[#FEFAFB] px-4 py-3 pr-20 text-sm font-semibold text-[#0D0D0D] outline-none focus:border-[#F33B7D] focus:ring-2 focus:ring-[#F33B7D]/15 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="absolute right-[4.25rem] top-1/2 -translate-y-1/2 text-xs text-[#8F8C8C]">
+                      kg
+                    </span>
+                    <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
+                      <button
+                        type="button"
+                        aria-label="Decrease weight"
+                        onClick={() => handleWeightStep(-weightRange.step)}
+                        className="flex h-7 w-6 items-center justify-center rounded border border-[#F0DCE4] bg-white text-[#3D3939] transition hover:bg-[#FEF4F4] disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Increase weight"
+                        onClick={() => handleWeightStep(weightRange.step)}
+                        className="flex h-7 w-6 items-center justify-center rounded border border-[#F0DCE4] bg-white text-[#3D3939] transition hover:bg-[#FEF4F4] disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-[10px] text-[#8F8C8C]">
+                    {weightRange.min}–{weightRange.max} kg
+                  </p>
                 </div>
               </div>
             )}
@@ -338,15 +686,13 @@ export default function PCOSQuestionnaire() {
 
           <div className="mt-5 rounded-xl bg-[#FEF4F4] p-3">
             <p className="text-xs leading-relaxed text-[#6B5F63]">
-              <span className="font-semibold text-[#F33B7D]">
-                Important:
-              </span>{" "}
+              <span className="font-semibold text-[#F33B7D]">Important:</span>{" "}
               This assessment provides a PCOS risk screening and prediction based on
               the information you provide. It does not detect or diagnose PCOS and
               cannot replace evaluation by a qualified healthcare professional.
             </p>
           </div>
-          
+
           <div className="mt-6 flex gap-3">
             <button
               onClick={handlePrevious}
@@ -360,7 +706,8 @@ export default function PCOSQuestionnaire() {
               disabled={!isAnswered()}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#F33B7D] px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_28px_-6px_rgba(243,59,125,0.5)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {isLast ? "Check My Risk" : "Next"} <ArrowRight className="h-4 w-4" />
+              {isLast ? "Check My Risk" : "Next"}{" "}
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>

@@ -1,3 +1,4 @@
+const EncryptionUtil = require("../utils/encryptionUtil");
 const Chat = require("../models/Chat");
 const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
@@ -409,7 +410,7 @@ const closeConsultation = async (doctorId, chatId) => {
   chat: chat._id,
   sender: doctorId,
   receiver: chat.patient,
-  message: "Consultation has been closed.",
+  message: EncryptionUtil.encryptText("Consultation has been closed."),
   messageType: "system",
   isRead: false,
 });
