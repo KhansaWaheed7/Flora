@@ -1,6 +1,13 @@
 const asyncHandler = require("../utils/asyncHandler");
 const ApiResponse = require("../utils/ApiResponse");
 const notificationService = require("../services/notification.service");
+const { emitToUser } = require("../socket/services/socketEmitter");
+const SOCKET_EVENTS = require("../constants/socketEvents");
+
+const emitUnreadCount = async (userId) => {
+  const unreadCount = await notificationService.getUnreadCount(userId);
+  emitToUser(userId, SOCKET_EVENTS.NOTIFICATION_COUNT_UPDATED, { unreadCount });
+};
 
 exports.getNotifications = asyncHandler(async (req, res) => {
   const notifications = await notificationService.getNotifications(req.user._id, {
@@ -33,6 +40,9 @@ exports.markRead = asyncHandler(async (req, res) => {
     );
   }
 
+  await emitUnreadCount(req.user._id);
+  emitToUser(req.user._id, SOCKET_EVENTS.NOTIFICATION_UPDATED, notification);
+
   return res.status(200).json(
     new ApiResponse(200, "Notification marked as read", notification)
   );
@@ -40,6 +50,8 @@ exports.markRead = asyncHandler(async (req, res) => {
 
 exports.markAllRead = asyncHandler(async (req, res) => {
   await notificationService.markAllRead(req.user._id);
+  await emitUnreadCount(req.user._id);
+  emitToUser(req.user._id, SOCKET_EVENTS.NOTIFICATION_UPDATED, { markAllRead: true });
 
   return res.status(200).json(
     new ApiResponse(200, "All notifications marked as read", null)
@@ -57,6 +69,9 @@ exports.deleteNotification = asyncHandler(async (req, res) => {
       new ApiResponse(404, "Notification not found", null)
     );
   }
+
+  await emitUnreadCount(req.user._id);
+  emitToUser(req.user._id, SOCKET_EVENTS.NOTIFICATION_DELETED, { id: req.params.id });
 
   return res.status(200).json(
     new ApiResponse(200, "Notification deleted successfully", null)

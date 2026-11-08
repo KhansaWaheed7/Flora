@@ -18,6 +18,7 @@ import {
   Info,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { useSocket } from "../../context/SocketContext";
 import {
   getNotifications,
   markAllNotificationsAsRead,
@@ -152,9 +153,10 @@ export default function Header({
   user,
 }) {
   const navigate = useNavigate();
+  const { socket, unreadNotificationCount, setUnreadNotificationCount } = useSocket();
 
   const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = unreadNotificationCount;
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -162,7 +164,7 @@ export default function Header({
   const searchInputRef = useRef(null);
   const searchContainerRef = useRef(null);
 
-  // Fetch notifications on mount (and poll every 30s)
+  // Fetch once, then keep the dropdown synchronized over Socket.IO
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -175,19 +177,33 @@ export default function Header({
           ? data.notifications
           : [];
         setNotifications(list);
-        setUnreadCount(list.filter((n) => !n.read).length);
+        setUnreadNotificationCount(list.filter((n) => !n.read).length);
       } catch (error) {
         console.error("Error fetching notifications:", error);
         setNotifications([]);
-        setUnreadCount(0);
+        setUnreadNotificationCount(0);
       }
     };
 
     fetchNotifications();
-
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
   }, [user?._id]);
+
+  useEffect(() => {
+    if (!socket) return;
+    const onCreated = ({ notification }) => {
+      if (!notification?._id) return;
+      setNotifications((items) => [notification, ...items.filter((item) => item._id !== notification._id)].slice(0, 50));
+    };
+    const onUpdated = (payload) => {
+      if (payload?.markAllRead) setNotifications((items) => items.map((item) => ({ ...item, read: true })));
+      else if (payload?._id) setNotifications((items) => items.map((item) => item._id === payload._id ? payload : item));
+    };
+    const onDeleted = ({ id }) => setNotifications((items) => items.filter((item) => item._id !== id));
+    socket.on("notification:created", onCreated);
+    socket.on("notification:updated", onUpdated);
+    socket.on("notification:deleted", onDeleted);
+    return () => { socket.off("notification:created", onCreated); socket.off("notification:updated", onUpdated); socket.off("notification:deleted", onDeleted); };
+  }, [socket]);
 
   // Handle click outside search
   useEffect(() => {
@@ -215,7 +231,7 @@ export default function Header({
       setNotifications((prev) =>
         prev.map((n) => (n._id === notificationId ? { ...n, read: true } : n))
       );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      setUnreadNotificationCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
@@ -225,7 +241,7 @@ export default function Header({
     try {
       await headerService.markAllNotificationsAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
+      setUnreadNotificationCount(0);
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
     }

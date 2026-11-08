@@ -4,6 +4,7 @@ import DoctorSidebar from "../components/doctor/DoctorSidebar";
 import DoctorHeader from "../components/doctor/DoctorHeader";
 
 import { useAuth } from "../context/AuthContext";
+import { useSocket } from "../context/SocketContext";
 import {
   getDoctorDashboard,
   getDoctorProfile,
@@ -26,6 +27,7 @@ export default function DoctorLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, setUser } = useAuth();
+  const { socket, unreadNotificationCount } = useSocket();
   const [counts, setCounts] = useState({});
   const [notifications, setNotifications] = useState([]);
 
@@ -55,7 +57,7 @@ export default function DoctorLayout({
         closedConsultations: dashboard?.closedConsultations || 0,
         activePatients: dashboard?.activePatients || 0,
         unreadMessages: dashboard?.unreadMessages || 0,
-        notificationCount: latestNotifications.filter((item) => !item.read).length,
+        notificationCount: unreadNotificationCount,
       }));
     } catch {
       // Header badges are non-critical.
@@ -84,7 +86,7 @@ export default function DoctorLayout({
           setNotifications(latest);
           setCounts((prev) => ({
             ...prev,
-            notificationCount: latest.filter((item) => !item.read).length,
+            notificationCount: unreadNotificationCount,
           }));
         }
       } catch {
@@ -130,6 +132,26 @@ export default function DoctorLayout({
     };
   }, []);
 
+  useEffect(() => {
+    setCounts((prev) => ({ ...prev, notificationCount: unreadNotificationCount }));
+  }, [unreadNotificationCount]);
+
+  useEffect(() => {
+    if (!socket) return;
+    const onCreated = ({ notification }) => {
+      if (notification?._id) setNotifications((items) => [notification, ...items.filter((item) => item._id !== notification._id)].slice(0, 6));
+    };
+    const onUpdated = (payload) => {
+      if (payload?.markAllRead) setNotifications((items) => items.map((item) => ({ ...item, read: true })));
+      else if (payload?._id) setNotifications((items) => items.map((item) => item._id === payload._id ? payload : item));
+    };
+    const onDeleted = ({ id }) => setNotifications((items) => items.filter((item) => item._id !== id));
+    socket.on("notification:created", onCreated);
+    socket.on("notification:updated", onUpdated);
+    socket.on("notification:deleted", onDeleted);
+    return () => { socket.off("notification:created", onCreated); socket.off("notification:updated", onUpdated); socket.off("notification:deleted", onDeleted); };
+  }, [socket]);
+
   const headerUser = {
     ...(user || {}),
     ...(doctorProfile || {}),
@@ -151,7 +173,7 @@ export default function DoctorLayout({
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           user={headerUser}
-          notificationCount={counts.notificationCount || 0}
+          notificationCount={unreadNotificationCount}
           notifications={notifications}
           showSearch={showSearch}
           onSearchChange={onSearchChange}

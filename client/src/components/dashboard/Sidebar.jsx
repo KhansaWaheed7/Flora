@@ -20,7 +20,7 @@ import {
 
 import { useState, useEffect } from "react";
 import { getConversations } from "../../services/chat.service";
-import { getNotifications } from "../../services/notification.service";
+import { useSocket } from "../../context/SocketContext";
 import Logo from "../../components/common/Logo";
 
 function NavItem({ icon: Icon, label, active, badge, path, onClick }) {
@@ -68,7 +68,7 @@ export default function Sidebar({
   // Unread chat count
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   // Unread notifications count
-  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+  const { unreadNotificationCount: unreadNotifCount } = useSocket();
 
   // Fetch unread chat count
   useEffect(() => {
@@ -98,41 +98,6 @@ export default function Sidebar({
     };
   }, []);
 
-  // Fetch unread notifications count (mirrors the header bell behaviour)
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchUnreadNotifications = async () => {
-      try {
-        const res = await getNotifications({ limit: 50 });
-        const list = Array.isArray(res)
-          ? res
-          : Array.isArray(res?.data)
-          ? res.data
-          : Array.isArray(res?.notifications)
-          ? res.notifications
-          : [];
-
-        const totalUnread = list.filter((n) => !n.read).length;
-
-        if (!cancelled) {
-          setUnreadNotifCount(totalUnread);
-        }
-      } catch (error) {
-        console.error("Failed to fetch unread notification count:", error);
-      }
-    };
-
-    fetchUnreadNotifications();
-
-    // Poll every 30s so the badge stays fresh without a refresh
-    const interval = setInterval(fetchUnreadNotifications, 30000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, []);
 
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },

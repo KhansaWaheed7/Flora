@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { useAuth } from "../../context/AuthContext";
+import { useSocket } from "../../context/SocketContext";
 import {
   Home,
   Repeat,
@@ -300,6 +301,7 @@ const getInsightTagColor = (insight) => {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { socket } = useSocket();
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -400,6 +402,22 @@ export default function DashboardPage() {
 
     loadData();
   }, [user?.role]);
+
+  useEffect(() => {
+    if (!socket) return;
+    const onCreated = ({ notification }) => {
+      if (notification?._id) setLatestNotifications((items) => [notification, ...items.filter((item) => item._id !== notification._id)].slice(0, 6));
+    };
+    const onUpdated = (payload) => {
+      if (payload?.markAllRead) setLatestNotifications((items) => items.map((item) => ({ ...item, read: true })));
+      else if (payload?._id) setLatestNotifications((items) => items.map((item) => item._id === payload._id ? payload : item));
+    };
+    const onDeleted = ({ id }) => setLatestNotifications((items) => items.filter((item) => item._id !== id));
+    socket.on("notification:created", onCreated);
+    socket.on("notification:updated", onUpdated);
+    socket.on("notification:deleted", onDeleted);
+    return () => { socket.off("notification:created", onCreated); socket.off("notification:updated", onUpdated); socket.off("notification:deleted", onDeleted); };
+  }, [socket]);
 
   useEffect(() => {
     if (!user?._id || user?.role === "admin") return;

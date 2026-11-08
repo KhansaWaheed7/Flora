@@ -16,6 +16,7 @@ RefreshCw,
 Trash2,
 } from "lucide-react";
 import PageLayout from "../../layouts/PageLayout";
+import { useSocket } from "../../context/SocketContext";
 import {
   getNotifications,
   markAllNotificationsAsRead,
@@ -166,6 +167,7 @@ function NotificationCard({ notification, onRead, onDelete }) {
 }
 
 export default function NotificationsPage() {
+  const { socket } = useSocket();
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
@@ -185,9 +187,23 @@ export default function NotificationsPage() {
     }
   }, []);
 
+  useEffect(() => { loadNotifications(); }, [loadNotifications]);
+
   useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+    if (!socket) return;
+    const onCreated = ({ notification }) => {
+      if (notification?._id) setNotifications((items) => [notification, ...items.filter((item) => item._id !== notification._id)]);
+    };
+    const onUpdated = (payload) => {
+      if (payload?.markAllRead) setNotifications((items) => items.map((item) => ({ ...item, read: true, readAt: new Date().toISOString() })));
+      else if (payload?._id) setNotifications((items) => items.map((item) => item._id === payload._id ? payload : item));
+    };
+    const onDeleted = ({ id }) => setNotifications((items) => items.filter((item) => item._id !== id));
+    socket.on("notification:created", onCreated);
+    socket.on("notification:updated", onUpdated);
+    socket.on("notification:deleted", onDeleted);
+    return () => { socket.off("notification:created", onCreated); socket.off("notification:updated", onUpdated); socket.off("notification:deleted", onDeleted); };
+  }, [socket]);
 
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item.read).length,

@@ -6,37 +6,28 @@ const PregnancyReminder = require("../models/PregnancyReminder");
 const { calculateAverageCycleLength, addDays } = require("../utils/cyclePrediction");
 const detectIrregularCycle = require("../utils/irregularCycle");
 const { calculateCurrentWeek } = require("../utils/pregnancyTimeline");
+const { emitToUser } = require("../socket/services/socketEmitter");
+const SOCKET_EVENTS = require("../constants/socketEvents");
 
 const createNotification = async ({
-  userId,
-  type,
-  title,
-  message,
-  link = "",
-  priority = "normal",
-  uniqueKey,
-  metadata = {},
-  expiresAt = null,
+  userId, type, title, message, link = "", priority = "normal",
+  uniqueKey, metadata = {}, expiresAt = null,
 }) => {
   if (!userId || !uniqueKey) return null;
 
-  return Notification.findOneAndUpdate(
-    { user: userId, uniqueKey },
-    {
-      $setOnInsert: {
-        user: userId,
-        type,
-        title,
-        message,
-        link,
-        priority,
-        uniqueKey,
-        metadata,
-        expiresAt,
-      },
-    },
-    { new: true, upsert: true, setDefaultsOnInsert: true }
-  );
+  // Insert only once. A duplicate uniqueKey must never produce a second live event.
+  try {
+    const notification = await Notification.create({
+      user: userId, type, title, message, link, priority, uniqueKey, metadata, expiresAt,
+    });
+    const unreadCount = await Notification.countDocuments({ user: userId, read: false });
+    emitToUser(userId, SOCKET_EVENTS.NOTIFICATION_CREATED, { notification: notification.toObject(), unreadCount });
+    emitToUser(userId, SOCKET_EVENTS.NOTIFICATION_COUNT_UPDATED, { unreadCount });
+    return notification;
+  } catch (error) {
+    if (error?.code === 11000) return Notification.findOne({ user: userId, uniqueKey });
+    throw error;
+  }
 };
 
 const markRead = async (userId, notificationId) => {

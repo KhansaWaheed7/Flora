@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import Avatar from "../common/Avatar";
 import { logout } from "../../utils/auth";
+import { markNotificationAsRead } from "../../services/notification.service";
 
 function getInitials(name = "") {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -114,8 +115,12 @@ export default function DoctorHeader({
                     <button
                       key={notification._id}
                       type="button"
-                      onClick={() => {
+                      onClick={async () => {
                         setShowNotifications(false);
+                        if (!notification.read) {
+                          try { await markNotificationAsRead(notification._id); }
+                          catch (error) { console.error("Unable to mark notification as read:", error); }
+                        }
                         if (notification.link) navigate(notification.link);
                       }}
                       className={`flex w-full gap-3 border-b border-[#F7E9EE] px-4 py-3 text-left hover:bg-[#FEF4F4] ${
